@@ -1,0 +1,32 @@
+@import 'tailwindcss';
+
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../storage/framework/views/*.php';
+@source '../**/*.blade.php';
+@source '../**/*.js';
+
+@theme {
+  /* COLORS */
+  --color-primary: #4a84e7;
+  --color-background-light: #f9fafb;
+  --color-background-dark: #19202e;
+  --color-accent-light: #e8f1f3;
+  --color-text-main: #0e191b;
+  --color-text-secondary: #4a84e7;
+  --color-border-subtle: #d0e3e6;
+
+  /* FONT FAMILY */
+  --font-display: "Manrope", sans-serif;
+  --font-body: "Manrope", sans-serif;
+
+  /* BORDER RADIUS */
+  --radius-default: 0.25rem;
+  --radius-lg: 0.5rem;
+  --radius-xl: 0.75rem;
+  --radius-full: 9999px;
+}
+
+/* =====================================
+   DARK MODE (class based)
+===================================== */
+@variant dark (&:where(.dark, .dark *));

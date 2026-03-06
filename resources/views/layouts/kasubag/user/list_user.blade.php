@@ -1,0 +1,209 @@
+<x-master>
+    <div class="max-w-7xl mx-auto flex flex-col gap-8 p-10 rounded-2xl bg-white/80 border-2 border-gray-200">
+
+        <!-- Header -->
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div>
+                <h2 class="text-text-main dark:text-white text-3xl font-extrabold tracking-tight">
+                    Kelola Pengguna
+                </h2>
+                <p class="text-text-secondary text-sm mt-1">
+                    Manajemen seluruh pengguna sistem
+                </p>
+            </div>
+
+            <a href="{{ route('kasubag.tambah-user') }}" class="px-5 py-2 bg-primary text-white rounded-lg shadow-sm hover:brightness-110 transition">
+                + Tambah User
+            </a>
+        </div>
+
+        <!-- Filter Section -->
+        <div class="bg-white dark:bg-gray-800 rounded-xl border border-border-subtle dark:border-gray-700 p-4 shadow-sm">
+            <div class="flex flex-col md:flex-row gap-3 items-center">
+
+        <form method="GET" action="{{ route('kasubag.list-user') }}" class="flex flex-col md:flex-row gap-3 w-full">
+
+            <!-- Search -->
+            <input
+                name="search"
+                value="{{ request('search') }}"
+                placeholder="Cari nama atau email..."
+                class="flex-1 px-4 py-2 text-sm rounded-lg border border-border-subtle dark:border-gray-600 bg-white dark:bg-gray-800 focus:ring-2 focus:ring-primary focus:outline-none"
+            />
+
+            <button type="submit" class="px-5 py-2 bg-primary text-white rounded-lg hover:brightness-110 transition"> Cari </button>
+
+            <!-- Status Filter -->
+            <select
+                name="status"
+                class="px-4 py-2 text-sm rounded-lg border border-border-subtle dark:border-gray-600 bg-white dark:bg-gray-800 focus:ring-2 focus:ring-primary focus:outline-none text-text-main dark:text-white"
+            >
+                <option value="">Semua Status</option>
+                <option value="active" {{ request('status') == 'active' ? 'selected' : '' }}>
+                    Active
+                </option>
+                <option value="inactive" {{ request('status') == 'inactive' ? 'selected' : '' }}>
+                    Inactive
+                </option>
+            </select>
+
+            <!-- Button -->
+            <button
+                type="submit"
+                class="px-5 py-2 bg-primary text-white rounded-lg hover:brightness-110 transition"
+            >
+                Filter
+            </button>
+
+        </form>
+
+                <button class="px-4 py-2 text-sm font-medium rounded-lg border border-border-subtle dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 transition">
+                    Export
+                </button>
+
+            </div>
+        </div>
+
+        <!-- Table -->
+        <div class="bg-white dark:bg-gray-800 rounded-xl border border-border-subtle dark:border-gray-700 shadow-sm overflow-hidden">
+
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+
+                    <thead class="bg-gray-50 dark:bg-gray-800 border-b border-border-subtle dark:border-gray-700 text-text-main uppercase text-xs tracking-wider">
+                        <tr>
+                            <th class="px-6 py-4 text-left">User</th>
+                            <th class="px-6 py-4 text-left">Email</th>
+                            <th class="px-6 py-4 text-left">Nomor Induk</th>
+                            <th class="px-6 py-4 text-left">Status</th>
+                            <th class="px-6 py-4 text-center">Action</th>
+                        </tr>
+                    </thead>
+
+                    <tbody class="divide-y divide-border-subtle dark:divide-gray-700">
+                        <!-- Row -->
+
+                        @forelse ( $users as $user )
+                        <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/40 transition">
+
+                            <td class="px-6 py-4 flex items-center gap-4">
+                                <div class="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center">
+                                    <i class="fa-solid fa-users text-white"></i>
+                                </div>
+                                <div>
+                                    <p class="font-semibold text-text-main dark:text-white">
+                                        {{ $user->nama_lengkap }}
+                                    </p>
+                                    <p class="text-xs text-text-secondary">
+                                        {{ $user->roles->first()->nama ?? 'User' }}
+                                    </p>
+                                </div>
+                            </td>
+
+                            <td class="px-6 py-4 text-text-secondary">
+                                {{ $user->email }}
+                            </td>
+
+                            <td class="px-6 py-4 text-text-secondary">
+                                {{ $user->nomor_induk }}
+                            </td>
+
+                            <td class="px-6 py-4">
+                                @if ($user->is_active == 'active')
+                                    <span class="px-3 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-600 dark:bg-green-900/40 dark:text-green-300">
+                                        Active
+                                    </span>
+                                @else
+                                    <span class="px-3 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-600 dark:bg-red-900/40 dark:text-red-300">
+                                        Inactive
+                                    </span>
+                                @endif
+                            </td>
+
+
+
+                            <td class="px-6 py-4">
+                                <div class="flex justify-center items-center gap-4 text-text-secondary">
+
+                                    <button class="hover:text-primary transition">
+                                        <i class="fa-regular fa-eye"></i>
+                                    </button>
+
+                                    <form action="{{ route('kasubag.edit-user', $user->nomor_induk) }}" method="GET" class="inline">
+                                        @csrf
+                                        <button type="submit" class="hover:text-yellow-500 transition">
+                                            <i class="fa-regular fa-pen-to-square"></i>
+                                        </button>
+                                    </form>
+
+                                </div>
+                            </td>
+
+                        </tr>
+
+                        @empty
+
+                        @endforelse
+
+                    </tbody>
+
+                </table>
+            </div>
+        </div>
+
+        <!-- Pagination -->
+        {{-- <div class="flex items-center justify-between">
+
+            <button class="px-4 py-2 rounded-lg border border-border-subtle dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 transition text-sm">
+                Previous
+            </button>
+
+            <div class="flex items-center gap-2">
+                <button class="px-3 py-1 bg-primary text-white rounded-md text-sm shadow-sm">
+                    1
+                </button>
+                <button class="px-3 py-1 border border-border-subtle dark:border-gray-600 rounded-md text-sm hover:bg-gray-50 dark:hover:bg-gray-700">
+                    2
+                </button>
+                <button class="px-3 py-1 border border-border-subtle dark:border-gray-600 rounded-md text-sm hover:bg-gray-50 dark:hover:bg-gray-700">
+                    3
+                </button>
+            </div>
+
+            <button class="px-4 py-2 rounded-lg border border-border-subtle dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 transition text-sm">
+                Next
+            </button>
+
+        </div> --}}
+
+        <!-- Pagination -->
+<div class="mt-6">
+    {{ $users->links() }}
+</div>
+    </div>
+
+    <!-- Error Handling -->
+    @if ($errors->any())
+        <script>
+            Swal.fire({
+                icon: 'error',
+                title: 'Oops...',
+                html: `{!! implode('<br>', $errors->all()) !!}`,
+            });
+        </script>
+    @endif
+
+    <!-- Success Message -->
+    @if(session('success'))
+        <script>
+            Swal.fire({
+                icon: 'success',
+                title: 'Berhasil',
+                text: "{{ session('success') }}",
+                timer: 2000,
+                showConfirmButton: false
+            });
+        </script>
+    @endif
+
+</x-master>
