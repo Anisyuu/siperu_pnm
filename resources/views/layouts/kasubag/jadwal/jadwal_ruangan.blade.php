@@ -1,79 +1,96 @@
 <x-master>
-<div class="max-w-7xl mx-auto flex flex-col gap-8 p-10 rounded-2xl bg-white/80 dark:bg-gray-900/60 border border-border-subtle dark:border-gray-700">
 
-    <!-- HEADER -->
-    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div class="bg-slate-100 min-h-screen px-8 py-10">
 
-        <div>
-            <h2 class="text-text-main dark:text-white text-3xl font-extrabold tracking-tight">
-                Jadwal Ruangan
-            </h2>
-            <p class="text-text-secondary text-sm mt-1">
-                Lihat dan filter jadwal penggunaan ruangan
-            </p>
+        {{-- HEADER --}}
+        <div class="flex items-start justify-between mb-8 flex-wrap gap-4">
+
+            <div>
+                <h1 class="text-3xl font-extrabold text-slate-900 tracking-tight">
+                    Jadwal Ruangan
+                </h1>
+
+                <p class="text-slate-500 mt-1 text-sm">
+                    Lihat jadwal peminjaman ruangan di seluruh gedung kampus.
+                </p>
+            </div>
+
+            <div class="flex items-center gap-3">
+
+                <div class="flex items-center gap-2 bg-white border border-slate-200 rounded-2xl px-5 py-3">
+
+                    <div class="w-9 h-9 bg-blue-50 rounded-xl flex items-center justify-center">
+                        <i class="fa-solid fa-tags text-blue-500 text-sm"></i>
+                    </div>
+
+                    <div>
+                        <div class="text-[10px] font-bold text-slate-400 uppercase">Total Jadwal</div>
+                        <div class="text-xl font-extrabold text-slate-800">
+                            {{ "10"}}
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
         </div>
 
-        <div class="flex items-center gap-2 text-sm text-text-secondary bg-white dark:bg-gray-800 px-4 py-2 rounded-lg border border-border-subtle dark:border-gray-700">
-            <i class="fa-regular fa-calendar-days"></i>
-            <span>{{ now()->locale('id')->translatedFormat('d F Y') }}</span>
+
+    <div class="max-w-7xl mx-auto flex flex-col gap-8 ">
+
+        <!-- FILTER SECTION -->
+        <div class="bg-white dark:bg-gray-800 rounded-xl border border-border-subtle dark:border-gray-700 p-5">
+            <form class="flex flex-col md:flex-row gap-4 md:items-end">
+
+                <!-- Pilih Ruangan -->
+                <div class="flex flex-col flex-1">
+                    <label class="text-xs font-semibold text-text-secondary mb-1">
+                        Ruangan
+                    </label>
+                    <select class="px-3 py-2 text-sm rounded-lg border border-border-subtle dark:border-gray-600 bg-white dark:bg-gray-800 focus:ring-2 focus:ring-primary focus:outline-none">
+                        <option>Semua Ruangan</option>
+                        <option>Ruang Alpha</option>
+                        <option>Ruang Beta</option>
+                        <option>Ruang Diskusi 1</option>
+                    </select>
+                </div>
+
+                <!-- Pilih Tanggal -->
+                <div class="flex flex-col flex-1">
+                    <label class="text-xs font-semibold text-text-secondary mb-1">
+                        Tanggal
+                    </label>
+                    <input type="date"
+                        class="px-3 py-2 text-sm rounded-lg border border-border-subtle dark:border-gray-600 bg-white dark:bg-gray-800 focus:ring-2 focus:ring-primary focus:outline-none">
+                </div>
+
+                <!-- Status -->
+                <div class="flex flex-col flex-1">
+                    <label class="text-xs font-semibold text-text-secondary mb-1">
+                        Status
+                    </label>
+                    <select class="px-3 py-2 text-sm rounded-lg border border-border-subtle dark:border-gray-600 bg-white dark:bg-gray-800 focus:ring-2 focus:ring-primary focus:outline-none">
+                        <option>Semua</option>
+                        <option>Disetujui</option>
+                        <option>Menunggu</option>
+                    </select>
+                </div>
+
+                <!-- Submit -->
+                <div class="flex shrink-0">
+                    <button type="submit"
+                            class="h-10 px-6 bg-primary text-white text-sm font-medium rounded-lg shadow-sm hover:brightness-110 transition">
+                        Terapkan
+                    </button>
+                </div>
+
+            </form>
         </div>
 
-    </div>
-
-
-    <!-- FILTER SECTION -->
-    <div class="bg-white dark:bg-gray-800 rounded-2xl border border-border-subtle dark:border-gray-700 shadow-sm p-5">
-        <form class="flex flex-col md:flex-row gap-4 md:items-end">
-
-            <!-- Pilih Ruangan -->
-            <div class="flex flex-col flex-1">
-                <label class="text-xs font-semibold text-text-secondary mb-1">
-                    Ruangan
-                </label>
-                <select class="px-3 py-2 text-sm rounded-lg border border-border-subtle dark:border-gray-600 bg-white dark:bg-gray-800 focus:ring-2 focus:ring-primary focus:outline-none">
-                    <option>Semua Ruangan</option>
-                    <option>Ruang Alpha</option>
-                    <option>Ruang Beta</option>
-                    <option>Ruang Diskusi 1</option>
-                </select>
-            </div>
-
-            <!-- Pilih Tanggal -->
-            <div class="flex flex-col flex-1">
-                <label class="text-xs font-semibold text-text-secondary mb-1">
-                    Tanggal
-                </label>
-                <input type="date"
-                    class="px-3 py-2 text-sm rounded-lg border border-border-subtle dark:border-gray-600 bg-white dark:bg-gray-800 focus:ring-2 focus:ring-primary focus:outline-none">
-            </div>
-
-            <!-- Status -->
-            <div class="flex flex-col flex-1">
-                <label class="text-xs font-semibold text-text-secondary mb-1">
-                    Status
-                </label>
-                <select class="px-3 py-2 text-sm rounded-lg border border-border-subtle dark:border-gray-600 bg-white dark:bg-gray-800 focus:ring-2 focus:ring-primary focus:outline-none">
-                    <option>Semua</option>
-                    <option>Disetujui</option>
-                    <option>Menunggu</option>
-                </select>
-            </div>
-
-            <!-- Submit -->
-            <div class="flex shrink-0">
-                <button type="submit"
-                        class="h-10 px-6 bg-primary text-white text-sm font-medium rounded-lg shadow-sm hover:brightness-110 transition">
-                    Terapkan
-                </button>
-            </div>
-
-        </form>
-    </div>
-
-    <div class="flex flex-col gap-4">
+            <div class="flex flex-col gap-4">
 
                 <div class="flex justify-end">
-                    <div class="flex items-center bg-white dark:bg-gray-800 rounded-lg border border-border-subtle dark:border-gray-700 px-3 py-1.5 shadow-sm">
+                    <div class="flex items-center bg-white dark:bg-gray-800 rounded-lg border border-border-subtle dark:border-gray-700 px-3 py-1.5 ">
                     <button class="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors text-text-secondary">
                         <i class="fa-solid fa-chevron-left"></i>
                     </button>
@@ -88,7 +105,7 @@
 
                     <div class="w-px h-4 bg-gray-200 dark:bg-gray-700 mx-2"></div>
 
-                    <button class="px-3 py-1 text-xs font-bold bg-primary text-white rounded-md shadow-sm">
+                    <button class="px-3 py-1 text-xs font-bold bg-primary text-white rounded-md ">
                         Bulan
                     </button>
 

@@ -1,21 +1,45 @@
 <x-master>
-    <div class="max-w-7xl mx-auto flex flex-col gap-8 p-10 rounded-2xl bg-white/80 border-2 border-gray-200">
 
-        <!-- Header -->
-        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div class="bg-slate-100 min-h-screen px-8 py-10">
+
+        {{-- HEADER --}}
+        <div class="flex items-start justify-between mb-8 flex-wrap gap-4">
+
             <div>
-                <h2 class="text-text-main dark:text-white text-3xl font-extrabold tracking-tight">
+                <h1 class="text-3xl font-extrabold text-slate-900 tracking-tight">
                     Kelola Pengguna
-                </h2>
-                <p class="text-text-secondary text-sm mt-1">
+                </h1>
+
+                <p class="text-slate-500 mt-1 text-sm">
                     Manajemen seluruh pengguna sistem
                 </p>
             </div>
 
-            <a href="{{ route('kasubag.tambah-user') }}" class="px-5 py-2 bg-primary text-white rounded-lg shadow-sm hover:brightness-110 transition">
-                + Tambah User
-            </a>
+            <div class="flex items-center gap-3">
+
+                <div class="flex items-center gap-2 bg-white border border-slate-200 rounded-2xl px-5 py-3 shadow-sm">
+
+                    <div class="w-9 h-9 bg-blue-50 rounded-xl flex items-center justify-center">
+                        <i class="fa-solid fa-tags text-blue-500 text-sm"></i>
+                    </div>
+
+                    <div>
+                        <div class="text-[10px] font-bold text-slate-400 uppercase">Total Pengguna</div>
+                        <div class="text-lg font-bold text-slate-800">
+                            {{ $users->count() }}
+                        </div>
+                    </div>
+
+                </div>
+
+                <a href="{{ route('kasubag.tambah-user') }}" class="px-5 py-5 bg-primary text-white rounded-lg shadow-sm hover:brightness-110 transition">
+                    <i class="fa-solid fa-plus text-sm"></i> 
+                </a>
+
+            </div>
         </div>
+
+    <div class="max-w-7xl mx-auto flex flex-col gap-6">
 
         <!-- Filter Section -->
         <div class="bg-white dark:bg-gray-800 rounded-xl border border-border-subtle dark:border-gray-700 p-4 shadow-sm">
@@ -72,6 +96,7 @@
 
                     <thead class="bg-gray-50 dark:bg-gray-800 border-b border-border-subtle dark:border-gray-700 text-text-main uppercase text-xs tracking-wider">
                         <tr>
+                            <th class="px-6 py-4 text-left">No</th>
                             <th class="px-6 py-4 text-left">User</th>
                             <th class="px-6 py-4 text-left">Email</th>
                             <th class="px-6 py-4 text-left">Nomor Induk</th>
@@ -85,6 +110,10 @@
 
                         @forelse ( $users as $user )
                         <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/40 transition">
+
+                            <td class="px-6 py-4 text-text-secondary">
+                                {{ ($users->currentPage() - 1) * $users->perPage() + $loop->iteration }}
+                            </td>
 
                             <td class="px-6 py-4 flex items-center gap-4">
                                 <div class="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center">
@@ -125,13 +154,14 @@
                             <td class="px-6 py-4">
                                 <div class="flex justify-center items-center gap-4 text-text-secondary">
 
-                                    <button class="hover:text-primary transition">
+                                    <button class="w-8 h-8 flex items-center justify-center bg-blue-200/40 border border-blue-300 text-blue-500 rounded-lg hover:bg-blue-300/50 hover:border-blue-400 transition-all">
                                         <i class="fa-regular fa-eye"></i>
                                     </button>
 
                                     <form action="{{ route('kasubag.edit-user', $user->nomor_induk) }}" method="GET" class="inline">
                                         @csrf
-                                        <button type="submit" class="hover:text-yellow-500 transition">
+                                        <button type="submit" 
+                                         class="w-8 h-8 flex items-center justify-center bg-orange-200/40 border border-orange-300 text-orange-500 rounded-lg  hover:bg-orange-300/50 hover:border-orange-400 transition-all">
                                             <i class="fa-regular fa-pen-to-square"></i>
                                         </button>
                                     </form>

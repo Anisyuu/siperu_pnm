@@ -1,568 +1,185 @@
-<aside
-    class="hidden md:flex w-64 flex-col dark:bg-[#111] min-h-screen transition-all"
->
-    <div class="flex m-3 rounded-xl shadow bg-white h-full flex-col justify-between p-4">
-        <div class="flex flex-col gap-4">
+<aside class="hidden md:flex w-80 flex-col dark:bg-[#111] min-h-screen transition-all">
+    <div class="flex m-3 rounded-xl shadow-sm bg-white dark:bg-[#1d1d1d] h-full flex-col justify-between p-4 border border-gray-100 dark:border-gray-800">
+        <div class="flex flex-col gap-1">
 
-            <!-- Header -->
-            <div class="px-5 py-3 flex items-center gap-3">
-                <div class="flex items-center justify-center text-white">
-                    <span class="text-text-main dark:text-white text-2xl font-extrabold tracking-tight">
-                        PinjamRuang<span class="text-primary">.</span>
-                    </span>
-                </div>
+            <div class="px-3 py-4 flex justify-center items-center gap-3 mb-2">
+                <span class="text-gray-900 dark:text-white text-2xl font-black tracking-tight">
+                    PinjamRuang<span class="text-primary text-blue-600">.</span>
+                </span>
             </div>
 
-            <!-- Menu -->
-            <nav class="flex flex-col gap-2 mt-4">
+            <nav class="flex flex-col gap-1">
+                
+                @php
+                    // Helper styling untuk mengurangi repetisi kode
+                    $activeClass = "bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400";
+                    $inactiveClass = "text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-gray-900 transition-all duration-200";
+                    $iconActive = "text-blue-600 dark:text-blue-400";
+                    $iconInactive = "text-gray-400 group-hover:text-gray-600";
+                @endphp
 
                 @hasRole('kasubag')
-                @php
-                    $isDashboard  = request()->routeIs('kasubag.dashboard');
-                    $isJadwal     = request()->routeIs('kasubag.jadwal-ruangan');
-                    $isListUser   = request()->routeIs('kasubag.list-user');
-                    $isMasterRuangan = request()->routeIs('kasubag.master-ruangan');
-                    $isKelolaRuangan = request()->routeIs('kasubag.kelola-ruangan');
-                    $isVerifikasiPeminjaman = request()->routeIs('kasubag.verifikasi-peminjaman');
-                    $isRiwayatVerifikasi = request()->routeIs('kasubag.riwayat-verifikasi');
-                    $isRiwayatPeminjaman = request()->routeIs('kasubag.riwayat-peminjaman');
-                @endphp
-                    <a
-                        class="flex items-center gap-3 px-3 py-3 rounded-lg {{ $isDashboard ? 'bg-primary/10 text-primary' : '' }} hover:bg-primary/10 dark:hover:bg-gray-800 transition-colors group"
-                        href="{{ route('kasubag.dashboard') }}"
-                    >
-                        <i class="fa-solid fa-border-all text-text-main transition-colors"></i>
-                        <p class="text-text-main dark:text-gray-300 text-sm font-medium leading-normal">
-                            Dashboard
-                        </p>
+                    <a href="{{ route('kasubag.dashboard') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg group {{ request()->routeIs('kasubag.dashboard') ? $activeClass : $inactiveClass }}">
+                        <i class="fa-solid fa-border-all w-5 {{ request()->routeIs('kasubag.dashboard') ? $iconActive : $iconInactive }}"></i>
+                        <span class="text-sm font-semibold">Dashboard</span>
                     </a>
 
-                    <a
-                        class="flex items-center gap-3 px-3 py-3 rounded-lg {{ $isJadwal ? 'bg-primary/10 text-primary' : '' }} hover:bg-primary/10 dark:hover:bg-gray-800 transition-colors group"
-                        href="{{ route('kasubag.jadwal-ruangan') }}"
-                    >
-                        <i class="fa-regular fa-calendar text-text-main transition-colors"></i>
-                        <p class="text-text-main dark:text-gray-300 text-sm font-medium leading-normal">
-                            Jadwal
-                        </p>
+                    <a href="{{ route('kasubag.jadwal-ruangan') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg group {{ request()->routeIs('kasubag.jadwal-ruangan') ? $activeClass : $inactiveClass }}">
+                        <i class="fa-regular fa-calendar w-5 {{ request()->routeIs('kasubag.jadwal-ruangan') ? $iconActive : $iconInactive }}"></i>
+                        <span class="text-sm font-semibold">Jadwal</span>
                     </a>
 
-                    <a
-                        class="flex items-center gap-3 px-3 py-3 rounded-lg {{ $isListUser ? 'bg-primary/10 text-primary' : '' }} hover:bg-primary/10 dark:hover:bg-gray-800 transition-colors group"
-                        href="{{ route('kasubag.list-user') }}"
-                    >
-                        <i class="fa-regular fa-user text-text-main transition-colors"></i>
-                        <p class="text-text-main dark:text-gray-300 text-sm font-medium leading-normal">
-                            Kelola Pengguna
-                        </p>
+                    <a href="{{ route('kasubag.list-user') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg group {{ request()->routeIs('kasubag.list-user') ? $activeClass : $inactiveClass }}">
+                        <i class="fa-regular fa-user w-5 {{ request()->routeIs('kasubag.list-user') ? $iconActive : $iconInactive }}"></i>
+                        <span class="text-sm font-semibold">Kelola Pengguna</span>
                     </a>
 
-                    <!-- Kelola Ruangan -->
                     <div class="flex flex-col">
-
-                    <button
-                        id="kelolaRuanganBtn"
-                        type="button"
-                        class="flex items-center justify-between gap-3 px-3 py-3 rounded-lg {{ $isMasterRuangan || $isKelolaRuangan ? 'bg-primary/10 text-primary' : '' }} hover:bg-primary/10 dark:hover:bg-gray-800 transition-colors group"
-                    >
-                        <div class="flex items-center gap-3">
-                            <i class="fa-regular fa-building text-text-main transition-colors"></i>
-                            <p class="text-text-main dark:text-gray-300 text-sm font-medium leading-normal">
-                                Ruangan
-                            </p>
+                        @php $isRuanganActive = request()->routeIs('kasubag.jenis-ruang.*') || request()->routeIs('kasubag.kampus.*'); @endphp
+                        <button id="kelolaRuanganBtn" type="button" class="flex items-center justify-between px-3 py-2.5 rounded-lg group {{ $isRuanganActive ? 'text-blue-600' : $inactiveClass }}">
+                            <div class="flex items-center gap-3">
+                                <i class="fa-regular fa-building w-5"></i>
+                                <span class="text-sm font-semibold">Ruangan</span>
+                            </div>
+                            <i id="kelolaRuanganIcon" class="fa-solid fa-chevron-down text-[10px] transition-transform duration-300 {{ $isRuanganActive ? 'rotate-180' : '' }}"></i>
+                        </button>
+                        <div id="kelolaRuanganSubmenu" class="{{ $isRuanganActive ? '' : 'hidden' }} ml-9 mt-1 border-l border-gray-200 dark:border-gray-700 flex flex-col gap-1">
+                            <a href="{{ route('kasubag.jenis-ruang.index') }}" class="pl-4 py-2 text-sm {{ request()->routeIs('kasubag.jenis-ruang.*') ? 'text-blue-600 font-bold' : 'text-gray-500 hover:text-blue-600' }}">Jenis Ruangan</a>
+                            <a href="{{ route('kasubag.kampus.index') }}" class="pl-4 py-2 text-sm {{ request()->routeIs('kasubag.kampus.*') ? 'text-blue-600 font-bold' : 'text-gray-500 hover:text-blue-600' }}">Kampus & Gedung</a>
                         </div>
-
-                        <i
-                            id="kelolaRuanganIcon"
-                            class="fa-solid fa-chevron-down text-xs text-text-main group-hover:text-primary transition-transform duration-200"
-                        ></i>
-                    </button>
-
-                    <div
-                        id="kelolaRuanganSubmenu"
-                        class="ml-6 mt-2 pl-4 border-l border-gray-200 dark:border-gray-700 flex flex-col gap-1 hidden"
-                    >
-                        <a
-                            href="{{ route('kasubag.master-ruangan') }}"
-                            class="relative flex items-center px-3 py-2 text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md transition-colors"
-                        >
-                            <span class="absolute -left-4 top-1/2 -translate-y-1/2 w-4 border-t border-gray-300 dark:border-gray-600"></span>
-                            Master Ruangan
-                        </a>
-
-                        <a
-                            href="{{ route('kasubag.kelola-ruangan') }}"
-                            class="relative flex items-center px-3 py-2 text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md transition-colors"
-                        >
-                            <span class="absolute -left-4 top-1/2 -translate-y-1/2 w-4 border-t border-gray-300 dark:border-gray-600"></span>
-                            Kelola Ruangan
-                        </a>
                     </div>
-                </div>
 
-                    <a
-                        class="flex items-center gap-3 px-3 py-3 rounded-lg {{ $isVerifikasiPeminjaman ? 'bg-primary/10 text-primary' : '' }} hover:bg-primary/10 dark:hover:bg-gray-800 transition-colors group"
-                        href="{{ route('kasubag.verifikasi-peminjaman') }}"
-                    >
-                        <i class="fa-solid fa-list-check text-text-main transition-colors"></i>
-                        <p class="text-text-main dark:text-gray-300 text-sm font-medium leading-normal">
-                            Verifikasi Peminjaman
-                        </p>
+                    <a href="{{ route('kasubag.verifikasi-peminjaman') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg group {{ request()->routeIs('kasubag.verifikasi-peminjaman') ? $activeClass : $inactiveClass }}">
+                        <i class="fa-solid fa-list-check w-5 {{ request()->routeIs('kasubag.verifikasi-peminjaman') ? $iconActive : $iconInactive }}"></i>
+                        <span class="text-sm font-semibold">Verifikasi Peminjaman</span>
                     </a>
 
-                <!-- Histori -->
-                <div class="flex flex-col">
-
-                    <button
-                        id="RiwayatBtn"
-                        type="button"
-                        class="flex items-center justify-between gap-3 px-3 py-3 rounded-lg {{ $isRiwayatVerifikasi || $isRiwayatPeminjaman ? 'bg-primary/10 text-primary' : '' }} hover:bg-primary/10 dark:hover:bg-gray-800 transition-colors group"
-                    >
-                        <div class="flex items-center gap-3">
-                            <i class="fa-solid fa-clock-rotate-left text-text-main transition-colors"></i>
-                            <p class="text-text-main dark:text-gray-300 text-sm font-medium leading-normal">
-                                Riwayat
-                            </p>
+                    <div class="flex flex-col">
+                        @php $isRiwayatActive = request()->routeIs('kasubag.riwayat-verifikasi') || request()->routeIs('kasubag.riwayat-peminjaman'); @endphp
+                        <button id="RiwayatBtn" type="button" class="flex items-center justify-between px-3 py-2.5 rounded-lg group {{ $isRiwayatActive ? 'text-blue-600' : $inactiveClass }}">
+                            <div class="flex items-center gap-3">
+                                <i class="fa-solid fa-clock-rotate-left w-5"></i>
+                                <span class="text-sm font-semibold">Riwayat</span>
+                            </div>
+                            <i id="riwayatIcon" class="fa-solid fa-chevron-down text-[10px] transition-transform duration-300 {{ $isRiwayatActive ? 'rotate-180' : '' }}"></i>
+                        </button>
+                        <div id="riwayatSubmenu" class="{{ $isRiwayatActive ? '' : 'hidden' }} ml-9 mt-1 border-l border-gray-200 dark:border-gray-700 flex flex-col gap-1">
+                            <a href="{{ route('kasubag.riwayat-verifikasi') }}" class="pl-4 py-2 text-sm {{ request()->routeIs('kasubag.riwayat-verifikasi') ? 'text-blue-600 font-bold' : 'text-gray-500 hover:text-blue-600' }}">Riwayat Verifikasi</a>
+                            <a href="{{ route('kasubag.riwayat-peminjaman') }}" class="pl-4 py-2 text-sm {{ request()->routeIs('kasubag.riwayat-peminjaman') ? 'text-blue-600 font-bold' : 'text-gray-500 hover:text-blue-600' }}">Riwayat Peminjaman</a>
                         </div>
-
-                        <i
-                            id="riwayatIcon"
-                            class="fa-solid fa-chevron-down text-xs text-text-main group-hover:text-primary transition-transform duration-200"
-                        ></i>
-                    </button>
-
-                    <div
-                        id="riwayatSubmenu"
-                        class="ml-6 mt-2 pl-4 border-l border-gray-200 dark:border-gray-700 flex flex-col gap-1 hidden"
-                    >
-                        <a
-                            href="{{ route('kasubag.riwayat-verifikasi') }}"
-                            class="relative flex items-center px-3 py-2 text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md transition-colors"
-                        >
-                            <span class="absolute -left-4 top-1/2 -translate-y-1/2 w-4 border-t border-gray-300 dark:border-gray-600"></span>
-                            Riwayat Verifikasi
-                        </a>
-
-                        <a
-                            href="{{ route('kasubag.riwayat-peminjaman') }}"
-                            class="relative flex items-center px-3 py-2 text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md transition-colors"
-                        >
-                            <span class="absolute -left-4 top-1/2 -translate-y-1/2 w-4 border-t border-gray-300 dark:border-gray-600"></span>
-                            Riwayat Peminjaman
-                        </a>
                     </div>
-                </div>
                 @endhasRole
 
-
-                <!-- Menu -->
-            <nav class="flex flex-col gap-2 mt-4">
-
                 @hasRole('sarpras')
-                @php
-                    $isDashboard  = request()->routeIs('sarpras.dashboard');
-                    $isJadwal     = request()->routeIs('sarpras.kelola-jadwal');
-                    $isVerifikasiPeminjaman = request()->routeIs('sarpras.verifikasi-peminjaman');
-                    $isRiwayatVerifikasi = request()->routeIs('sarpras.riwayat-verifikasi');
-                @endphp
-                    <a
-                        class="flex items-center gap-3 px-3 py-3 rounded-lg {{ $isDashboard ? 'bg-primary/10 dark:bg-gray-800' : 'hover:bg-primary/10 dark:hover:bg-gray-800' }} transition-colors group"
-                        href="{{ route('sarpras.dashboard') }}"
-                    >
-                        <i class="fa-solid fa-border-all text-text-main transition-colors"></i>
-                        <p class="text-text-main dark:text-gray-300 text-sm font-medium leading-normal">
-                            Dashboard
-                        </p>
+                    <a href="{{ route('sarpras.dashboard') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg group {{ request()->routeIs('sarpras.dashboard') ? $activeClass : $inactiveClass }}">
+                        <i class="fa-solid fa-border-all w-5 {{ request()->routeIs('sarpras.dashboard') ? $iconActive : $iconInactive }}"></i>
+                        <span class="text-sm font-semibold">Dashboard</span>
                     </a>
-
-                    <a
-                        class="flex items-center gap-3 px-3 py-3 rounded-lg {{ $isJadwal ? 'bg-primary/10 dark:bg-gray-800' : 'hover:bg-primary/10 dark:hover:bg-gray-800' }} transition-colors group"
-                        href="{{ route('sarpras.kelola-jadwal') }}"
-                    >
-                        <i class="fa-regular fa-calendar text-text-main transition-colors"></i>
-                        <p class="text-text-main dark:text-gray-300 text-sm font-medium leading-normal">
-                            Jadwal
-                        </p>
+                    <a href="{{ route('sarpras.kelola-jadwal') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg group {{ request()->routeIs('sarpras.kelola-jadwal') ? $activeClass : $inactiveClass }}">
+                        <i class="fa-regular fa-calendar w-5 {{ request()->routeIs('sarpras.kelola-jadwal') ? $iconActive : $iconInactive }}"></i>
+                        <span class="text-sm font-semibold">Jadwal</span>
                     </a>
-
-                    {{-- <a
-                        class="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-primary/10 dark:hover:bg-gray-800 transition-colors group"
-                        href="{{ route('sarpras.kelola-ruangan') }}"
-                    >
-                        <i class="fa-solid fa-list-check text-text-secondary group-hover:text-primary transition-colors"></i>
-                        <p class="text-text-main dark:text-gray-300 text-sm font-medium leading-normal">
-                            Kelola Ruangan
-                        </p>
-                    </a> --}}
                     <div class="flex flex-col">
-
-                    <button
-                        id="verfikasiPeminjamanBtn"
-                        type="button"
-                        class="flex items-center justify-between gap-3 px-3 py-3 rounded-lg {{ $isVerifikasiPeminjaman || $isRiwayatVerifikasi ? 'bg-primary/10 dark:bg-gray-800' : 'hover:bg-primary/10 dark:hover:bg-gray-800' }} transition-colors group"
-                    >
-                        <div class="flex items-center gap-3">
-                            <i class="fa-regular fa-building text-text-main transition-colors"></i>
-                            <p class="text-text-main dark:text-gray-300 text-sm font-medium leading-normal">
-                                Peminjaman
-                            </p>
+                        @php $isPeminjamanSarprasActive = request()->routeIs('sarpras.verifikasi-peminjaman') || request()->routeIs('sarpras.riwayat-verifikasi'); @endphp
+                        <button id="verfikasiPeminjamanBtn" type="button" class="flex items-center justify-between px-3 py-2.5 rounded-lg group {{ $isPeminjamanSarprasActive ? 'text-blue-600' : $inactiveClass }}">
+                            <div class="flex items-center gap-3">
+                                <i class="fa-regular fa-building w-5"></i>
+                                <span class="text-sm font-semibold">Peminjaman</span>
+                            </div>
+                            <i id="verfikasiPeminjamanIcon" class="fa-solid fa-chevron-down text-[10px] transition-transform duration-300 {{ $isPeminjamanSarprasActive ? 'rotate-180' : '' }}"></i>
+                        </button>
+                        <div id="verfikasiPeminjamanSubmenu" class="{{ $isPeminjamanSarprasActive ? '' : 'hidden' }} ml-9 mt-1 border-l border-gray-200 flex flex-col gap-1">
+                            <a href="{{ route('sarpras.verifikasi-peminjaman') }}" class="pl-4 py-2 text-sm {{ request()->routeIs('sarpras.verifikasi-peminjaman') ? 'text-blue-600 font-bold' : 'text-gray-500' }}">Verifikasi</a>
+                            <a href="{{ route('sarpras.riwayat-verifikasi') }}" class="pl-4 py-2 text-sm {{ request()->routeIs('sarpras.riwayat-verifikasi') ? 'text-blue-600 font-bold' : 'text-gray-500' }}">Riwayat</a>
                         </div>
-
-                        <i
-                            id="verfikasiPeminjamanIcon"
-                            class="fa-solid fa-chevron-down text-xs text-text-main group-hover:text-primary transition-transform duration-200"
-                        ></i>
-                    </button>
-
-                    <div
-                        id="verfikasiPeminjamanSubmenu"
-                        class="ml-6 mt-2 pl-4 border-l border-gray-200 dark:border-gray-700 flex flex-col gap-1 hidden"
-                    >
-                        <a
-                            href="{{ route('sarpras.verifikasi-peminjaman') }}"
-                            class="relative flex items-center px-3 py-2 text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md transition-colors"
-                        >
-                            <span class="absolute -left-4 top-1/2 -translate-y-1/2 w-4 border-t border-gray-300 dark:border-gray-600"></span>
-                            Verifikasi Peminjaman
-                        </a>
-
-                        <a
-                            href="{{ route('sarpras.riwayat-verifikasi') }}"
-                            class="relative flex items-center px-3 py-2 text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md transition-colors"
-                        >
-                            <span class="absolute -left-4 top-1/2 -translate-y-1/2 w-4 border-t border-gray-300 dark:border-gray-600"></span>
-                            Riwayat Verifikasi
-                        </a>
                     </div>
-                </div>
                 @endhasRole
 
                 @hasRole('pimpinan')
-                    <a
-                        class="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-primary/10 dark:hover:bg-gray-800 transition-colors group"
-                        href="{{ route('pimpinan.dashboard') }}"
-                    >
-                        <i class="fa-regular fa-house text-text-main group-hover:text-primary transition-colors"></i>
-                        <p class="text-text-main dark:text-gray-300 text-sm font-medium leading-normal">
-                            Dashboard
-                        </p>
+                    <a href="{{ route('pimpinan.dashboard') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg group {{ request()->routeIs('pimpinan.dashboard') ? $activeClass : $inactiveClass }}">
+                        <i class="fa-regular fa-house w-5 {{ request()->routeIs('pimpinan.dashboard') ? $iconActive : $iconInactive }}"></i>
+                        <span class="text-sm font-semibold">Dashboard</span>
                     </a>
-
-                    <a
-                        class="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-primary/10 dark:hover:bg-gray-800 transition-colors group"
-                        href="{{ route('pimpinan.jadwal-ruangan') }}"
-                    >
-                        <i class="fa-regular fa-calendar text-text-main group-hover:text-primary transition-colors"></i>
-                        <p class="text-text-main dark:text-gray-300 text-sm font-medium leading-normal">
-                            Jadwal
-                        </p>
+                    <a href="{{ route('pimpinan.jadwal-ruangan') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg group {{ request()->routeIs('pimpinan.jadwal-ruangan') ? $activeClass : $inactiveClass }}">
+                        <i class="fa-regular fa-calendar w-5 {{ request()->routeIs('pimpinan.jadwal-ruangan') ? $iconActive : $iconInactive }}"></i>
+                        <span class="text-sm font-semibold">Jadwal</span>
                     </a>
-
-                    {{-- <a
-                        class="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-primary/10 dark:hover:bg-gray-800 transition-colors group"
-                        href="{{ route('sarpras.kelola-ruangan') }}"
-                    >
-                        <i class="fa-solid fa-list-check text-text-secondary group-hover:text-primary transition-colors"></i>
-                        <p class="text-text-main dark:text-gray-300 text-sm font-medium leading-normal">
-                            Kelola Ruangan
-                        </p>
-                    </a> --}}
                     <div class="flex flex-col">
-
-                    <button
-                        id="verfikasiPeminjamanBtn"
-                        type="button"
-                        class="flex items-center justify-between gap-3 px-3 py-3 rounded-lg hover:bg-primary/10 dark:hover:bg-gray-800 transition-colors group"
-                    >
-                        <div class="flex items-center gap-3">
-                            <i class="fa-solid fa-door-open text-text-secondary group-hover:text-primary transition-colors"></i>
-                            <p class="text-text-main dark:text-gray-300 text-sm font-medium leading-normal">
-                                Peminjaman
-                            </p>
+                        @php $isPimpinanActive = request()->routeIs('pimpinan.verifikasi-peminjaman') || request()->routeIs('pimpinan.riwayat-verifikasi'); @endphp
+                        <button id="pimpinanVerifBtn" type="button" class="flex items-center justify-between px-3 py-2.5 rounded-lg group {{ $isPimpinanActive ? 'text-blue-600' : $inactiveClass }}">
+                            <div class="flex items-center gap-3">
+                                <i class="fa-solid fa-door-open w-5"></i>
+                                <span class="text-sm font-semibold">Peminjaman</span>
+                            </div>
+                            <i id="pimpinanVerifIcon" class="fa-solid fa-chevron-down text-[10px] transition-transform duration-300 {{ $isPimpinanActive ? 'rotate-180' : '' }}"></i>
+                        </button>
+                        <div id="pimpinanVerifSubmenu" class="{{ $isPimpinanActive ? '' : 'hidden' }} ml-9 mt-1 border-l border-gray-200 flex flex-col gap-1">
+                            <a href="{{ route('pimpinan.verifikasi-peminjaman') }}" class="pl-4 py-2 text-sm {{ request()->routeIs('pimpinan.verifikasi-peminjaman') ? 'text-blue-600 font-bold' : 'text-gray-500' }}">Verifikasi</a>
+                            <a href="{{ route('pimpinan.riwayat-verifikasi') }}" class="pl-4 py-2 text-sm {{ request()->routeIs('pimpinan.riwayat-verifikasi') ? 'text-blue-600 font-bold' : 'text-gray-500' }}">Riwayat</a>
                         </div>
-
-                        <i
-                            id="verfikasiPeminjamanIcon"
-                            class="fa-solid fa-chevron-down text-xs text-text-secondary group-hover:text-primary transition-transform duration-200"
-                        ></i>
-                    </button>
-
-                    <div
-                        id="verfikasiPeminjamanSubmenu"
-                        class="ml-6 mt-2 pl-4 border-l border-gray-200 dark:border-gray-700 flex flex-col gap-1 hidden"
-                    >
-                        <a
-                            href="{{ route('pimpinan.verifikasi-peminjaman') }}"
-                            class="relative flex items-center px-3 py-2 text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md transition-colors"
-                        >
-                            <span class="absolute -left-4 top-1/2 -translate-y-1/2 w-4 border-t border-gray-300 dark:border-gray-600"></span>
-                            Verifikasi Peminjaman
-                        </a>
-
-                        <a
-                            href="{{ route('pimpinan.riwayat-verifikasi') }}"
-                            class="relative flex items-center px-3 py-2 text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md transition-colors"
-                        >
-                            <span class="absolute -left-4 top-1/2 -translate-y-1/2 w-4 border-t border-gray-300 dark:border-gray-600"></span>
-                            Riwayat Verifikasi
-                        </a>
                     </div>
-                </div>
-                @endhasRole
-                    {{-- <!-- Histori -->
-                <div class="flex flex-col">
-
-                    <button
-                        id="RiwayatBtn"
-                        type="button"
-                        class="flex items-center justify-between gap-3 px-3 py-3 rounded-lg hover:bg-primary/10 dark:hover:bg-gray-800 transition-colors group"
-                    >
-                        <div class="flex items-center gap-3">
-                            <i class="fa-solid fa-clock-rotate-left text-text-secondary group-hover:text-primary transition-colors"></i>
-                            <p class="text-text-main dark:text-gray-300 text-sm font-medium leading-normal">
-                                Riwayat
-                            </p>
-                        </div>
-
-                        <i
-                            id="RiwayatIcon"
-                            class="fa-solid text-xs text-text-secondary group-hover:text-primary transition-transform duration-200"
-                        ></i>
-                    </button>
-                </div> --}}
-
-                @hasRole('ormawa')
-
-                @php
-                    $isDashboard  = request()->routeIs('ormawa.dashboard');
-                    $isJadwal     = request()->routeIs('ormawa.jadwal-ruangan');
-                    $isPeminjaman = request()->routeIs('ormawa.ajukan-peminjaman*'); // kalau ada create/store dll
-                    $isRiwayat    = request()->routeIs('ormawa.riwayat-peminjaman*');
-                @endphp
-                    <a
-                        class="flex items-center gap-3 px-3 py-3 rounded-lg {{ $isDashboard ? 'bg-primary/10 text-primary' : 'hover:bg-primary/10 dark:hover:bg-gray-800' }} transition-colors group"
-                        href="{{ route('ormawa.dashboard') }}"
-                    >
-                        <i class="fa-solid fa-border-all text-text-main transition-colors"></i>
-                        <p class="text-text-main dark:text-gray-300 text-sm font-medium leading-normal">
-                            Dashboard
-                        </p>
-                    </a>
-
-                    <a
-                        class="flex items-center gap-3 px-3 py-3 rounded-lg {{ $isJadwal ? 'bg-primary/10 text-primary' : 'hover:bg-primary/10 dark:hover:bg-gray-800' }} transition-colors group"
-                        href="{{ route('ormawa.jadwal-ruangan') }}"
-                    >
-                        <i class="fa-regular fa-calendar text-text-main transition-colors"></i>
-                        <p class="text-text-main dark:text-gray-300 text-sm font-medium leading-normal">
-                            Jadwal
-                        </p>
-                    </a>
-
-                    <a
-                        class="flex items-center gap-3 px-3 py-3 rounded-lg {{ $isPeminjaman ? 'bg-primary/10 text-primary' : 'hover:bg-primary/10 dark:hover:bg-gray-800' }} transition-colors group"
-                        href="{{ route('ormawa.ajukan-peminjaman') }}"
-                    >
-                        <i class="fa-regular fa-building text-text-main transition-colors"></i>
-                        <p class="text-text-main dark:text-gray-300 text-sm font-medium leading-normal">
-                            Peminjaman
-                        </p>
-                    </a>
-                    <!-- Histori -->
-                    <a
-                        class="flex items-center gap-3 px-3 py-3 rounded-lg {{ $isRiwayat ? 'bg-primary/10 text-primary' : 'hover:bg-primary/10 dark:hover:bg-gray-800' }} transition-colors group"
-                        href="{{ route('ormawa.riwayat-peminjaman') }}"
-                    >
-                        <i class="fa-solid fa-clock-rotate-left text-text-main transition-colors"></i>
-                        <p class="text-text-main dark:text-gray-300 text-sm font-medium leading-normal">
-                            Riwayat
-                        </p>
-                    </a>
                 @endhasRole
 
-                @hasRole('mahasiswa')
-                @php
-                    $isDashboard  = request()->routeIs('mahasiswa.dashboard');
-                    $isJadwal     = request()->routeIs('mahasiswa.jadwal-ruangan');
-                    $isPeminjaman = request()->routeIs('mahasiswa.ajukan-peminjaman*'); // kalau ada create/store dll
-                    $isRiwayat    = request()->routeIs('mahasiswa.riwayat-peminjaman*');
-                @endphp
-
-                    <a
-                        class="flex items-center gap-3 px-3 py-3 rounded-lg {{ $isDashboard ? 'bg-primary/10 text-primary' : 'hover:bg-primary/10 dark:hover:bg-gray-800' }} transition-colors group"
-                        href="{{ route('mahasiswa.dashboard') }}"
-                    >
-                        <i class="fa-solid fa-house text-text-main transition-colors"></i>
-                        <p class="text-text-main dark:text-gray-300 text-sm font-medium leading-normal">
-                            Dashboard
-                        </p>
-                    </a>
-
-                    <a
-                        class="flex items-center gap-3 px-3 py-3 rounded-lg {{ $isJadwal ? 'bg-primary/10 text-primary' : 'hover:bg-primary/10 dark:hover:bg-gray-800' }} transition-colors group"
-                        href="{{ route('mahasiswa.jadwal-ruangan') }}"
-                    >
-                        <i class="fa-solid fa-calendar text-text-main transition-colors"></i>
-                        <p class="text-text-main dark:text-gray-300 text-sm font-medium leading-normal">
-                            Jadwal
-                        </p>
-                    </a>
-
-                    <a
-                        class="flex items-center gap-3 px-3 py-3 rounded-lg {{ $isPeminjaman ? 'bg-primary/10 text-primary' : 'hover:bg-primary/10 dark:hover:bg-gray-800' }} transition-colors group"
-                        href="{{ route('mahasiswa.ajukan-peminjaman') }}"
-                    >
-                        <i class="fa-solid fa-list-check text-text-main transition-colors"></i>
-                        <p class="text-text-main dark:text-gray-300 text-sm font-medium leading-normal">
-                            Peminjaman
-                        </p>
-                    </a>
-                    <!-- Histori -->
-                    <a
-                        class="flex items-center gap-3 px-3 py-3 rounded-lg {{ $isRiwayat ? 'bg-primary/10 text-primary' : 'hover:bg-primary/10 dark:hover:bg-gray-800' }} transition-colors group"
-                        href="{{ route('mahasiswa.riwayat-peminjaman') }}"
-                    >
-                        <i class="fa-solid fa-clock-rotate-left text-text-main transition-colors"></i>
-                        <p class="text-text-main dark:text-gray-300 text-sm font-medium leading-normal">
-                            Riwayat
-                        </p>
-                    </a>
-                @endhasRole
-
-                @hasRole('dosen')
-                @php
-                    $isDashboard  = request()->routeIs('dosen.dashboard');
-                    $isJadwal     = request()->routeIs('dosen.jadwal-ruangan');
-                    $isPeminjaman = request()->routeIs('dosen.ajukan-peminjaman*');
-                    $isRiwayat    = request()->routeIs('dosen.riwayat-peminjaman*');
-                @endphp
-                    <a
-                        class="flex items-center gap-3 px-3 py-3 rounded-lg {{ $isDashboard ? 'bg-primary/10 text-primary' : 'hover:bg-primary/10 dark:hover:bg-gray-800' }} transition-colors group"
-                        href="{{ route('dosen.dashboard') }}"
-                    >
-                        <i class="fa-solid fa-house text-text-main transition-colors"></i>
-                        <p class="text-text-main dark:text-gray-300 text-sm font-medium leading-normal">
-                            Dashboard
-                        </p>
-                    </a>
-
-                    <a
-                        class="flex items-center gap-3 px-3 py-3 rounded-lg {{ $isJadwal ? 'bg-primary/10 text-primary' : 'hover:bg-primary/10 dark:hover:bg-gray-800' }} transition-colors group"
-                        href="{{ route('dosen.jadwal-ruangan') }}"
-                    >
-                        <i class="fa-solid fa-calendar text-text-main transition-colors"></i>
-                        <p class="text-text-main dark:text-gray-300 text-sm font-medium leading-normal">
-                            Jadwal
-                        </p>
-                    </a>
-
-                    <a
-                        class="flex items-center gap-3 px-3 py-3 rounded-lg {{ $isPeminjaman ? 'bg-primary/10 text-primary' : 'hover:bg-primary/10 dark:hover:bg-gray-800' }} transition-colors group"
-                        href="{{ route('dosen.ajukan-peminjaman') }}"
-                    >
-                        <i class="fa-solid fa-list-check text-text-main transition-colors"></i>
-                        <p class="text-text-main dark:text-gray-300 text-sm font-medium leading-normal">
-                            Peminjaman
-                        </p>
-                    </a>
-                    <!-- Histori -->
-                    <a
-                        class="flex items-center gap-3 px-3 py-3 rounded-lg {{ $isRiwayat ? 'bg-primary/10 text-primary' : 'hover:bg-primary/10 dark:hover:bg-gray-800' }} transition-colors group"
-                        href="{{ route('dosen.riwayat-peminjaman') }}"
-                    >
-                        <i class="fa-solid fa-clock-rotate-left text-text-main transition-colors"></i>
-                        <p class="text-text-main dark:text-gray-300 text-sm font-medium leading-normal">
-                            Riwayat
-                        </p>
-                    </a>
-                @endhasRole
+                @foreach(['ormawa', 'mahasiswa', 'dosen'] as $role)
+                    @hasRole($role)
+                        <a href="{{ route($role.'.dashboard') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg group {{ request()->routeIs($role.'.dashboard') ? $activeClass : $inactiveClass }}">
+                            <i class="fa-solid {{ $role == 'ormawa' ? 'fa-border-all' : 'fa-house' }} w-5"></i>
+                            <span class="text-sm font-semibold">Dashboard</span>
+                        </a>
+                        <a href="{{ route($role.'.jadwal-ruangan') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg group {{ request()->routeIs($role.'.jadwal-ruangan') ? $activeClass : $inactiveClass }}">
+                            <i class="fa-regular fa-calendar w-5"></i>
+                            <span class="text-sm font-semibold">Jadwal</span>
+                        </a>
+                        <a href="{{ route($role.'.ajukan-peminjaman') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg group {{ request()->routeIs($role.'.ajukan-peminjaman') ? $activeClass : $inactiveClass }}">
+                            <i class="fa-regular fa-building w-5"></i>
+                            <span class="text-sm font-semibold">Peminjaman</span>
+                        </a>
+                        <a href="{{ route($role.'.riwayat-peminjaman') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg group {{ request()->routeIs($role.'.riwayat-peminjaman') ? $activeClass : $inactiveClass }}">
+                            <i class="fa-solid fa-clock-rotate-left w-5"></i>
+                            <span class="text-sm font-semibold">Riwayat</span>
+                        </a>
+                    @endhasRole
+                @endforeach
 
             </nav>
         </div>
 
-        <!-- Logout Button -->
-        <form action="{{ route('logout') }}" method="POST">
-            @csrf
-
-            <button
-                type="submit"
-                class="flex w-full cursor-pointer items-center justify-center gap-2 overflow-hidden rounded-lg h-12 px-4 text-text-main hover:bg-gray-200 transition-colors"
-            >
-                <i class="fa-solid fa-arrow-right-from-bracket"></i>
-                <span class="text-sm font-bold leading-normal tracking-[0.015em]">
-                    Logout
-                </span>
-            </button>
-        </form>
-
-
+        <div class="pt-4 mt-4 border-t border-gray-100 dark:border-gray-800">
+            <form action="{{ route('logout') }}" method="POST">
+                @csrf
+                <button type="submit" class="flex w-full items-center justify-center gap-2 rounded-lg h-11 px-4 bg-red-50 text-red-600 hover:bg-red-600 hover:text-white transition-all duration-300 font-bold text-sm">
+                    <i class="fa-solid fa-arrow-right-from-bracket"></i>
+                    <span>Logout</span>
+                </button>
+            </form>
+        </div>
     </div>
 </aside>
+
 
 @push("js")
 <script>
 document.addEventListener("DOMContentLoaded", function () {
+    const toggleDropdown = (btnId, submenuId, iconId) => {
+        const btn = document.getElementById(btnId);
+        const submenu = document.getElementById(submenuId);
+        const icon = document.getElementById(iconId);
 
-    // Kelola Ruangan
-    const kelolaRuanganBtn = document.getElementById("kelolaRuanganBtn");
-    const kelolaRuanganIcon = document.getElementById("kelolaRuanganIcon");
-    const kelolaRuanganSubmenu = document.getElementById("kelolaRuanganSubmenu");
-
-    if (kelolaRuanganBtn) {
-        kelolaRuanganBtn.addEventListener("click", function () {
-            kelolaRuanganSubmenu.classList.toggle("hidden");
-            kelolaRuanganIcon.classList.toggle("rotate-180");
-        });
-    }
-
-    // Histori
-    const historiBtn = document.getElementById("HistoriBtn");
-    const historiIcon = document.getElementById("HistoriIcon");
-    const historiSubmenu = document.getElementById("HistoriSubmenu");
-
-    if (historiBtn) {
-        historiBtn.addEventListener("click", function () {
-            historiSubmenu.classList.toggle("hidden");
-            historiIcon.classList.toggle("rotate-180");
-        });
-    }
-
-    // Peminjaman
-    const peminjamanBtn = document.getElementById("PeminjamanBtn");
-    const peminjamanIcon = document.getElementById("PeminjamanIcon");
-    const peminjamanSubmenu = document.getElementById("PeminjamanSubmenu");
-
-    if (peminjamanBtn) {
-        peminjamanBtn.addEventListener("click", function () {
-            peminjamanSubmenu.classList.toggle("hidden");
-            peminjamanIcon.classList.toggle("rotate-180");
-        });
-    }
-
-        // Verifikasi Peminjaman
-        const verifikasiPeminjamanBtn = document.getElementById("verfikasiPeminjamanBtn");
-        const verifikasiPeminjamanIcon = document.getElementById("verfikasiPeminjamanIcon");
-        const verifikasiPeminjamanSubmenu = document.getElementById("verfikasiPeminjamanSubmenu");
-
-        if (verifikasiPeminjamanBtn) {
-            verifikasiPeminjamanBtn.addEventListener("click", function () {
-                verifikasiPeminjamanSubmenu.classList.toggle("hidden");
-                verifikasiPeminjamanIcon.classList.toggle("rotate-180");
+        if (btn && submenu) {
+            btn.addEventListener("click", function () {
+                const isHidden = submenu.classList.toggle("hidden");
+                if (icon) {
+                    icon.classList.toggle("rotate-180", !isHidden);
+                }
             });
         }
+    };
 
-        // Riwayat
-        const riwayatBtn = document.getElementById("RiwayatBtn");
-        const riwayatIcon = document.getElementById("riwayatIcon");
-        const riwayatSubmenu = document.getElementById("riwayatSubmenu");
-
-        if (riwayatBtn) {
-            riwayatBtn.addEventListener("click", function () {
-                riwayatSubmenu.classList.toggle("hidden");
-                riwayatIcon.classList.toggle("rotate-180");
-            });
-        }
-
+    // Inisialisasi semua dropdown yang ada
+    toggleDropdown("kelolaRuanganBtn", "kelolaRuanganSubmenu", "kelolaRuanganIcon");
+    toggleDropdown("RiwayatBtn", "riwayatSubmenu", "riwayatIcon");
+    toggleDropdown("verfikasiPeminjamanBtn", "verfikasiPeminjamanSubmenu", "verfikasiPeminjamanIcon");
+    toggleDropdown("pimpinanVerifBtn", "pimpinanVerifSubmenu", "pimpinanVerifIcon");
 });
 </script>
-@endpush
+@endpush    

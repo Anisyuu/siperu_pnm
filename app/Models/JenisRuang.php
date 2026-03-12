@@ -10,6 +10,12 @@ class JenisRuang extends Model
 
     protected $fillable = [
         'nama',
+        'slug',
     ];
+
+    public function ruangan()
+    {
+        return $this->hasMany(Ruangan::class, 'id_jenis_ruang');
+    }
 
 }

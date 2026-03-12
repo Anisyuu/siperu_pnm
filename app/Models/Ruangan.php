@@ -14,6 +14,7 @@ class Ruangan extends Model
         'lantai',
         'nomor_ruang',
         'nama_ruang',
+        'slug',
     ];
 
 

@@ -16,8 +16,8 @@
   --color-border-subtle: #d0e3e6;
 
   /* FONT FAMILY */
-  --font-display: "Manrope", sans-serif;
-  --font-body: "Manrope", sans-serif;
+  --font-display: "Inter", sans-serif;
+  --font-body: "Inter", sans-serif;
 
   /* BORDER RADIUS */
   --radius-default: 0.25rem;
@@ -30,3 +30,8 @@
    DARK MODE (class based)
 ===================================== */
 @variant dark (&:where(.dark, .dark *));
+
+* {
+  box-sizing: border-box;
+  font-family: 'Poppins', sans-serif;
+}

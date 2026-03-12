@@ -13,10 +13,17 @@ return new class extends Migration
     {
         Schema::create('gedung', function (Blueprint $table) {
             $table->id();
-            $table->string('nama', 25)->unique();
+            $table->foreignId('kampus_id')->constrained('kampus')->onDelete('cascade');
+            $table->string('nama', 25);
+            $table->integer('lantai');
+            $table->string('slug', 50)->unique()->nullable();
             $table->string('id_user'); // atau sesuai tipe kolomnya
             $table->foreign('id_user')->references('nomor_induk')->on('user')->onDelete('cascade');
             $table->timestamps();
+            $table->unique([
+                'nama',
+                'kampus_id'
+            ]);
         });
     }
 

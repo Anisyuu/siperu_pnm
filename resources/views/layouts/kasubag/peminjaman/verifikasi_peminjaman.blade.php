@@ -1,21 +1,41 @@
 <x-master>
-    <div class="max-w-7xl mx-auto flex flex-col gap-8 p-10 rounded-2xl bg-white/80 border-2 border-gray-200">
+        <div class="bg-slate-100 min-h-screen px-8 py-10">
 
-        <!-- Header -->
-        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        {{-- HEADER --}}
+        <div class="flex items-start justify-between mb-8 flex-wrap gap-4">
+
             <div>
-                <h2 class="text-text-main dark:text-white text-3xl font-extrabold tracking-tight">
+                <h1 class="text-3xl font-extrabold text-slate-900 tracking-tight">
                     Verifikasi Peminjaman
-                </h2>
-                <p class="text-text-secondary text-sm mt-1">
-                    Kelola dan verifikasi seluruh pengajuan peminjaman ruangan
+                </h1>
+
+                <p class="text-slate-500 mt-1 text-sm">
+                    Kelola seluruh pengajuan peminjaman ruangan yang masuk dan lakukan verifikasi.
                 </p>
             </div>
 
-            <button class="px-5 py-2 border border-border-subtle rounded-lg text-sm hover:bg-gray-50 dark:hover:bg-gray-700 transition">
-                Ekspor Data
-            </button>
+            <div class="flex items-center gap-3">
+
+                <div class="flex items-center gap-2 bg-white border border-slate-200 rounded-2xl px-5 py-3 shadow-sm">
+
+                    <div class="w-9 h-9 bg-blue-50 rounded-xl flex items-center justify-center">
+                        <i class="fa-solid fa-tags text-blue-500 text-sm"></i>
+                    </div>
+
+                    <div>
+                        <div class="text-[10px] font-bold text-slate-400 uppercase">Total Pengajuan</div>
+                        <div class="text-lg font-bold text-slate-800">
+                          {{ "10" }}
+                        </div>
+                    </div>
+
+                </div>
+
+
+            </div>
         </div>
+
+    <div class="max-w-7xl mx-auto flex flex-col gap-6">
 
         <!-- Filter Section -->
         <div class="bg-white dark:bg-gray-800 rounded-xl border border-border-subtle dark:border-gray-700 p-4 shadow-sm">
@@ -100,7 +120,8 @@
                                 <div class="flex justify-center items-center gap-4 text-text-secondary">
 
                                     <!-- DETAIL ONLY -->
-                                    <button onclick="openModal()" class="hover:text-primary transition">
+                                    <button onclick="openModal()" 
+                                    class="w-8 h-8 flex items-center justify-center bg-blue-200/40 border border-blue-300 text-blue-500 rounded-lg hover:bg-blue-300/50 hover:border-blue-400 transition-all">
                                         <i class="fa-regular fa-eye"></i>
                                     </button>
 

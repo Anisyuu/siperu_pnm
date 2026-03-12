@@ -11,6 +11,12 @@ use App\Http\Controllers\Kasubag\PeminjamanController as KasubagPeminjamanContro
 use App\Http\Controllers\Kasubag\UserController as KasubagUserController;
 use App\Http\Controllers\Kasubag\KelolaRuanganController as KasubagKelolaRuanganController;
 use App\Http\Controllers\Kasubag\RiwayatController as KasubagRiwayatController;
+use App\Http\Controllers\Kasubag\{
+    GedungController,
+    JenisRuangController,
+    KampusController,
+    RuanganController
+};
 
 // Controller sarpras
 use App\Http\Controllers\Sarpras\JadwalController as SarprasJadwalController;
@@ -80,20 +86,7 @@ Route::middleware(['auth'])->group(function () {
             ->name('edit-user');
         Route::put('/update-user/{nomor_induk}', [KasubagUserController::class, 'updateUser'])
             ->name('update-user');
-        // Route update user belum dibuat, nanti buat route POST /kasubag/update-user/{
-
-        Route::get('/master-ruangan', [KasubagKelolaRuanganController::class, 'masterRuangan'])
-            ->name('master-ruangan');
-
-        Route::get('/kelola-ruangan', [KasubagKelolaRuanganController::class, 'KelolaRuangan'])
-            ->name('kelola-ruangan');
-
-        Route::post('/simpan-jenis-ruangan', [KasubagKelolaRuanganController::class, 'simpanJenisRuang'])
-            ->name('simpan-jenis-ruangan');
-
-        Route::post('/simpan-gedung', [KasubagKelolaRuanganController::class, 'simpanGedung'])
-            ->name('simpan-gedung');
-
+            
         Route::get('/jadwal-ruangan', [KasubagJadwalController::class, 'jadwalRuangan'])
             ->name('jadwal-ruangan');
 
@@ -106,23 +99,35 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/riwayat-peminjaman', [KasubagRiwayatController::class, 'riwayatPeminjaman'])
             ->name('riwayat-peminjaman');
 
-        Route::delete('/hapus-jenis-ruangan/{id}', [KasubagKelolaRuanganController::class, 'hapusJenisRuang'])
-            ->name('hapus-jenis-ruangan');
+        Route::prefix('kampus')->name('kampus.')->group(function () {
+            Route::get('/',                        [KampusController::class, 'index'])->name('index');
+            Route::post('/',                       [KampusController::class, 'store'])->name('store');
+            Route::put('/{kampus}',                [KampusController::class, 'update'])->name('update');
+            Route::delete('/{kampus}',             [KampusController::class, 'destroy'])->name('destroy');
+        });
 
-        Route::delete('/hapus-gedung/{id}', [KasubagKelolaRuanganController::class, 'hapusGedung'])
-            ->name('hapus-gedung');
+        Route::prefix('gedung')->name('gedung.')->group(function () {
+            Route::get('/{slug}', [GedungController::class, 'index'])
+                ->name('index');    
+            Route::post('/',                       [GedungController::class, 'store'])->name('store');
+            Route::put('/{gedung}',                [GedungController::class, 'update'])->name('update');
+            Route::delete('/{gedung}',             [GedungController::class, 'destroy'])->name('destroy');
+        });
 
-        Route::get('/tambah-ruangan', [KasubagKelolaRuanganController::class, 'tambahRuangan'])
-            ->name('tambah-ruangan');
+        Route::prefix('ruangan')->name('ruangan.')->group(function () {
+            Route::get('/gedung/{slug}/lantai/{lantai}', [RuanganController::class, 'index'])->name('index');
+            Route::post('/',                       [RuanganController::class, 'store'])->name('store');
+            Route::put('/{ruangan}',               [RuanganController::class, 'update'])->name('update');
+            Route::delete('/{ruangan}',            [RuanganController::class, 'destroy'])->name('destroy');
+        });
 
-        Route::post('/simpan-ruangan', [KasubagKelolaRuanganController::class, 'simpanRuangan'])
-            ->name('simpan-ruangan');
+        Route::prefix('jenis-ruang')->name('jenis-ruang.')->group(function () {
+            Route::get('/',                        [JenisRuangController::class, 'index'])->name('index');
+            Route::post('/',                       [JenisRuangController::class, 'store'])->name('store');
+            Route::put('/{jenisRuang}',            [JenisRuangController::class, 'update'])->name('update');
+            Route::delete('/{jenisRuang}',         [JenisRuangController::class, 'destroy'])->name('destroy');
+        });
 
-        Route::get('/edit-ruangan/{id}', [KasubagKelolaRuanganController::class, 'editRuangan'])
-            ->name('edit-ruangan');
-
-        Route::put('/update-ruangan/{id}', [KasubagKelolaRuanganController::class, 'updateRuangan'])
-            ->name('update-ruangan');
 
     });
 

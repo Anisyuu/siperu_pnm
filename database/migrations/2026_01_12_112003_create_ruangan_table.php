@@ -18,10 +18,10 @@ return new class extends Migration
             $table->integer('lantai');
             $table->string('nomor_ruang', 5);
             $table->string('nama_ruang', 25);
+            $table->string('slug', 50)->unique()->nullable();
             $table->timestamps();
 
             $table->unique(['id_gedung', 'lantai', 'nomor_ruang']);
-
             $table->index(['id_gedung']);
             $table->index(['id_jenis_ruang']);
         });
