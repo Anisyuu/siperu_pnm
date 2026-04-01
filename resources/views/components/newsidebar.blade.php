@@ -9,7 +9,7 @@
             </div>
 
             <nav class="flex flex-col gap-1">
-                
+
                 @php
                     // Helper styling untuk mengurangi repetisi kode
                     $activeClass = "bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400";
@@ -97,7 +97,7 @@
 
                 @hasRole('pimpinan')
                     <a href="{{ route('pimpinan.dashboard') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg group {{ request()->routeIs('pimpinan.dashboard') ? $activeClass : $inactiveClass }}">
-                        <i class="fa-regular fa-house w-5 {{ request()->routeIs('pimpinan.dashboard') ? $iconActive : $iconInactive }}"></i>
+                        <i class="fa-solid fa-border-all w-5 {{ request()->routeIs('pimpinan.dashboard') ? $iconActive : $iconInactive }}"></i>
                         <span class="text-sm font-semibold">Dashboard</span>
                     </a>
                     <a href="{{ route('pimpinan.jadwal-ruangan') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg group {{ request()->routeIs('pimpinan.jadwal-ruangan') ? $activeClass : $inactiveClass }}">
@@ -108,7 +108,7 @@
                         @php $isPimpinanActive = request()->routeIs('pimpinan.verifikasi-peminjaman') || request()->routeIs('pimpinan.riwayat-verifikasi'); @endphp
                         <button id="pimpinanVerifBtn" type="button" class="flex items-center justify-between px-3 py-2.5 rounded-lg group {{ $isPimpinanActive ? 'text-blue-600' : $inactiveClass }}">
                             <div class="flex items-center gap-3">
-                                <i class="fa-solid fa-door-open w-5"></i>
+                                <i class="fa-regular fa-building w-5"></i>
                                 <span class="text-sm font-semibold">Peminjaman</span>
                             </div>
                             <i id="pimpinanVerifIcon" class="fa-solid fa-chevron-down text-[10px] transition-transform duration-300 {{ $isPimpinanActive ? 'rotate-180' : '' }}"></i>
@@ -123,14 +123,14 @@
                 @foreach(['ormawa', 'mahasiswa', 'dosen'] as $role)
                     @hasRole($role)
                         <a href="{{ route($role.'.dashboard') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg group {{ request()->routeIs($role.'.dashboard') ? $activeClass : $inactiveClass }}">
-                            <i class="fa-solid {{ $role == 'ormawa' ? 'fa-border-all' : 'fa-house' }} w-5"></i>
+                            <i class="fa-solid fa-border-all w-5"></i>
                             <span class="text-sm font-semibold">Dashboard</span>
                         </a>
                         <a href="{{ route($role.'.jadwal-ruangan') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg group {{ request()->routeIs($role.'.jadwal-ruangan') ? $activeClass : $inactiveClass }}">
                             <i class="fa-regular fa-calendar w-5"></i>
                             <span class="text-sm font-semibold">Jadwal</span>
                         </a>
-                        <a href="{{ route($role.'.ajukan-peminjaman') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg group {{ request()->routeIs($role.'.ajukan-peminjaman') ? $activeClass : $inactiveClass }}">
+                        <a href="{{ route($role.'.list-peminjaman') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg group {{ request()->routeIs($role.'.list-peminjaman') ? $activeClass : $inactiveClass }}">
                             <i class="fa-regular fa-building w-5"></i>
                             <span class="text-sm font-semibold">Peminjaman</span>
                         </a>
@@ -182,4 +182,4 @@ document.addEventListener("DOMContentLoaded", function () {
     toggleDropdown("pimpinanVerifBtn", "pimpinanVerifSubmenu", "pimpinanVerifIcon");
 });
 </script>
-@endpush    
+@endpush

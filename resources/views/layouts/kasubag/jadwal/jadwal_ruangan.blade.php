@@ -1,282 +1,248 @@
 <x-master>
+@php
+    // Pengaturan “calendar grid”
+    $startHour = 0;   // mulai jam 00:00
+    $endHour   = 23;  // sampai jam 23:00
+    $slotHeight = 80; // tinggi 1 jam = 80px
+    $totalHours = ($endHour - $startHour) + 1; // hasil = 24 jam
 
-    <div class="bg-slate-100 min-h-screen px-8 py-10">
+    $prevWeekTanggal = $weekStart->copy()->subDays(7)->toDateString();
+    $nextWeekTanggal = $weekStart->copy()->addDays(7)->toDateString();
 
-        {{-- HEADER --}}
-        <div class="flex items-start justify-between mb-8 flex-wrap gap-4">
+    // palette sederhana biar event beda warna (berdasarkan ruangan_id)
+    $palette = [
+        ['bg' => 'bg-primary/10', 'border' => 'border-primary', 'title' => 'text-primary', 'time' => 'text-primary/80'],
+        ['bg' => 'bg-purple-100', 'border' => 'border-purple-500', 'title' => 'text-purple-700', 'time' => 'text-purple-600'],
+        ['bg' => 'bg-orange-100', 'border' => 'border-orange-500', 'title' => 'text-orange-700', 'time' => 'text-orange-600'],
+        ['bg' => 'bg-emerald-100', 'border' => 'border-emerald-500', 'title' => 'text-emerald-700', 'time' => 'text-emerald-600'],
+    ];
+@endphp
 
+<div class="bg-slate-100 min-h-screen px-8 py-10">
+    <div class="max-w-7xl mx-auto flex flex-col gap-6">
+
+        <!-- Header -->
+        <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
             <div>
-                <h1 class="text-3xl font-extrabold text-slate-900 tracking-tight">
+                <h2 class="text-slate-900 text-3xl font-extrabold tracking-tight">
                     Jadwal Ruangan
-                </h1>
-
-                <p class="text-slate-500 mt-1 text-sm">
-                    Lihat jadwal peminjaman ruangan di seluruh gedung kampus.
+                </h2>
+                <p class="text-slate-500 text-sm mt-1">
+                    Lihat dan filter jadwal penggunaan ruangan
                 </p>
             </div>
 
-            <div class="flex items-center gap-3">
-
-                <div class="flex items-center gap-2 bg-white border border-slate-200 rounded-2xl px-5 py-3">
-
-                    <div class="w-9 h-9 bg-blue-50 rounded-xl flex items-center justify-center">
-                        <i class="fa-solid fa-tags text-blue-500 text-sm"></i>
-                    </div>
-
-                    <div>
-                        <div class="text-[10px] font-bold text-slate-400 uppercase">Total Jadwal</div>
-                        <div class="text-xl font-extrabold text-slate-800">
-                            {{ "10"}}
-                        </div>
-                    </div>
-
-                </div>
-
+            <div class="flex items-center gap-2 text-sm text-slate-500 bg-white px-4 py-2.5 rounded-xl border border-slate-200 shadow-sm">
+                <i class="fa-regular fa-calendar-days"></i>
+                <span>{{ now()->locale('id')->translatedFormat('d F Y') }}</span>
             </div>
         </div>
 
-
-    <div class="max-w-7xl mx-auto flex flex-col gap-8 ">
-
         <!-- FILTER SECTION -->
-        <div class="bg-white dark:bg-gray-800 rounded-xl border border-border-subtle dark:border-gray-700 p-5">
-            <form class="flex flex-col md:flex-row gap-4 md:items-end">
+        <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
+            <form method="GET" action="{{ url()->current() }}" class="flex flex-col md:flex-row gap-4 md:items-end">
 
-                <!-- Pilih Ruangan -->
+                <!-- Ruangan -->
                 <div class="flex flex-col flex-1">
-                    <label class="text-xs font-semibold text-text-secondary mb-1">
-                        Ruangan
-                    </label>
-                    <select class="px-3 py-2 text-sm rounded-lg border border-border-subtle dark:border-gray-600 bg-white dark:bg-gray-800 focus:ring-2 focus:ring-primary focus:outline-none">
-                        <option>Semua Ruangan</option>
-                        <option>Ruang Alpha</option>
-                        <option>Ruang Beta</option>
-                        <option>Ruang Diskusi 1</option>
+                    <label class="text-xs font-semibold text-slate-500 mb-1">Ruangan</label>
+                    <select name="ruangan_id"
+                            class="px-3 py-2.5 text-sm rounded-lg border border-slate-200 bg-white focus:ring-2 focus:ring-primary focus:outline-none text-slate-800">
+                        <option value="">Semua Ruangan</option>
+                        @foreach($ruangan as $r)
+                            <option value="{{ $r->id }}" @selected(request('ruangan_id') == $r->id)>
+                                {{ $r->nama_ruang ?? $r->nama ?? ('Ruangan #' . $r->id) }}
+                            </option>
+                        @endforeach
                     </select>
                 </div>
 
-                <!-- Pilih Tanggal -->
+                <!-- Tanggal (anchor minggu) -->
                 <div class="flex flex-col flex-1">
-                    <label class="text-xs font-semibold text-text-secondary mb-1">
-                        Tanggal
-                    </label>
+                    <label class="text-xs font-semibold text-slate-500 mb-1">Tanggal</label>
                     <input type="date"
-                        class="px-3 py-2 text-sm rounded-lg border border-border-subtle dark:border-gray-600 bg-white dark:bg-gray-800 focus:ring-2 focus:ring-primary focus:outline-none">
+                           name="tanggal"
+                           value="{{ request('tanggal', $weekStart->toDateString()) }}"
+                           class="px-3 py-2.5 text-sm rounded-lg border border-slate-200 bg-white focus:ring-2 focus:ring-primary focus:outline-none text-slate-800">
                 </div>
 
-                <!-- Status -->
+                <!-- Keyword -->
                 <div class="flex flex-col flex-1">
-                    <label class="text-xs font-semibold text-text-secondary mb-1">
-                        Status
-                    </label>
-                    <select class="px-3 py-2 text-sm rounded-lg border border-border-subtle dark:border-gray-600 bg-white dark:bg-gray-800 focus:ring-2 focus:ring-primary focus:outline-none">
-                        <option>Semua</option>
-                        <option>Disetujui</option>
-                        <option>Menunggu</option>
-                    </select>
+                    <label class="text-xs font-semibold text-slate-500 mb-1">Cari</label>
+                    <input type="text" name="keyword" value="{{ request('keyword') }}"
+                           placeholder="Mata kuliah / Dosen / Catatan"
+                           class="px-3 py-2.5 text-sm rounded-lg border border-slate-200 bg-white focus:ring-2 focus:ring-primary focus:outline-none text-slate-800">
                 </div>
 
-                <!-- Submit -->
-                <div class="flex shrink-0">
+                <!-- Buttons -->
+                <div class="flex shrink-0 gap-2">
                     <button type="submit"
-                            class="h-10 px-6 bg-primary text-white text-sm font-medium rounded-lg shadow-sm hover:brightness-110 transition">
+                            class="h-11 px-6 bg-primary text-white text-sm font-medium rounded-lg shadow-sm hover:brightness-110 transition">
                         Terapkan
                     </button>
-                </div>
 
+                    <a href="{{ url()->current() }}"
+                       class="h-11 px-4 inline-flex items-center justify-center text-sm font-semibold rounded-lg border border-slate-200 bg-white hover:bg-slate-50 transition text-slate-700">
+                        Reset
+                    </a>
+                </div>
             </form>
         </div>
 
-            <div class="flex flex-col gap-4">
+        <div class="flex flex-col gap-4">
 
-                <div class="flex justify-end">
-                    <div class="flex items-center bg-white dark:bg-gray-800 rounded-lg border border-border-subtle dark:border-gray-700 px-3 py-1.5 ">
-                    <button class="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors text-text-secondary">
+            <!-- TOP RIGHT CONTROLS -->
+            <div class="flex justify-end">
+                <div class="flex items-center bg-white rounded-lg border border-slate-200 px-3 py-1.5 shadow-sm">
+
+                    {{-- prev week (jaga filter lain) --}}
+                    <a href="{{ url()->current() . '?' . http_build_query(array_merge(request()->except('tanggal'), ['tanggal' => $prevWeekTanggal])) }}"
+                       class="p-1.5 hover:bg-slate-100 rounded-md transition-colors text-slate-500">
                         <i class="fa-solid fa-chevron-left"></i>
-                    </button>
+                    </a>
 
-                    <span class="px-4 text-sm font-bold text-text-main dark:text-white">
-                        Januari 2026
+                    <span class="px-4 text-sm font-bold text-slate-800">
+                        {{ $monthLabel }}
                     </span>
 
-                    <button class="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors text-text-secondary">
+                    {{-- next week --}}
+                    <a href="{{ url()->current() . '?' . http_build_query(array_merge(request()->except('tanggal'), ['tanggal' => $nextWeekTanggal])) }}"
+                       class="p-1.5 hover:bg-slate-100 rounded-md transition-colors text-slate-500">
                         <i class="fa-solid fa-chevron-right"></i>
-                    </button>
+                    </a>
 
-                    <div class="w-px h-4 bg-gray-200 dark:bg-gray-700 mx-2"></div>
+                    <div class="w-px h-4 bg-slate-200 mx-2"></div>
 
-                    <button class="px-3 py-1 text-xs font-bold bg-primary text-white rounded-md ">
-                        Bulan
-                    </button>
-
-                    <button class="px-3 py-1 text-xs font-medium text-text-secondary hover:text-text-main rounded-md transition-colors">
+                    <button type="button" class="px-3 py-1 text-xs font-bold bg-primary text-white rounded-md shadow-sm">
                         Minggu
+                    </button>
+
+                    <button type="button" disabled
+                            class="px-3 py-1 text-xs font-medium text-slate-400 rounded-md opacity-50 cursor-not-allowed">
+                        Bulan
                     </button>
                 </div>
             </div>
 
-            <div class="bg-white dark:bg-gray-800 rounded-xl border border-border-subtle dark:border-gray-700 shadow-sm overflow-hidden flex flex-col h-[500px]">
+            <!-- CALENDAR -->
+            <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col h-[500px]">
 
-                <div class="flex border-b border-border-subtle dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800 z-20">
-                    <div class="w-16 shrink-0 border-r border-border-subtle dark:border-gray-700 flex items-center justify-center p-2">
-                        <span class="text-xs font-bold text-text-secondary">
-                            GMT+7
-                        </span>
+                <!-- DAY HEADER -->
+                <div class="flex border-b border-slate-200 bg-slate-50 z-20">
+                    <div class="w-16 shrink-0 border-r border-slate-200 flex items-center justify-center p-2">
+                        <span class="text-xs font-bold text-slate-500">GMT+7</span>
                     </div>
 
                     <div class="flex-1 overflow-hidden">
                         <div class="grid grid-cols-7 w-full min-w-[700px]">
+                            @foreach($days as $day)
+                                @php
+                                    $isToday = $day->isSameDay(now());
+                                    $isWeekend = in_array($day->dayOfWeekIso, [6,7]); // Sab=6 Min=7
+                                    $abbr = $day->locale('id')->translatedFormat('D'); // Sen, Sel, ...
+                                @endphp
 
-                            <div class="p-3 border-r border-border-subtle dark:border-gray-700 text-center bg-primary/5 dark:bg-primary/10">
-                                <p class="text-xs font-bold text-primary mb-1">Sen</p>
-                                <div class="size-8 mx-auto flex items-center justify-center bg-primary text-white rounded-full font-bold text-sm shadow-md">
-                                    23
+                                <div class="p-3 border-r border-slate-200 text-center
+                                    {{ $isToday ? 'bg-primary/5' : ($isWeekend ? 'bg-slate-50/70' : 'group cursor-pointer hover:bg-slate-50 transition-colors') }}">
+                                    <p class="text-xs {{ $isWeekend ? 'text-red-400 font-medium' : ($isToday ? 'text-primary font-bold' : 'text-slate-500 font-medium group-hover:text-primary') }} mb-1">
+                                        {{ $abbr }}
+                                    </p>
+
+                                    @if($isToday)
+                                        <div class="size-8 mx-auto flex items-center justify-center bg-primary text-white rounded-full font-bold text-sm shadow-md">
+                                            {{ $day->format('d') }}
+                                        </div>
+                                    @else
+                                        <div class="size-8 mx-auto flex items-center justify-center {{ $isWeekend ? 'text-slate-400' : 'text-slate-800' }} font-bold text-sm">
+                                            {{ $day->format('d') }}
+                                        </div>
+                                    @endif
                                 </div>
-                            </div>
-
-                            <div class="p-3 border-r border-border-subtle dark:border-gray-700 text-center group cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors">
-                                <p class="text-xs font-medium text-text-secondary mb-1 group-hover:text-primary">
-                                    Sel
-                                </p>
-                                <div class="size-8 mx-auto flex items-center justify-center text-text-main dark:text-white font-bold text-sm">
-                                    24
-                                </div>
-                            </div>
-
-                            <div class="p-3 border-r border-border-subtle dark:border-gray-700 text-center group cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors">
-                                <p class="text-xs font-medium text-text-secondary mb-1 group-hover:text-primary">
-                                    Rab
-                                </p>
-                                <div class="size-8 mx-auto flex items-center justify-center text-text-main dark:text-white font-bold text-sm">
-                                    25
-                                </div>
-                            </div>
-
-                            <div class="p-3 border-r border-border-subtle dark:border-gray-700 text-center group cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors">
-                                <p class="text-xs font-medium text-text-secondary mb-1 group-hover:text-primary">
-                                    Kam
-                                </p>
-                                <div class="size-8 mx-auto flex items-center justify-center text-text-main dark:text-white font-bold text-sm">
-                                    26
-                                </div>
-                            </div>
-
-                            <div class="p-3 border-r border-border-subtle dark:border-gray-700 text-center group cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors">
-                                <p class="text-xs font-medium text-text-secondary mb-1 group-hover:text-primary">
-                                    Jum
-                                </p>
-                                <div class="size-8 mx-auto flex items-center justify-center text-text-main dark:text-white font-bold text-sm">
-                                    27
-                                </div>
-                            </div>
-
-                            <div class="p-3 border-r border-border-subtle dark:border-gray-700 text-center bg-gray-50/30 dark:bg-gray-800/50">
-                                <p class="text-xs font-medium text-red-400 mb-1">Sab</p>
-                                <div class="size-8 mx-auto flex items-center justify-center text-text-secondary font-bold text-sm">
-                                    28
-                                </div>
-                            </div>
-
-                            <div class="p-3 text-center bg-gray-50/30 dark:bg-gray-800/50">
-                                <p class="text-xs font-medium text-red-400 mb-1">Min</p>
-                                <div class="size-8 mx-auto flex items-center justify-center text-text-secondary font-bold text-sm">
-                                    29
-                                </div>
-                            </div>
-
+                            @endforeach
                         </div>
                     </div>
                 </div>
 
+                <!-- BODY -->
                 <div class="flex-1 overflow-y-auto relative custom-scrollbar">
                     <div class="flex min-h-[600px]">
 
-                        <div class="w-16 shrink-0 flex flex-col border-r border-border-subtle dark:border-gray-700 bg-white dark:bg-gray-800 sticky left-0 z-10">
-                            <div class="h-20 border-b border-border-subtle dark:border-gray-700/50 text-[10px] text-text-secondary p-1 text-center relative">
-                                <span class="-top-2 relative bg-white dark:bg-gray-800 px-1">08:00</span>
-                            </div>
-                            <div class="h-20 border-b border-border-subtle dark:border-gray-700/50 text-[10px] text-text-secondary p-1 text-center relative">
-                                <span class="-top-2 relative bg-white dark:bg-gray-800 px-1">09:00</span>
-                            </div>
-                            <div class="h-20 border-b border-border-subtle dark:border-gray-700/50 text-[10px] text-text-secondary p-1 text-center relative">
-                                <span class="-top-2 relative bg-white dark:bg-gray-800 px-1">10:00</span>
-                            </div>
-                            <div class="h-20 border-b border-border-subtle dark:border-gray-700/50 text-[10px] text-text-secondary p-1 text-center relative">
-                                <span class="-top-2 relative bg-white dark:bg-gray-800 px-1">11:00</span>
-                            </div>
-                            <div class="h-20 border-b border-border-subtle dark:border-gray-700/50 text-[10px] text-text-secondary p-1 text-center relative">
-                                <span class="-top-2 relative bg-white dark:bg-gray-800 px-1">12:00</span>
-                            </div>
-                            <div class="h-20 border-b border-border-subtle dark:border-gray-700/50 text-[10px] text-text-secondary p-1 text-center relative">
-                                <span class="-top-2 relative bg-white dark:bg-gray-800 px-1">13:00</span>
-                            </div>
-                            <div class="h-20 border-b border-border-subtle dark:border-gray-700/50 text-[10px] text-text-secondary p-1 text-center relative">
-                                <span class="-top-2 relative bg-white dark:bg-gray-800 px-1">14:00</span>
-                            </div>
-                            <div class="h-20 border-b border-border-subtle dark:border-gray-700/50 text-[10px] text-text-secondary p-1 text-center relative">
-                                <span class="-top-2 relative bg-white dark:bg-gray-800 px-1">15:00</span>
-                            </div>
+                        <!-- TIME GUTTER 30 MENIT -->
+                        <div class="w-16 shrink-0 flex flex-col border-r border-slate-200 bg-white sticky left-0 z-10">
+                            @for($time = $startHour * 60; $time <= $endHour * 60; $time += 30)
+                                @php
+                                    $hour = floor($time / 60);
+                                    $minute = $time % 60;
+                                @endphp
+
+                                <div class="h-10 border-b border-slate-200/70 text-[10px] text-slate-500 p-1 text-center relative">
+                                    <span class="-top-2 relative bg-white px-1">
+                                        {{ sprintf('%02d:%02d', $hour, $minute) }}
+                                    </span>
+                                </div>
+                            @endfor
                         </div>
 
-                        <div class="flex-1 min-w-[700px] grid grid-cols-7 relative bg-white dark:bg-gray-800">
+                        <!-- GRID -->
+                        <div class="flex-1 min-w-[700px] grid grid-cols-7 relative bg-white"
+                             style="min-height: {{ $totalHours * $slotHeight }}px;">
 
+                            <!-- dashed lines overlay -->
                             <div class="absolute inset-0 flex flex-col pointer-events-none">
-                                <div class="h-20 border-b border-border-subtle dark:border-gray-700/30 w-full border-dashed"></div>
-                                <div class="h-20 border-b border-border-subtle dark:border-gray-700/30 w-full border-dashed"></div>
-                                <div class="h-20 border-b border-border-subtle dark:border-gray-700/30 w-full border-dashed"></div>
-                                <div class="h-20 border-b border-border-subtle dark:border-gray-700/30 w-full border-dashed"></div>
-                                <div class="h-20 border-b border-border-subtle dark:border-gray-700/30 w-full border-dashed"></div>
-                                <div class="h-20 border-b border-border-subtle dark:border-gray-700/30 w-full border-dashed"></div>
-                                <div class="h-20 border-b border-border-subtle dark:border-gray-700/30 w-full border-dashed"></div>
-                                <div class="h-20 border-b border-border-subtle dark:border-gray-700/30 w-full border-dashed"></div>
+                                @for($i=0; $i<$totalHours; $i++)
+                                    <div class="h-20 border-b border-slate-200/70 w-full border-dashed"></div>
+                                @endfor
                             </div>
 
-                            <div class="border-r border-border-subtle dark:border-gray-700 relative h-full group">
-                                <div class="absolute top-10 left-1 right-1 h-[60px] bg-primary/10 border-l-4 border-primary rounded p-2 hover:brightness-95 cursor-pointer z-10 shadow-sm">
-                                    <p class="text-[11px] font-bold text-primary truncate">
-                                        Brainstorming Q4
-                                    </p>
-                                    <p class="text-[10px] text-primary/80 truncate">
-                                        08:30 - 09:30
-                                    </p>
+                            @foreach($days as $day)
+                                @php
+                                    $dateKey = $day->toDateString();
+                                    $dayEvents = $eventsByDate->get($dateKey, collect());
+                                    $isWeekend = in_array($day->dayOfWeekIso, [6,7]);
+                                @endphp
+
+                                <div class="border-r border-slate-200 relative h-full {{ $isWeekend ? 'bg-slate-50/50' : '' }}">
+                                    @foreach($dayEvents as $ev)
+                                        @php
+                                            $start = \Illuminate\Support\Carbon::parse($ev->waktu_mulai);
+                                            $end   = \Illuminate\Support\Carbon::parse($ev->waktu_selesai);
+
+                                            // menit dari startHour
+                                            $startMinutes = ($start->hour * 60 + $start->minute) - ($startHour * 60);
+                                            $endMinutes   = ($end->hour * 60 + $end->minute) - ($startHour * 60);
+
+                                            // clamp biar gak keluar container
+                                            $startMinutes = max(0, $startMinutes);
+                                            $endMinutes   = min($totalHours * 60, $endMinutes);
+
+                                            $duration  = max(15, $endMinutes - $startMinutes); // minimal 15 menit
+                                            $topPx     = ($startMinutes / 60) * $slotHeight;
+                                            $heightPx  = ($duration / 60) * $slotHeight;
+
+                                            $idx = ($ev->ruangan_id ?? 0) % count($palette);
+                                            $c = $palette[$idx];
+
+                                            $title = $ev->mata_kuliah;
+                                            $timeText = $start->format('H:i') . ' - ' . $end->format('H:i');
+                                        @endphp
+
+                                        <div class="absolute left-1 right-1 rounded p-2 hover:brightness-95 cursor-pointer z-10 shadow-sm {{ $c['bg'] }} border-l-4 {{ $c['border'] }}"
+                                             style="top: {{ $topPx }}px; height: {{ $heightPx }}px;">
+                                            <p class="text-[11px] font-bold truncate {{ $c['title'] }}">
+                                                {{ $title }}
+                                            </p>
+                                            <p class="text-[10px] truncate {{ $c['time'] }}">
+                                                {{ $timeText }}
+                                            </p>
+                                            <p class="mt-1 text-[10px] text-slate-500 truncate">
+                                                {{ $ev->dosen_pengampu }}
+                                                @if($ev->ruangan)
+                                                    • {{ $ev->ruangan->nama_ruang ?? $ev->ruangan->nama ?? ('Ruangan #' . $ev->ruangan_id) }}
+                                                @endif
+                                            </p>
+                                        </div>
+                                    @endforeach
                                 </div>
-                            </div>
-
-                            <div class="border-r border-border-subtle dark:border-gray-700 relative h-full">
-                                <div class="absolute top-[180px] left-0 right-0 border-t-2 border-red-500 z-20 flex items-center">
-                                    <div class="size-2 bg-red-500 rounded-full -ml-1"></div>
-                                </div>
-                            </div>
-
-                            <div class="border-r border-border-subtle dark:border-gray-700 relative h-full">
-                                <div class="absolute top-[20px] left-1 right-1 h-[140px] bg-purple-100 dark:bg-purple-900/40 border-l-4 border-purple-500 rounded p-2 hover:brightness-95 cursor-pointer z-10 shadow-sm">
-                                    <p class="text-[11px] font-bold text-purple-700 dark:text-purple-300 truncate">
-                                        Design Review Sprint
-                                    </p>
-                                    <p class="text-[10px] text-purple-600 dark:text-purple-400 truncate">
-                                        08:15 - 10:45
-                                    </p>
-                                    <div class="mt-1 flex -space-x-1">
-                                        <div class="size-4 rounded-full bg-gray-300 border border-white"></div>
-                                        <div class="size-4 rounded-full bg-gray-400 border border-white"></div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="border-r border-border-subtle dark:border-gray-700 relative h-full">
-                                <div class="absolute top-[240px] left-1 right-1 h-[60px] bg-orange-100 dark:bg-orange-900/40 border-l-4 border-orange-500 rounded p-2 hover:brightness-95 cursor-pointer z-10 shadow-sm">
-                                    <p class="text-[11px] font-bold text-orange-700 dark:text-orange-300 truncate">
-                                        Client Meeting
-                                    </p>
-                                    <p class="text-[10px] text-orange-600 dark:text-orange-400 truncate">
-                                        11:00 - 12:00
-                                    </p>
-                                </div>
-                            </div>
-
-                            <div class="border-r border-border-subtle dark:border-gray-700 relative h-full"></div>
-                            <div class="border-r border-border-subtle dark:border-gray-700 relative h-full bg-gray-50/20 dark:bg-gray-800/20"></div>
-                            <div class="relative h-full bg-gray-50/20 dark:bg-gray-800/20"></div>
+                            @endforeach
 
                         </div>
                     </div>
@@ -284,6 +250,13 @@
 
             </div>
 
-        </div>
+            @if($jadwal->count() === 0)
+                <div class="text-sm text-slate-500 text-center py-6">
+                    Tidak ada jadwal pada minggu ini dengan filter yang dipilih.
+                </div>
+            @endif
 
+        </div>
+    </div>
+</div>
 </x-master>

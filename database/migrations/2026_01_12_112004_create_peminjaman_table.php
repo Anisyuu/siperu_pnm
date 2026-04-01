@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('peminjaman', function (Blueprint $table) {
             $table->id();
+            $table->string('no_peminjaman', 10)->unique();
             $table->string('pemohon_id', 20);
 
             $table->foreign('pemohon_id')

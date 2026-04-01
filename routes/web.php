@@ -24,9 +24,9 @@ use App\Http\Controllers\Sarpras\PeminjamanController as SarprasPeminjamanContro
 use App\Http\Controllers\Sarpras\RiwayatController as SarprasRiwayatController;
 
 // Controller pimpinan
-use App\Http\Controllers\Pimpinan\JadwalController;
-use App\Http\Controllers\Pimpinan\PeminjamanController;
+use App\Http\Controllers\Pimpinan\JadwalController as PimpinanJadwalController;
 use App\Http\Controllers\Pimpinan\RiwayatController as PimpinanRiwayatController;
+use App\Http\Controllers\Pimpinan\PeminjamanController as PimpinanPeminjamanController;
 
 // Controller dosen
 use App\Http\Controllers\Dosen\JadwalController as DosenJadwalController;
@@ -77,16 +77,21 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/list-user', [KasubagUserController::class, 'listUser'])
             ->name('list-user');
 
+        Route::get('/detail-user/{nomor_induk}', [KasubagUserController::class, 'detailUser'])
+            ->name('detail-user');
+
         Route::get('/tambah-user', [KasubagUserController::class, 'tambahUser'])
             ->name('tambah-user');
+
         Route::post('/simpan-user', [KasubagUserController::class, 'simpanUser'])
             ->name('simpan-user');
 
         Route::get('/edit-user/{nomor_induk}', [KasubagUserController::class, 'editUser'])
             ->name('edit-user');
+
         Route::put('/update-user/{nomor_induk}', [KasubagUserController::class, 'updateUser'])
             ->name('update-user');
-            
+
         Route::get('/jadwal-ruangan', [KasubagJadwalController::class, 'jadwalRuangan'])
             ->name('jadwal-ruangan');
 
@@ -108,7 +113,7 @@ Route::middleware(['auth'])->group(function () {
 
         Route::prefix('gedung')->name('gedung.')->group(function () {
             Route::get('/{slug}', [GedungController::class, 'index'])
-                ->name('index');    
+                ->name('index');
             Route::post('/',                       [GedungController::class, 'store'])->name('store');
             Route::put('/{gedung}',                [GedungController::class, 'update'])->name('update');
             Route::delete('/{gedung}',             [GedungController::class, 'destroy'])->name('destroy');
@@ -127,8 +132,6 @@ Route::middleware(['auth'])->group(function () {
             Route::put('/{jenisRuang}',            [JenisRuangController::class, 'update'])->name('update');
             Route::delete('/{jenisRuang}',         [JenisRuangController::class, 'destroy'])->name('destroy');
         });
-
-
     });
 
     // Sarpras
@@ -177,13 +180,13 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/dashboard', fn () => view('layouts.pimpinan.dashboard'))
             ->name('dashboard');
 
-        Route::get('/jadwal-ruangan', [JadwalController::class, 'jadwalRuangan'])
+        Route::get('/jadwal-ruangan', [PimpinanJadwalController::class, 'jadwalRuangan'])
             ->name('jadwal-ruangan');
 
-        Route::get('/verifikasi-peminjaman', [PeminjamanController::class, 'verifikasiPeminjaman'])
+        Route::get('/verifikasi-peminjaman', [PimpinanPeminjamanController::class, 'verifikasiPeminjaman'])
             ->name('verifikasi-peminjaman');
 
-        Route::get('/riwayat-verifikasi', [PeminjamanController::class, 'riwayatVerifikasi'])
+        Route::get('/riwayat-verifikasi', [PimpinanPeminjamanController::class, 'riwayatVerifikasi'])
             ->name('riwayat-verifikasi');
 
     });
@@ -219,8 +222,20 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/jadwal-ruangan', [OrmawaJadwalController::class, 'jadwalRuangan'])
             ->name('jadwal-ruangan');
 
+        Route::get('/list-peminjaman', [OrmawaPeminjamanController::class, 'listPeminjaman'])
+            ->name('list-peminjaman');
+
         Route::get('/ajukan-peminjaman', [OrmawaPeminjamanController::class, 'ajukanPeminjaman'])
             ->name('ajukan-peminjaman');
+
+        Route::post('/simpan-peminjaman', [OrmawaPeminjamanController::class, 'store'])
+            ->name('simpan-peminjaman');
+
+        Route::get('/detail-peminjaman/{id}', [OrmawaPeminjamanController::class, 'detailPeminjaman'])
+            ->name('detail-peminjaman');
+
+        Route::delete('/batalkan-peminjaman/{id}', [OrmawaPeminjamanController::class, 'batalkanPeminjaman'])
+            ->name('batalkan-peminjaman');
 
         Route::get('/riwayat-peminjaman', [OrmawaRiwayatController::class, 'riwayatPeminjaman'])
             ->name('riwayat-peminjaman');
@@ -238,8 +253,8 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/jadwal-ruangan', [MahasiswaJadwalController::class, 'jadwalRuangan'])
             ->name('jadwal-ruangan');
 
-        Route::get('/ajukan-peminjaman', [MahasiswaPeminjamanController::class, 'ajukanPeminjaman'])
-            ->name('ajukan-peminjaman');
+        Route::get('/list-peminjaman', [MahasiswaPeminjamanController::class, 'listPeminjaman'])
+            ->name('list-peminjaman');
 
         Route::get('/riwayat-peminjaman', [MahasiswaRiwayatController::class, 'riwayatPeminjaman'])
             ->name('riwayat-peminjaman');

@@ -26,6 +26,15 @@ class UserController extends Controller
         return view('layouts.kasubag.user.list_user', compact('users', 'search', 'status'));
     }
 
+    public function detailUser($nomor_induk)
+    {
+        $user = User::with('roles')->where('nomor_induk', $nomor_induk)->first();
+        if (!$user) {
+            return redirect()->back()->with('error', 'User tidak ditemukan');
+        }
+        return view('layouts.kasubag.user.detail_user', compact('user'));
+    }
+
     public function tambahUser()
     {
         $roles = Role::all();
@@ -37,6 +46,7 @@ class UserController extends Controller
         // Validasi
         $validated = $request->validate([
             'nama_lengkap' => 'required|string|max:255',
+            'no_telp'      => 'nullable|string|max:20',
             'email'        => 'required|email|max:255|unique:user,email',
             'nomor_induk'  => 'required|string|max:50|unique:user,nomor_induk',
             'role'         => 'required|exists:role,nama',
@@ -45,6 +55,7 @@ class UserController extends Controller
         // Simpan user
         $user = User::create([
             'nama_lengkap' => $validated['nama_lengkap'],
+            'no_telp'      => $validated['no_telp'] ?? null,
             'email'        => $validated['email'],
             'nomor_induk'  => $validated['nomor_induk'],
             'password'     => Hash::make($validated['nomor_induk']), // otomatis ke-hash oleh mutator
@@ -82,6 +93,7 @@ class UserController extends Controller
         // Validasi
         $validated = $request->validate([
             'nama_lengkap' => 'required|string|max:255',
+            'no_telp'      => 'nullable|string|max:20',
             'email'        => 'required|email|max:255|unique:user,email,' . $user->nomor_induk . ',nomor_induk',
             'role'         => 'required|exists:role,nama',
             'is_active'    => 'required|in:active,inactive',
@@ -90,6 +102,7 @@ class UserController extends Controller
         // Update user
         $user->update([
             'nama_lengkap' => $validated['nama_lengkap'],
+            'no_telp'      => $validated['no_telp'] ?? null,
             'email'        => $validated['email'],
             'is_active'    => $validated['is_active'],
         ]);

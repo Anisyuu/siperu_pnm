@@ -63,7 +63,7 @@ class GedungController extends Controller
             'lantai'    => $request->lantai,
         ]);
 
-        $kampusSlug = $gedung->kampus->slug; 
+        $kampusSlug = $gedung->kampus->slug;
 
         Alert::success('Berhasil', 'Gedung berhasil ditambahkan');
         return redirect()->route('kasubag.gedung.index', [
@@ -74,16 +74,16 @@ class GedungController extends Controller
     public function update(Request $request, Gedung $gedung)
     {
         $request->validate([
-            'id_kampus' => 'required|exists:kampus,id',
+            'kampus_id' => 'required|exists:kampus,id',
             'nama'      => 'required|string|max:25',
             'id_user'   => 'required|exists:user,nomor_induk',
             'lantai'    => 'required|integer|min:1|max:200',
         ]);
 
-        $exists = Gedung::where('id_kampus', $request->id_kampus)
-                        ->where('nama', $request->nama)
-                        ->where('id', '!=', $gedung->id)
-                        ->exists();
+        $exists = Gedung::where('kampus_id', $request->kampus_id)
+                         ->where('nama', $request->nama)
+                         ->where('id', '!=', $gedung->id)
+                         ->exists();
 
         if ($exists) {
             Alert::error('Gagal', 'Gedung dengan nama tersebut sudah ada di kampus ini.');
@@ -92,7 +92,7 @@ class GedungController extends Controller
             ])->withInput();
         }
 
-        $gedung->update($request->only('id_kampus', 'nama', 'id_user', 'lantai'));
+        $gedung->update($request->only('kampus_id', 'nama', 'id_user', 'lantai'));
         $gedung->load(['kampus', 'user']);
 
         Alert::success('Berhasil', 'Gedung berhasil diperbarui');

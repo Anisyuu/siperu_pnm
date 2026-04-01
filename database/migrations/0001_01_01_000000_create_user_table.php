@@ -15,6 +15,7 @@ return new class extends Migration
             // $table->id();
             $table->string('nomor_induk', 20)->primary();
             $table->string('nama_lengkap', 150);
+            $table->string('no_telp', 20)->nullable();
             $table->string('email', 100)->unique();
             $table->string('password', 60);
 

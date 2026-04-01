@@ -26,6 +26,18 @@
                 >
             </div>
 
+            <!-- Nomor Telepon -->
+            <div>
+                <label class="block text-sm font-semibold mb-2">Nomor Telepon</label>
+                <input
+                    type="text"
+                    name="no_telp"
+                    value="{{ old('no_telp') }}"
+                    class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary focus:outline-none"
+                >
+            </div>
+
+
             <!-- Email -->
             <div>
                 <label class="block text-sm font-semibold mb-2">Email</label>

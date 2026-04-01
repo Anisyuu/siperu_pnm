@@ -106,6 +106,7 @@ class UserSeeder extends Seeder
 
 
         $superadmin = User::where('nomor_induk', '123654789')->first();
+        $pimpinan  = User::where('nomor_induk', '987456321')->first();
         $mahasiswa  = User::where('nomor_induk', '233307094')->first();
         $ormawa     = User::where('nomor_induk', '233307095')->first();
         $dosen      = User::where('nomor_induk', '233307096')->first();
@@ -115,6 +116,10 @@ class UserSeeder extends Seeder
 
         if ($superadmin) {
             $superadmin->syncRoles(['kasubag']);
+        }
+
+        if ($pimpinan) {
+            $pimpinan->syncRoles(['pimpinan']);
         }
 
         if ($mahasiswa) {

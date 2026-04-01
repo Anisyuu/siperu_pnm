@@ -224,15 +224,15 @@
 
                 @foreach($ruangan->getUrlRange(1, $ruangan->lastPage()) as $page => $url)
                 <a href="{{ $url }}"
-                   class="w-9 h-9 flex items-center justify-center rounded-xl text-sm font-semibold transition-all
-                          {{ $ruangan->currentPage() === $page ? 'bg-primary text-white ' : 'text-slate-500 hover:text-primary hover:bg-blue-50 border border-slate-200' }}">
+                class="w-9 h-9 flex items-center justify-center rounded-xl text-sm font-semibold transition-all
+                        {{ $ruangan->currentPage() === $page ? 'bg-primary text-white ' : 'text-slate-500 hover:text-primary hover:bg-blue-50 border border-slate-200' }}">
                     {{ $page }}
                 </a>
                 @endforeach
 
                 @if($ruangan->hasMorePages())
                     <a href="{{ $ruangan->nextPageUrl() }}"
-                       class="w-9 h-9 flex items-center justify-center rounded-xl text-slate-500 hover:text-primary hover:bg-blue-50 border border-slate-200 transition-all">
+                    class="w-9 h-9 flex items-center justify-center rounded-xl text-slate-500 hover:text-primary hover:bg-blue-50 border border-slate-200 transition-all">
                         <i class="fa-solid fa-chevron-right text-xs"></i>
                     </a>
                 @else

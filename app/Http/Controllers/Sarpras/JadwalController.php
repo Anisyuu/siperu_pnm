@@ -88,6 +88,12 @@ class JadwalController extends Controller
 
     public function simpanJadwal(Request $request)
     {
+        // Gabung jam + menit
+        // $request->merge([
+        //     'waktu_mulai'   => $request->jam_mulai . ':' . str_pad($request->menit_mulai, 2, '0', STR_PAD_LEFT),
+        //     'waktu_selesai' => $request->jam_selesai . ':' . str_pad($request->menit_selesai, 2, '0', STR_PAD_LEFT),
+        // ]);
+
         $validated = $request->validate([
             'ruangan_id'     => 'required|exists:ruangan,id',
             'tanggal'        => 'required|date',
@@ -105,7 +111,7 @@ class JadwalController extends Controller
         return redirect()
             ->route('sarpras.kelola-jadwal')
             ->with('success', 'Jadwal berhasil ditambahkan.');
-    }
+        }
 
     public function editJadwal($id)
     {
@@ -131,23 +137,28 @@ class JadwalController extends Controller
     {
         $jadwal = Jadwal::findOrFail($id);
 
-        $validated = $request->validate([
-            'ruangan_id'     => 'required|exists:ruangan,id',
-            'tanggal'        => 'required|date',
-            'waktu_mulai'    => 'required|date_format:H:i',
-            'waktu_selesai'  => 'required|date_format:H:i|after:waktu_mulai',
-            'mata_kuliah'    => 'required|string|max:100',
-            'dosen_pengampu' => 'required|string|max:100',
-            'catatan'        => 'nullable|string',
-        ]);
+    $request->merge([
+        'waktu_mulai'   => $request->jam_mulai . ':' . str_pad($request->menit_mulai, 2, '0', STR_PAD_LEFT),
+        'waktu_selesai' => $request->jam_selesai . ':' . str_pad($request->menit_selesai, 2, '0', STR_PAD_LEFT),
+    ]);
 
-        $jadwal->update($validated);
+    $validated = $request->validate([
+        'ruangan_id'     => 'required|exists:ruangan,id',
+        'tanggal'        => 'required|date',
+        'waktu_mulai'    => 'required|date_format:H:i',
+        'waktu_selesai'  => 'required|date_format:H:i|after:waktu_mulai',
+        'mata_kuliah'    => 'required|string|max:100',
+        'dosen_pengampu' => 'required|string|max:100',
+        'catatan'        => 'nullable|string',
+    ]);
 
-        Alert::success('Berhasil', 'Jadwal berhasil diperbarui');
+    $jadwal->update($validated);
 
-        return redirect()
-            ->route('sarpras.kelola-jadwal')
-            ->with('success', 'Jadwal berhasil diperbarui.');
+    Alert::success('Berhasil', 'Jadwal berhasil diperbarui');
+
+    return redirect()
+        ->route('sarpras.kelola-jadwal')
+        ->with('success', 'Jadwal berhasil diperbarui.');
     }
 
     public function hapusJadwal($id)

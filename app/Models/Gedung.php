@@ -16,6 +16,11 @@ class Gedung extends Model
         'slug',
     ];
 
+    public function getRoutekeyName()
+    {
+        return 'slug';
+    }
+
     public function user()
     {
         return $this->belongsTo(User::class,'id_user','nomor_induk');

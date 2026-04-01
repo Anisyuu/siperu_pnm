@@ -33,7 +33,7 @@
                 </div>
 
                 <a href="{{ route('kasubag.tambah-user') }}" class="px-5 py-5 bg-primary text-white rounded-lg shadow-sm hover:brightness-110 transition">
-                    <i class="fa-solid fa-plus text-sm"></i> 
+                    <i class="fa-solid fa-plus text-sm"></i>
                 </a>
 
             </div>
@@ -154,13 +154,14 @@
                             <td class="px-6 py-4">
                                 <div class="flex justify-center items-center gap-4 text-text-secondary">
 
-                                    <button class="w-8 h-8 flex items-center justify-center bg-blue-200/40 border border-blue-300 text-blue-500 rounded-lg hover:bg-blue-300/50 hover:border-blue-400 transition-all">
+                                    <a href="{{ route('kasubag.detail-user', $user->nomor_induk) }}"
+                                     class="w-8 h-8 flex items-center justify-center bg-blue-200/40 border border-blue-300 text-blue-500 rounded-lg hover:bg-blue-300/50 hover:border-blue-400 transition-all">
                                         <i class="fa-regular fa-eye"></i>
-                                    </button>
+                                    </a>
 
                                     <form action="{{ route('kasubag.edit-user', $user->nomor_induk) }}" method="GET" class="inline">
                                         @csrf
-                                        <button type="submit" 
+                                        <button type="submit"
                                          class="w-8 h-8 flex items-center justify-center bg-orange-200/40 border border-orange-300 text-orange-500 rounded-lg  hover:bg-orange-300/50 hover:border-orange-400 transition-all">
                                             <i class="fa-regular fa-pen-to-square"></i>
                                         </button>
@@ -210,7 +211,7 @@
 <div class="mt-6">
     {{ $users->links() }}
 </div>
-    </div>
+
 
     <!-- Error Handling -->
     @if ($errors->any())
