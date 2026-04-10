@@ -1,4 +1,4 @@
-<aside class="hidden md:flex w-80 flex-col dark:bg-[#111] min-h-screen transition-all">
+<aside class="hidden md:flex sticky top-0 h-screen w-80 flex-col dark:bg-[#111] transition-all">
     <div class="flex m-3 rounded-xl shadow-sm bg-white dark:bg-[#1d1d1d] h-full flex-col justify-between p-4 border border-gray-100 dark:border-gray-800">
         <div class="flex flex-col gap-1">
 
@@ -48,6 +48,11 @@
                             <a href="{{ route('kasubag.kampus.index') }}" class="pl-4 py-2 text-sm {{ request()->routeIs('kasubag.kampus.*') ? 'text-blue-600 font-bold' : 'text-gray-500 hover:text-blue-600' }}">Kampus & Gedung</a>
                         </div>
                     </div>
+
+                    <a href="{{ route('kasubag.alur-verifikasi.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg group {{ request()->routeIs('kasubag.alur-verifikasi') ? $activeClass : $inactiveClass }}">
+                        <i class="fa-solid fa-road w-5 {{ request()->routeIs('kasubag.alur-verifikasi') ? $iconActive : $iconInactive }}"></i>
+                        <span class="text-sm font-semibold">Alur Verifikasi</span>
+                    </a>
 
                     <a href="{{ route('kasubag.verifikasi-peminjaman') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg group {{ request()->routeIs('kasubag.verifikasi-peminjaman') ? $activeClass : $inactiveClass }}">
                         <i class="fa-solid fa-list-check w-5 {{ request()->routeIs('kasubag.verifikasi-peminjaman') ? $iconActive : $iconInactive }}"></i>
@@ -145,6 +150,32 @@
         </div>
 
         <div class="pt-4 mt-4 border-t border-gray-100 dark:border-gray-800">
+
+            @php
+                $initials = collect(explode(' ', auth()->user()->nama_lengkap))
+                    ->take(2)
+                    ->map(fn($w) => strtoupper($w[0]))
+                    ->implode('');
+            @endphp
+
+            <button class="flex w-full items-center gap-3 mb-3 px-3 py-2.5 bg-white border border-blue-50 rounded-xl hover:bg-slate-50 transition-colors duration-150 group">
+
+                {{-- Avatar --}}
+                <a class="w-9 h-9 rounded-lg uppercase bg-blue-50 text-blue-700 flex items-center justify-center text-xs font-bold flex-shrink-0">
+                    {{ $initials }}
+                </a>
+
+                {{-- Info --}}
+                <div class="flex-1 text-left overflow-hidden">
+                    <div class="text-sm font-semibold text-slate-800 truncate leading-tight">
+                        {{ auth()->user()->nama_lengkap }}
+                    </div>
+                    <div class="text-[11px] text-slate-400 mt-0.5 truncate leading-tight">
+                        {{ auth()->user()->roles->first()->nama ?? '-' }}
+                    </div>
+                </div>
+            </button>
+
             <form action="{{ route('logout') }}" method="POST">
                 @csrf
                 <button type="submit" class="flex w-full items-center justify-center gap-2 rounded-lg h-11 px-4 bg-red-50 text-red-600 hover:bg-red-600 hover:text-white transition-all duration-300 font-bold text-sm">
@@ -152,6 +183,7 @@
                     <span>Logout</span>
                 </button>
             </form>
+
         </div>
     </div>
 </aside>

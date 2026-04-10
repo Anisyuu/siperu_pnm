@@ -7,10 +7,10 @@
         <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
                 <h1 class="text-slate-900 text-3xl font-extrabold tracking-tight">
-                    Riwayat Peminjaman
+                    List Pengajuan Peminjaman
                 </h1>
                 <p class="text-slate-500 text-sm mt-1">
-                    Riwayat seluruh pengajuan peminjaman ruangan
+                    Manajemen seluruh pengajuan peminjaman ruangan
                 </p>
             </div>
             <div class="flex items-center gap-3">
@@ -23,6 +23,10 @@
                         <p class="text-xl font-extrabold text-slate-800">{{ $peminjaman->total() }}</p>
                     </div>
                 </div>
+                <a href="{{ route('dosen.ajukan-peminjaman') }}"
+                   class="inline-flex items-center justify-center w-11 h-11 bg-primary text-white rounded-2xl shadow-sm hover:brightness-110 transition">
+                    <i class="fa-solid fa-plus text-sm"></i>
+                </a>
             </div>
         </div>
 
@@ -93,7 +97,7 @@
                                 </td>
 
                                 <td class="px-4 py-4 text-sm text-slate-600 whitespace-nowrap">
-                                    {{ \Carbon\Carbon::parse($item->created_at)->locale('id')->translatedFormat('d F Y H:i') }}
+                                    {{ \Carbon\Carbon::parse($item->created_at)->locale('id')->translatedFormat('d M Y H:i') }}
                                 </td>
 
                                 <td class="px-4 py-4">
@@ -112,10 +116,10 @@
                                 </td>
 
                                 <td class="px-4 py-4 text-sm text-slate-600">
-                                    {{ \Carbon\Carbon::parse($item->tanggal_mulai)->locale('id')->translatedFormat('d F Y') }}
+                                    {{ \Carbon\Carbon::parse($item->tanggal_mulai)->locale('id')->translatedFormat('d M Y') }}
                                     @if($item->tanggal_mulai !== $item->tanggal_selesai)
                                         <div class="text-xs text-slate-400">
-                                            s/d {{ \Carbon\Carbon::parse($item->tanggal_selesai)->locale('id')->translatedFormat('d F Y') }}
+                                            s/d {{ \Carbon\Carbon::parse($item->tanggal_selesai)->locale('id')->translatedFormat('d M Y') }}
                                         </div>
                                     @endif
                                 </td>
@@ -160,11 +164,11 @@
                                             <form action="{{ route('dosen.batalkan-peminjaman', $item->id) }}" method="POST" class="inline"
                                                   onsubmit="return confirm('Yakin ingin membatalkan pengajuan ini?')">
                                                 @csrf
-                                                {{-- @method('DELETE')
+                                                @method('DELETE')
                                                 <button type="submit"
                                                     class="inline-flex items-center justify-center w-9 h-9 bg-red-50 text-red-500 hover:bg-red-100 rounded-xl transition-colors opacity-60 group-hover:opacity-100">
                                                     <i class="fa-regular fa-trash-can text-sm"></i>
-                                                </button> --}}
+                                                </button>
                                             </form>
                                         @endif
                                     </div>

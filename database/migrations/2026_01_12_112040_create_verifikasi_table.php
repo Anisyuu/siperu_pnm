@@ -14,14 +14,12 @@ return new class extends Migration
         Schema::create('verifikasi', function (Blueprint $table) {
             $table->id();
             $table->foreignId('id_peminjaman')->constrained('peminjaman')->onDelete('cascade');
-            $table->integer('urutan');
-
             $table->string('id_verifikator', 20);
             $table->foreign('id_verifikator')
                 ->references('nomor_induk')
                 ->on('user')
                 ->onDelete('cascade');
-
+            $table->integer('urutan');  
             $table->string('role_verifikator', 25);
             $table->enum('status_verifikasi', ['pending', 'disetujui', 'ditolak'])->default('pending');
             $table->text('catatan')->nullable();

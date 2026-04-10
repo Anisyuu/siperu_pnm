@@ -21,16 +21,18 @@ return new class extends Migration
                 ->on('user')
                 ->onDelete('cascade');
             $table->foreignId('ruangan_id')->constrained('ruangan')->onDelete('cascade');
-            $table->date('tanggal');
+            $table->date('tanggal_mulai');
+            $table->date('tanggal_selesai');
             $table->time('waktu_mulai');
             $table->time('waktu_selesai');
             $table->text('kegiatan');
             $table->string('dokumen_bukti')->nullable();
             $table->enum('status', ['pending', 'disetujui', 'ditolak'])->default('pending');
             $table->text('catatan')->nullable();
+
             $table->timestamps();
 
-            $table->index(['ruangan_id', 'tanggal']);
+            $table->index(['ruangan_id', 'tanggal_mulai', 'tanggal_selesai']);
             $table->index(['status', 'created_at']);
         });
     }

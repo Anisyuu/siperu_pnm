@@ -13,9 +13,9 @@ return new class extends Migration
     {
         Schema::create('alur_verifikasi', function (Blueprint $table) {
             $table->id();
-            $table->string('jenis_pemohon', 25);
+            $table->string('jenis_pemohon', 25); // Contoh: 'mahasiswa' , 'ormawa'
             $table->integer('urutan');
-            $table->string('role_verifikator', 25);
+            $table->string('role_verifikator', 25); // Contoh: 'admin' , 'kasubag'
             $table->timestamps();
         });
     }

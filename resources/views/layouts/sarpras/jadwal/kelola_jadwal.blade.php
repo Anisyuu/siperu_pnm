@@ -1,221 +1,186 @@
 <x-master>
 
-<div class="bg-slate-100 min-h-screen px-8 py-10">
+<div class="min-h-screen bg-slate-100 px-6 py-10">
+<div class="max-w-7xl mx-auto flex flex-col gap-6">
 
     {{-- HEADER --}}
-    <div class="flex items-start justify-between mb-8 flex-wrap gap-4">
-
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-            <h1 class="text-3xl font-extrabold text-slate-900 tracking-tight">
+            <h1 class="text-slate-900 text-3xl font-extrabold tracking-tight">
                 Kelola Jadwal
             </h1>
-
-            <p class="text-slate-500 mt-1 text-sm">
+            <p class="text-slate-500 text-sm mt-1">
                 Manajemen jadwal penggunaan ruangan
             </p>
         </div>
-
         <div class="flex items-center gap-3">
-
-            {{-- Total Jadwal --}}
-            <div class="flex items-center gap-2 bg-white border border-slate-200 rounded-2xl px-5 py-3 shadow-sm">
-
-                <div class="w-9 h-9 bg-blue-50 rounded-xl flex items-center justify-center">
+            <div class="bg-white border border-slate-200 rounded-2xl px-5 py-4 flex items-center gap-3 shadow-sm">
+                <div class="w-9 h-9 bg-blue-50 rounded-xl flex items-center justify-center flex-shrink-0">
                     <i class="fa-solid fa-calendar text-blue-500 text-sm"></i>
                 </div>
-
                 <div>
-                    <div class="text-[10px] font-bold text-slate-400 uppercase">
-                        Total Jadwal
-                    </div>
-                    <div class="text-lg font-bold text-slate-800">
-                        {{ $jadwal->total() }}
-                    </div>
+                    <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Total Jadwal</p>
+                    <p class="text-xl font-extrabold text-slate-800">{{ $jadwal->total() }}</p>
                 </div>
-
             </div>
-
-            {{-- Button tambah --}}
             <a href="{{ route('sarpras.tambah-jadwal') }}"
-               class="px-5 py-5 bg-primary text-white rounded-lg shadow-sm hover:brightness-110 transition">
+               class="inline-flex items-center justify-center w-11 h-11 bg-primary text-white rounded-2xl shadow-sm hover:brightness-110 transition">
                 <i class="fa-solid fa-plus text-sm"></i>
             </a>
-
         </div>
     </div>
 
-
-    <div class="max-w-7xl mx-auto flex flex-col gap-6">
-
-        {{-- FILTER --}}
-        <div class="bg-white dark:bg-gray-800 rounded-xl border border-border-subtle dark:border-gray-700 p-4 shadow-sm">
-
-            <form method="GET" action="{{ route('sarpras.kelola-jadwal') }}"
-                  class="flex flex-col md:flex-row gap-3 w-full items-center">
-
-                {{-- Search --}}
+    {{-- FILTER --}}
+    <form method="GET" action="{{ route('sarpras.kelola-jadwal') }}"
+          class="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm">
+        <div class="flex flex-col md:flex-row gap-3">
+            <div class="relative flex-1">
+                <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm pointer-events-none"></i>
                 <input
-                    type="text"
                     name="search"
                     value="{{ request('search') }}"
                     placeholder="Cari mata kuliah / dosen..."
-                    class="flex-1 px-4 py-2 text-sm rounded-lg border border-border-subtle dark:border-gray-600 bg-white dark:bg-gray-800 focus:ring-2 focus:ring-primary focus:outline-none"
+                    class="w-full pl-9 pr-4 py-2.5 text-sm rounded-xl border border-slate-200 bg-white focus:ring-2 focus:ring-blue-300 focus:border-blue-400 focus:outline-none text-slate-700 transition"
                 />
-
-                {{-- Ruangan --}}
-                <select
-                    name="ruangan_id"
-                    class="px-4 py-2 text-sm rounded-lg border border-border-subtle dark:border-gray-600 bg-white dark:bg-gray-800"
-                >
-                    <option value="">Semua Ruangan</option>
-                    @foreach ($ruangan as $r)
-                        <option value="{{ $r->id }}" {{ request('ruangan_id') == $r->id ? 'selected' : '' }}>
-                            {{ $r->nama_ruang }} - {{ $r->gedung->nama ?? '-' }}
-                        </option>
-                    @endforeach
-                </select>
-
-                {{-- Tanggal --}}
-                <input
-                    type="date"
-                    name="tanggal"
-                    value="{{ request('tanggal') }}"
-                    class="px-4 py-2 text-sm rounded-lg border border-border-subtle dark:border-gray-600 bg-white dark:bg-gray-800"
-                />
-
-                {{-- Button --}}
-                <button type="submit"
-                    class="px-5 py-2 bg-primary text-white rounded-lg hover:brightness-110 transition">
-                    Filter
-                </button>
-
-                <a href="{{ route('sarpras.kelola-jadwal') }}"
-                   class="px-4 py-2 text-sm font-medium rounded-lg border border-border-subtle hover:bg-gray-50 transition">
-                    Reset
-                </a>
-
-            </form>
-
-        </div>
-
-
-        {{-- TABLE --}}
-        <div class="bg-white dark:bg-gray-800 rounded-xl border border-border-subtle dark:border-gray-700 shadow-sm overflow-hidden">
-
-            <div class="overflow-x-auto">
-                <table class="w-full text-sm">
-
-    <thead class="bg-gray-50 border-b border-border-subtle text-text-main uppercase text-xs tracking-wider">
-        <tr>
-            <th class="px-6 py-4 text-left">No</th>
-            <th class="px-6 py-4 text-left">Tanggal</th>
-            <th class="px-6 py-4 text-left">Ruangan</th>
-            <th class="px-6 py-4 text-left">Lokasi</th>
-            <th class="px-6 py-4 text-left">Waktu</th>
-            <th class="px-6 py-4 text-left">Perkuliahan</th>
-            <th class="px-6 py-4 text-center">Action</th>
-        </tr>
-    </thead>
-
-    <tbody class="divide-y divide-border-subtle">
-
-        @forelse ($jadwal as $j)
-        <tr class="hover:bg-gray-50 transition">
-
-            {{-- NO --}}
-            <td class="px-6 py-4 text-text-secondary">
-                {{ ($jadwal->currentPage() - 1) * $jadwal->perPage() + $loop->iteration }}
-            </td>
-
-            {{-- Tanggal --}}
-            <td class="px-6 py-4">
-                <div class="font-semibold text-text-main">
-                    {{ \Carbon\Carbon::parse($j->tanggal)->locale('id')->translatedFormat('d F Y') }}
-                </div>
-                <div class="text-xs text-text-secondary">
-                    {{ \Carbon\Carbon::parse($j->tanggal)->locale('id')->translatedFormat('l') }}
-                </div>
-            </td>
-
-            {{-- Ruangan --}}
-            <td class="px-6 py-4">
-                <div class="font-semibold text-text-main">
-                    {{ $j->ruangan->nama_ruang ?? '-' }}
-                </div>
-                <div class="text-xs text-text-secondary">
-                    {{ $j->ruangan->nomor_ruang ?? '-' }}
-                </div>
-            </td>
-
-            {{-- Lokasi --}}
-            <td class="px-6 py-4 text-text-secondary">
-                <div>{{ $j->ruangan->gedung->kampus->nama_kampus ?? '-' }}</div>
-                <div class="text-xs">
-                    {{ $j->ruangan->gedung->nama ?? '-' }}
-                </div>
-            </td>
-
-            {{-- Waktu --}}
-            <td class="px-6 py-4">
-                <span class="inline-flex items-center rounded-full bg-primary/10 text-primary px-3 py-1 text-xs font-semibold">
-                    {{ substr($j->waktu_mulai,0,5) }} - {{ substr($j->waktu_selesai,0,5) }}
-                </span>
-            </td>
-
-            {{-- Perkuliahan --}}
-            <td class="px-6 py-4">
-                <div class="font-semibold text-text-main">
-                    {{ $j->mata_kuliah }}
-                </div>
-                <div class="text-sm text-text-secondary">
-                    {{ $j->dosen_pengampu }}
-                </div>
-            </td>
-
-            {{-- Action --}}
-            <td class="px-6 py-4">
-                <div class="flex justify-center items-center gap-3">
-
-                    {{-- Edit --}}
-                    <a href="{{ route('sarpras.edit-jadwal', $j->id) }}"
-                       class="w-8 h-8 flex items-center justify-center bg-orange-200/40 border border-orange-300 text-orange-500 rounded-lg hover:bg-orange-300/50 transition">
-                        <i class="fa-regular fa-pen-to-square"></i>
-                    </a>
-
-                    {{-- Delete --}}
-                    <form action="{{ route('sarpras.hapus-jadwal', $j->id) }}" method="POST">
-                        @csrf
-                        @method('DELETE')
-                        <button
-                            class="w-8 h-8 flex items-center justify-center bg-red-200/40 border border-red-300 text-red-500 rounded-lg hover:bg-red-300/50 transition">
-                            <i class="fa-solid fa-trash"></i>
-                        </button>
-                    </form>
-
-                </div>
-            </td>
-
-        </tr>
-        @empty
-        <tr>
-            <td colspan="7" class="px-6 py-10 text-center text-slate-500">
-                Data jadwal belum tersedia
-            </td>
-        </tr>
-        @endforelse
-
-    </tbody>
-
-</table>
             </div>
+
+            <select
+                name="ruangan_id"
+                class="px-4 py-2.5 text-sm rounded-xl border border-slate-200 bg-white focus:ring-2 focus:ring-blue-300 focus:border-blue-400 focus:outline-none text-slate-700 transition"
+            >
+                <option value="">Semua Ruangan</option>
+                @foreach ($ruangan as $r)
+                    <option value="{{ $r->id }}" {{ request('ruangan_id') == $r->id ? 'selected' : '' }}>
+                        {{ $r->nama_ruang }} - {{ $r->gedung->nama ?? '-' }}
+                    </option>
+                @endforeach
+            </select>
+
+            <input
+                type="date"
+                name="tanggal"
+                value="{{ request('tanggal') }}"
+                class="px-4 py-2.5 text-sm rounded-xl border border-slate-200 bg-white focus:ring-2 focus:ring-blue-300 focus:border-blue-400 focus:outline-none text-slate-700 transition"
+            />
+
+            <button type="submit"
+                class="px-6 py-2.5 bg-primary text-white text-sm font-semibold rounded-xl hover:brightness-110 active:scale-95 transition shadow-sm shadow-blue-200">
+                Terapkan
+            </button>
+
+            @if(request()->hasAny(['search', 'ruangan_id', 'tanggal']))
+            <a href="{{ route('sarpras.kelola-jadwal') }}"
+               class="px-4 py-2.5 border border-slate-200 text-sm text-slate-500 font-semibold rounded-xl hover:bg-slate-50 transition">
+                Reset
+            </a>
+            @endif
+        </div>
+    </form>
+
+    {{-- TABLE --}}
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+                <thead>
+                    <tr class="border-b border-slate-100 bg-slate-50/60">
+                        <th class="text-left px-5 py-3 text-[11px] font-bold text-slate-400 uppercase tracking-wider">No</th>
+                        <th class="text-left px-4 py-3 text-[11px] font-bold text-slate-400 uppercase tracking-wider">Tanggal</th>
+                        <th class="text-left px-4 py-3 text-[11px] font-bold text-slate-400 uppercase tracking-wider">Ruangan</th>
+                        <th class="text-left px-4 py-3 text-[11px] font-bold text-slate-400 uppercase tracking-wider">Lokasi</th>
+                        <th class="text-left px-4 py-3 text-[11px] font-bold text-slate-400 uppercase tracking-wider">Waktu</th>
+                        <th class="text-left px-4 py-3 text-[11px] font-bold text-slate-400 uppercase tracking-wider">Perkuliahan</th>
+                        <th class="text-center px-5 py-3 text-[11px] font-bold text-slate-400 uppercase tracking-wider">Aksi</th>
+                    </tr>
+                </thead>
+
+                <tbody class="divide-y divide-slate-50">
+                    @forelse ($jadwal as $j)
+                    <tr class="hover:bg-slate-50/70 transition-colors group">
+
+                        <td class="px-5 py-4 text-sm text-slate-500">
+                            {{ ($jadwal->currentPage() - 1) * $jadwal->perPage() + $loop->iteration }}
+                        </td>
+
+                        <td class="px-4 py-4">
+                            <p class="font-semibold text-slate-800 text-sm leading-tight">
+                                {{ \Carbon\Carbon::parse($j->tanggal)->locale('id')->translatedFormat('d M Y') }}
+                            </p>
+                            <p class="text-xs text-slate-400 mt-0.5">
+                                {{ \Carbon\Carbon::parse($j->tanggal)->locale('id')->translatedFormat('l') }}
+                            </p>
+                        </td>
+
+                        <td class="px-4 py-4">
+                            <p class="font-semibold text-slate-700 text-sm leading-tight">
+                                {{ $j->ruangan->nama_ruang ?? '-' }}
+                            </p>
+                            <p class="text-xs text-slate-400 mt-0.5">
+                                {{ $j->ruangan->nomor_ruang ?? '-' }}
+                            </p>
+                        </td>
+
+                        <td class="px-4 py-4">
+                            <p class="text-sm text-slate-600">{{ $j->ruangan->gedung->kampus->nama_kampus ?? '-' }}</p>
+                            <p class="text-xs text-slate-400">{{ $j->ruangan->gedung->nama ?? '-' }}</p>
+                        </td>
+
+                        <td class="px-4 py-4">
+                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-bold rounded-full bg-blue-50 text-blue-700 border border-blue-100">
+                                {{ substr($j->waktu_mulai,0,5) }} – {{ substr($j->waktu_selesai,0,5) }}
+                            </span>
+                        </td>
+
+                        <td class="px-4 py-4">
+                            <p class="font-semibold text-slate-800 text-sm leading-tight">{{ $j->mata_kuliah }}</p>
+                            <p class="text-xs text-slate-400 mt-0.5">{{ $j->dosen_pengampu }}</p>
+                        </td>
+
+                        <td class="px-5 py-4 text-center">
+                            <div class="flex justify-center items-center gap-2">
+                                <a href="{{ route('sarpras.edit-jadwal', $j->id) }}"
+                                   class="inline-flex items-center justify-center w-9 h-9 bg-amber-50 text-amber-500 hover:bg-amber-100 rounded-xl transition-colors opacity-60 group-hover:opacity-100">
+                                    <i class="fa-regular fa-pen-to-square text-sm"></i>
+                                </a>
+                                <form action="{{ route('sarpras.hapus-jadwal', $j->id) }}" method="POST" class="inline"
+                                      onsubmit="return confirm('Yakin ingin menghapus jadwal ini?')">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit"
+                                        class="inline-flex items-center justify-center w-9 h-9 bg-red-50 text-red-500 hover:bg-red-100 rounded-xl transition-colors opacity-60 group-hover:opacity-100">
+                                        <i class="fa-regular fa-trash-can text-sm"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+
+                    </tr>
+                    @empty
+                    <tr>
+                        <td colspan="7" class="px-6 py-16 text-center">
+                            <div class="flex flex-col items-center gap-3">
+                                <div class="w-14 h-14 bg-slate-100 rounded-2xl flex items-center justify-center">
+                                    <i class="fa-regular fa-calendar-xmark text-2xl text-slate-300"></i>
+                                </div>
+                                <div>
+                                    <p class="font-semibold text-slate-500 text-sm">Belum ada jadwal tersedia</p>
+                                    <p class="text-xs text-slate-400 mt-0.5">Coba ubah filter pencarian Anda.</p>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    @endforelse
+                </tbody>
+            </table>
         </div>
 
-        {{-- Pagination --}}
-        <div class="mt-6">
+        @if($jadwal->hasPages())
+        <div class="px-5 py-4 border-t border-slate-100 bg-slate-50/40">
             {{ $jadwal->links() }}
         </div>
-
+        @endif
     </div>
+
+</div>
 </div>
 
 </x-master>

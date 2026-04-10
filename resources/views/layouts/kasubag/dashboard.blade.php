@@ -1,332 +1,248 @@
 <x-master>
+    @php
+        $slotHeight = 80;
+        $totalHours = ($endHour - $startHour) + 1;
+
+        $prevWeekTanggal = $weekStart->copy()->subDays(7)->toDateString();
+        $nextWeekTanggal = $weekStart->copy()->addDays(7)->toDateString();
+
+        $palette = [
+            ['bg' => 'bg-primary/10', 'border' => 'border-primary', 'title' => 'text-primary', 'time' => 'text-primary/80'],
+            ['bg' => 'bg-purple-100', 'border' => 'border-purple-500', 'title' => 'text-purple-700', 'time' => 'text-purple-600'],
+            ['bg' => 'bg-orange-100', 'border' => 'border-orange-500', 'title' => 'text-orange-700', 'time' => 'text-orange-600'],
+            ['bg' => 'bg-emerald-100', 'border' => 'border-emerald-500', 'title' => 'text-emerald-700', 'time' => 'text-emerald-600'],
+        ];
+    @endphp
+
     <div class="bg-slate-100 min-h-screen px-8 py-10">
-        <div class="max-w-7xl mx-auto flex flex-col">
+        <div class="max-w-7xl mx-auto flex flex-col gap-6">
 
             {{-- HEADER --}}
-            <div class="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
-                <div class="flex flex-col gap-1">
-                    <h2 class="text-slate-900 text-3xl md:text-4xl font-extrabold tracking-tight">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                    <h2 class="text-slate-900 text-3xl font-extrabold tracking-tight">
                         Selamat Datang, {{ auth()->user()->nama_lengkap }}!
                     </h2>
-
                     <div class="flex items-center gap-2 text-sm text-slate-500 mt-1">
-                        <i class="fa-regular fa-calendar-days text-[16px]"></i>
+                        <i class="fa-regular fa-calendar-days"></i>
                         <span id="realtime-date"></span>
                     </div>
                 </div>
             </div>
 
-            {{-- STATS CARD (TETAP STYLE LAMA) --}}
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 lg:gap-6">
+            {{-- STAT CARDS --}}
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
 
-                <div class="relative overflow-hidden rounded-xl bg-white dark:bg-gray-800 p-6 border border-border-subtle dark:border-gray-700 shadow-sm group hover:border-primary/30 transition-all">
-                    <div class="absolute right-3 top-3 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-                        <i class="fa-solid fa-calendar-days text-primary text-[80px] leading-none"></i>
+                {{-- CARD 1 --}}
+                <div class="bg-white border border-slate-200 rounded-2xl px-5 py-4 flex items-center gap-3 shadow-sm">
+                    <div class="w-9 h-9 bg-blue-50 rounded-xl flex items-center justify-center flex-shrink-0">
+                        <i class="fa-regular fa-calendar-days text-blue-500 text-sm"></i>
                     </div>
-
-                    <div class="flex flex-col gap-3 relative z-10">
-                        <div class="size-10 rounded-full bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center text-primary dark:text-blue-300">
-                            <i class="fa-regular fa-calendar-days"></i>
-                        </div>
-                        <div>
-                            <p class="text-text-secondary text-sm font-medium">
-                                Peminjaman Aktif
-                            </p>
-                            <p class="text-text-main dark:text-white text-3xl font-bold mt-1">
-                                8
-                            </p>
-                        </div>
+                    <div>
+                        <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Peminjaman Aktif</p>
+                        <p class="text-xl font-extrabold text-slate-800">8</p>
                     </div>
                 </div>
 
-                <div class="relative overflow-hidden rounded-xl bg-white dark:bg-gray-800 p-6 border border-border-subtle dark:border-gray-700 shadow-sm group hover:border-yellow-500/30 transition-all">
-                    <div class="absolute right-3 top-3 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-                        <i class="fa-solid fa-clock-rotate-left text-yellow-500 text-[80px] leading-none"></i>
+                {{-- CARD 2 --}}
+                <div class="bg-white border border-slate-200 rounded-2xl px-5 py-4 flex items-center gap-3 shadow-sm">
+                    <div class="w-9 h-9 bg-amber-50 rounded-xl flex items-center justify-center flex-shrink-0">
+                        <i class="fa-solid fa-clock-rotate-left text-amber-500 text-sm"></i>
                     </div>
-
-                    <div class="flex flex-col gap-3 relative z-10">
-                        <div class="size-10 rounded-full bg-yellow-50 dark:bg-yellow-900/30 flex items-center justify-center text-yellow-600 dark:text-yellow-300">
-                            <i class="fa-solid fa-clock-rotate-left"></i>
-                        </div>
-                        <div>
-                            <p class="text-text-secondary text-sm font-medium">
-                                Menunggu Persetujuan
-                            </p>
-                            <p class="text-text-main dark:text-white text-3xl font-bold mt-1">
-                                3
-                            </p>
-                        </div>
+                    <div>
+                        <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Menunggu Persetujuan</p>
+                        <p class="text-xl font-extrabold text-slate-800">3</p>
                     </div>
                 </div>
 
-                <div class="relative overflow-hidden rounded-xl bg-white dark:bg-gray-800 p-6 border border-border-subtle dark:border-gray-700 shadow-sm group hover:border-red-500/30 transition-all">
-                    <div class="absolute right-3 top-3 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-                        <i class="fa-solid fa-calendar-xmark text-red-500 text-[80px] leading-none"></i>
+                {{-- CARD 3 --}}
+                <div class="bg-white border border-slate-200 rounded-2xl px-5 py-4 flex items-center gap-3 shadow-sm">
+                    <div class="w-9 h-9 bg-red-50 rounded-xl flex items-center justify-center flex-shrink-0">
+                        <i class="fa-solid fa-calendar-xmark text-red-400 text-sm"></i>
                     </div>
-
-                    <div class="flex flex-col gap-3 relative z-10">
-                        <div class="size-10 rounded-full bg-red-50 dark:bg-red-900/30 flex items-center justify-center text-red-500 dark:text-red-300">
-                            <i class="fa-solid fa-calendar-xmark"></i>
-                        </div>
-                        <div>
-                            <p class="text-text-secondary text-sm font-medium">
-                                Pengajuan Ditolak
-                            </p>
-                            <p class="text-text-main dark:text-white text-3xl font-bold mt-1">
-                                1
-                            </p>
-                        </div>
+                    <div>
+                        <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Pengajuan Ditolak</p>
+                        <p class="text-xl font-extrabold text-slate-800">1</p>
                     </div>
                 </div>
 
             </div>
 
-            {{-- SECTION JADWAL --}}
-            <div class="flex flex-col gap-4 mt-6">
+            {{-- KALENDER --}}
+            <div class="flex flex-col gap-4">
 
-                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                    <div>
-                        <h3 class="text-slate-900 text-xl font-bold">
-                            Jadwal Ruangan
-                        </h3>
-                        <p class="text-sm text-slate-500 mt-1">
-                            Lihat jadwal peminjaman ruangan di seluruh gedung kampus.
-                        </p>
-                    </div>
-
-                    <div class="flex items-center bg-white rounded-lg border border-slate-200 p-1 shadow-sm">
-                        <button class="p-1.5 hover:bg-slate-100 rounded-md transition-colors text-slate-500">
+                {{-- CONTROL --}}
+                <div class="flex justify-end">
+                    <div class="flex items-center bg-white rounded-xl border border-slate-200 px-3 py-1.5 shadow-sm">
+                        <a href="{{ url()->current() . '?' . http_build_query(array_merge(request()->except('tanggal'), ['tanggal' => $prevWeekTanggal])) }}"
+                           class="p-1.5 hover:bg-slate-100 rounded-lg transition-colors text-slate-500">
                             <i class="fa-solid fa-chevron-left"></i>
-                        </button>
+                        </a>
 
                         <span class="px-4 text-sm font-bold text-slate-800">
-                            Januari 2026
+                            {{ $monthLabel }}
                         </span>
 
-                        <button class="p-1.5 hover:bg-slate-100 rounded-md transition-colors text-slate-500">
+                        <a href="{{ url()->current() . '?' . http_build_query(array_merge(request()->except('tanggal'), ['tanggal' => $nextWeekTanggal])) }}"
+                           class="p-1.5 hover:bg-slate-100 rounded-lg transition-colors text-slate-500">
                             <i class="fa-solid fa-chevron-right"></i>
-                        </button>
+                        </a>
 
                         <div class="w-px h-4 bg-slate-200 mx-2"></div>
 
-                        <button class="px-3 py-1 text-xs font-bold bg-primary text-white rounded-md shadow-sm">
-                            Bulan
-                        </button>
-
-                        <button class="px-3 py-1 text-xs font-medium text-slate-500 hover:text-slate-800 rounded-md transition-colors">
+                        <button type="button" class="px-3 py-1 text-xs font-bold bg-primary text-white rounded-lg shadow-sm">
                             Minggu
+                        </button>
+                        <button type="button" disabled
+                                class="px-3 py-1 text-xs font-medium text-slate-400 rounded-lg opacity-50 cursor-not-allowed">
+                            Bulan
                         </button>
                     </div>
                 </div>
 
-                {{-- KALENDER --}}
-                <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col h-[500px]">
+                {{-- CALENDAR --}}
+                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col h-[500px]">
 
-                    <div class="flex border-b border-slate-200 bg-slate-50 z-20">
+                    {{-- HEADER HARI --}}
+                    <div class="flex border-b border-slate-200 bg-slate-50/60 z-20">
                         <div class="w-16 shrink-0 border-r border-slate-200 flex items-center justify-center p-2">
-                            <span class="text-xs font-bold text-slate-500">
-                                GMT+7
-                            </span>
+                            <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">GMT+7</span>
                         </div>
 
                         <div class="flex-1 overflow-hidden">
                             <div class="grid grid-cols-7 w-full min-w-[700px]">
+                                @foreach($days as $day)
+                                    @php
+                                        $isToday   = $day->isSameDay(now());
+                                        $isWeekend = in_array($day->dayOfWeekIso, [6, 7]);
+                                        $abbr      = $day->locale('id')->translatedFormat('D');
+                                    @endphp
 
-                                <div class="p-3 border-r border-slate-200 text-center bg-primary/5">
-                                    <p class="text-xs font-bold text-primary mb-1">Sen</p>
-                                    <div class="size-8 mx-auto flex items-center justify-center bg-primary text-white rounded-full font-bold text-sm shadow-md">
-                                        23
+                                    <div class="p-3 border-r border-slate-200 text-center
+                                        {{ $isToday ? 'bg-primary/5' : ($isWeekend ? 'bg-slate-50/70' : 'group cursor-pointer hover:bg-slate-50 transition-colors') }}">
+
+                                        <p class="text-xs mb-1
+                                            {{ $isWeekend ? 'text-red-400 font-medium' : ($isToday ? 'text-primary font-bold' : 'text-slate-400 font-bold group-hover:text-primary') }}">
+                                            {{ $abbr }}
+                                        </p>
+
+                                        @if($isToday)
+                                            <div class="size-8 mx-auto flex items-center justify-center bg-primary text-white rounded-full font-bold text-sm shadow-md">
+                                                {{ $day->format('d') }}
+                                            </div>
+                                        @else
+                                            <div class="size-8 mx-auto flex items-center justify-center font-bold text-sm
+                                                {{ $isWeekend ? 'text-slate-400' : 'text-slate-800' }}">
+                                                {{ $day->format('d') }}
+                                            </div>
+                                        @endif
                                     </div>
-                                </div>
-
-                                <div class="p-3 border-r border-slate-200 text-center group cursor-pointer hover:bg-slate-50 transition-colors">
-                                    <p class="text-xs font-medium text-slate-500 mb-1 group-hover:text-primary">
-                                        Sel
-                                    </p>
-                                    <div class="size-8 mx-auto flex items-center justify-center text-slate-800 font-bold text-sm">
-                                        24
-                                    </div>
-                                </div>
-
-                                <div class="p-3 border-r border-slate-200 text-center group cursor-pointer hover:bg-slate-50 transition-colors">
-                                    <p class="text-xs font-medium text-slate-500 mb-1 group-hover:text-primary">
-                                        Rab
-                                    </p>
-                                    <div class="size-8 mx-auto flex items-center justify-center text-slate-800 font-bold text-sm">
-                                        25
-                                    </div>
-                                </div>
-
-                                <div class="p-3 border-r border-slate-200 text-center group cursor-pointer hover:bg-slate-50 transition-colors">
-                                    <p class="text-xs font-medium text-slate-500 mb-1 group-hover:text-primary">
-                                        Kam
-                                    </p>
-                                    <div class="size-8 mx-auto flex items-center justify-center text-slate-800 font-bold text-sm">
-                                        26
-                                    </div>
-                                </div>
-
-                                <div class="p-3 border-r border-slate-200 text-center group cursor-pointer hover:bg-slate-50 transition-colors">
-                                    <p class="text-xs font-medium text-slate-500 mb-1 group-hover:text-primary">
-                                        Jum
-                                    </p>
-                                    <div class="size-8 mx-auto flex items-center justify-center text-slate-800 font-bold text-sm">
-                                        27
-                                    </div>
-                                </div>
-
-                                <div class="p-3 border-r border-slate-200 text-center bg-slate-50/70">
-                                    <p class="text-xs font-medium text-red-400 mb-1">Sab</p>
-                                    <div class="size-8 mx-auto flex items-center justify-center text-slate-400 font-bold text-sm">
-                                        28
-                                    </div>
-                                </div>
-
-                                <div class="p-3 text-center bg-slate-50/70">
-                                    <p class="text-xs font-medium text-red-400 mb-1">Min</p>
-                                    <div class="size-8 mx-auto flex items-center justify-center text-slate-400 font-bold text-sm">
-                                        29
-                                    </div>
-                                </div>
-
+                                @endforeach
                             </div>
                         </div>
                     </div>
 
+                    {{-- BODY --}}
                     <div class="flex-1 overflow-y-auto relative custom-scrollbar">
                         <div class="flex min-h-[600px]">
 
+                            {{-- TIME --}}
                             <div class="w-16 shrink-0 flex flex-col border-r border-slate-200 bg-white sticky left-0 z-10">
-                                <div class="h-20 border-b border-slate-200/70 text-[10px] text-slate-500 p-1 text-center relative">
-                                    <span class="-top-2 relative bg-white px-1">08:00</span>
-                                </div>
-                                <div class="h-20 border-b border-slate-200/70 text-[10px] text-slate-500 p-1 text-center relative">
-                                    <span class="-top-2 relative bg-white px-1">09:00</span>
-                                </div>
-                                <div class="h-20 border-b border-slate-200/70 text-[10px] text-slate-500 p-1 text-center relative">
-                                    <span class="-top-2 relative bg-white px-1">10:00</span>
-                                </div>
-                                <div class="h-20 border-b border-slate-200/70 text-[10px] text-slate-500 p-1 text-center relative">
-                                    <span class="-top-2 relative bg-white px-1">11:00</span>
-                                </div>
-                                <div class="h-20 border-b border-slate-200/70 text-[10px] text-slate-500 p-1 text-center relative">
-                                    <span class="-top-2 relative bg-white px-1">12:00</span>
-                                </div>
-                                <div class="h-20 border-b border-slate-200/70 text-[10px] text-slate-500 p-1 text-center relative">
-                                    <span class="-top-2 relative bg-white px-1">13:00</span>
-                                </div>
-                                <div class="h-20 border-b border-slate-200/70 text-[10px] text-slate-500 p-1 text-center relative">
-                                    <span class="-top-2 relative bg-white px-1">14:00</span>
-                                </div>
-                                <div class="h-20 border-b border-slate-200/70 text-[10px] text-slate-500 p-1 text-center relative">
-                                    <span class="-top-2 relative bg-white px-1">15:00</span>
-                                </div>
+                                @for($time = $startHour * 60; $time <= $endHour * 60; $time += 30)
+                                    @php
+                                        $hour   = floor($time / 60);
+                                        $minute = $time % 60;
+                                    @endphp
+                                    <div class="h-10 border-b border-slate-200/70 text-[10px] text-slate-400 p-1 text-center relative">
+                                        <span class="-top-2 relative bg-white px-1">
+                                            {{ sprintf('%02d:%02d', $hour, $minute) }}
+                                        </span>
+                                    </div>
+                                @endfor
                             </div>
 
-                            <div class="flex-1 min-w-[700px] grid grid-cols-7 relative bg-white">
+                            {{-- GRID --}}
+                            <div class="flex-1 min-w-[700px] grid grid-cols-7 relative bg-white"
+                                 style="min-height: {{ $totalHours * $slotHeight }}px;">
 
                                 <div class="absolute inset-0 flex flex-col pointer-events-none">
-                                    <div class="h-20 border-b border-slate-200/70 w-full border-dashed"></div>
-                                    <div class="h-20 border-b border-slate-200/70 w-full border-dashed"></div>
-                                    <div class="h-20 border-b border-slate-200/70 w-full border-dashed"></div>
-                                    <div class="h-20 border-b border-slate-200/70 w-full border-dashed"></div>
-                                    <div class="h-20 border-b border-slate-200/70 w-full border-dashed"></div>
-                                    <div class="h-20 border-b border-slate-200/70 w-full border-dashed"></div>
-                                    <div class="h-20 border-b border-slate-200/70 w-full border-dashed"></div>
-                                    <div class="h-20 border-b border-slate-200/70 w-full border-dashed"></div>
+                                    @for($i = 0; $i < $totalHours; $i++)
+                                        <div class="h-20 border-b border-slate-200/70 w-full border-dashed"></div>
+                                    @endfor
                                 </div>
 
-                                <div class="border-r border-slate-200 relative h-full group">
-                                    <div class="absolute top-10 left-1 right-1 h-[60px] bg-primary/10 border-l-4 border-primary rounded p-2 hover:brightness-95 cursor-pointer z-10 shadow-sm">
-                                        <p class="text-[11px] font-bold text-primary truncate">
-                                            Brainstorming Q4
-                                        </p>
-                                        <p class="text-[10px] text-primary/80 truncate">
-                                            08:30 - 09:30
-                                        </p>
+                                @foreach($days as $day)
+                                    @php
+                                        $dateKey   = $day->toDateString();
+                                        $dayEvents = $eventsByDate->get($dateKey, collect());
+                                        $isWeekend = in_array($day->dayOfWeekIso, [6, 7]);
+                                    @endphp
+
+                                    <div class="border-r border-slate-200 relative h-full {{ $isWeekend ? 'bg-slate-50/50' : '' }}">
+                                        @foreach($dayEvents as $ev)
+                                            @php
+                                                $start = \Illuminate\Support\Carbon::parse($ev->waktu_mulai);
+                                                $end   = \Illuminate\Support\Carbon::parse($ev->waktu_selesai);
+
+                                                $startMinutes = ($start->hour * 60 + $start->minute) - ($startHour * 60);
+                                                $endMinutes   = ($end->hour * 60 + $end->minute) - ($startHour * 60);
+                                                $startMinutes = max(0, $startMinutes);
+                                                $endMinutes   = min($totalHours * 60, $endMinutes);
+
+                                                $duration = max(15, $endMinutes - $startMinutes);
+                                                $topPx    = ($startMinutes / 60) * $slotHeight;
+                                                $heightPx = ($duration / 60) * $slotHeight;
+
+                                                $idx = ($ev->ruangan_id ?? 0) % count($palette);
+                                                $c   = $palette[$idx];
+
+                                                $title    = $ev->mata_kuliah;
+                                                $timeText = $start->format('H:i') . ' - ' . $end->format('H:i');
+                                            @endphp
+
+                                            <div class="absolute left-1 right-1 rounded-lg p-2 hover:brightness-95 cursor-pointer z-10 shadow-sm {{ $c['bg'] }} border-l-4 {{ $c['border'] }}"
+                                                 style="top: {{ $topPx }}px; height: {{ $heightPx }}px;">
+                                                <p class="text-[11px] font-bold truncate {{ $c['title'] }}">{{ $title }}</p>
+                                                <p class="text-[10px] truncate {{ $c['time'] }}">{{ $timeText }}</p>
+                                                <p class="mt-1 text-[10px] text-slate-500 truncate">
+                                                    {{ $ev->dosen_pengampu }}
+                                                    @if($ev->ruangan)
+                                                        • {{ $ev->ruangan->nama_ruang ?? $ev->ruangan->nama ?? ('Ruangan #' . $ev->ruangan_id) }}
+                                                    @endif
+                                                </p>
+                                            </div>
+                                        @endforeach
                                     </div>
-                                </div>
-
-                                <div class="border-r border-slate-200 relative h-full">
-                                    <div class="absolute top-[180px] left-0 right-0 border-t-2 border-red-500 z-20 flex items-center">
-                                        <div class="size-2 bg-red-500 rounded-full -ml-1"></div>
-                                    </div>
-                                </div>
-
-                                <div class="border-r border-slate-200 relative h-full">
-                                    <div class="absolute top-[20px] left-1 right-1 h-[140px] bg-purple-100 border-l-4 border-purple-500 rounded p-2 hover:brightness-95 cursor-pointer z-10 shadow-sm">
-                                        <p class="text-[11px] font-bold text-purple-700 truncate">
-                                            Design Review Sprint
-                                        </p>
-                                        <p class="text-[10px] text-purple-600 truncate">
-                                            08:15 - 10:45
-                                        </p>
-                                        <div class="mt-1 flex -space-x-1">
-                                            <div class="size-4 rounded-full bg-gray-300 border border-white"></div>
-                                            <div class="size-4 rounded-full bg-gray-400 border border-white"></div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="border-r border-slate-200 relative h-full">
-                                    <div class="absolute top-[240px] left-1 right-1 h-[60px] bg-orange-100 border-l-4 border-orange-500 rounded p-2 hover:brightness-95 cursor-pointer z-10 shadow-sm">
-                                        <p class="text-[11px] font-bold text-orange-700 truncate">
-                                            Client Meeting
-                                        </p>
-                                        <p class="text-[10px] text-orange-600 truncate">
-                                            11:00 - 12:00
-                                        </p>
-                                    </div>
-                                </div>
-
-                                <div class="border-r border-slate-200 relative h-full"></div>
-                                <div class="border-r border-slate-200 relative h-full bg-slate-50/50"></div>
-                                <div class="relative h-full bg-slate-50/50"></div>
-
+                                @endforeach
                             </div>
                         </div>
                     </div>
 
                 </div>
 
-            </div>
+                @if($jadwal->count() === 0)
+                    <div class="text-sm text-slate-500 text-center py-6">
+                        Tidak ada jadwal pada minggu ini dengan filter yang dipilih.
+                    </div>
+                @endif
 
+            </div>
         </div>
     </div>
 
     @push('js')
-    <script>
-        document.addEventListener("DOMContentLoaded", function () {
-            function updateDate() {
-                const now = new Date();
-
-                const hari = [
-                    "Minggu",
-                    "Senin",
-                    "Selasa",
-                    "Rabu",
-                    "Kamis",
-                    "Jum'at",
-                    "Sabtu"
-                ];
-
-                const bulan = [
-                    "Januari","Februari","Maret","April","Mei","Juni",
-                    "Juli","Agustus","September","Oktober","November","Desember"
-                ];
-
-                const namaHari = hari[now.getDay()];
-                const tanggal = now.getDate();
-                const namaBulan = bulan[now.getMonth()];
-                const tahun = now.getFullYear();
-
-                const formatTanggal = `${namaHari}, ${tanggal} ${namaBulan} ${tahun}`;
-                document.getElementById("realtime-date").textContent = formatTanggal;
-            }
-
-            updateDate();
-            setInterval(updateDate, 60000);
-        });
-    </script>
+        <script>
+            document.addEventListener("DOMContentLoaded", function () {
+                function updateDate() {
+                    const now = new Date();
+                    const hari = ["Minggu","Senin","Selasa","Rabu","Kamis","Jum'at","Sabtu"];
+                    const bulan = ["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"];
+                    document.getElementById("realtime-date").textContent =
+                        `${hari[now.getDay()]}, ${now.getDate()} ${bulan[now.getMonth()]} ${now.getFullYear()}`;
+                }
+                updateDate();
+                setInterval(updateDate, 60000);
+            });
+        </script>
     @endpush
 </x-master>

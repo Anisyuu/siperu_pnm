@@ -244,7 +244,7 @@
                 </div>
 
                 <div class="px-5 pb-5">
-                    <a href="{{ route('ormawa.list-peminjaman') }}"
+                    <a href="{{ route('mahasiswa.list-peminjaman') }}"
                        class="w-full flex items-center justify-center gap-2 py-2.5 border border-slate-200 text-slate-600 font-semibold text-sm rounded-xl hover:bg-slate-50 transition-colors">
                         Kembali
                     </a>
