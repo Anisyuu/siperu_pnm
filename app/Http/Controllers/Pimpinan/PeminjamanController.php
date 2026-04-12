@@ -14,6 +14,7 @@ class PeminjamanController extends Controller
         $userId = Auth::user()->nomor_induk;
 
         $query = Peminjaman::with(['ruangan.gedung.kampus', 'pemohon'])
+            ->where('status', 'pending')
             ->whereDoesntHave('verifikasi', function ($q) use ($userId) {
                 $q->where('id_verifikator', $userId);
             });

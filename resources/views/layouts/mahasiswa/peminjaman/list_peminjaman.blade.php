@@ -108,7 +108,7 @@
 
                                 <td class="px-4 py-4">
                                     <p class="font-semibold text-slate-700 text-sm leading-tight">
-                                        {{ $item->ruangan->nomor_ruang ?? '-' }} - {{ $item->ruangan->nama_ruang ?? '-' }}
+                                        {{ $item->ruangan->nama_ruang ?? '-' }}
                                     </p>
                                     <p class="text-xs text-slate-400 mt-0.5">
                                         {{ $item->ruangan->gedung->nama ?? '-' }}

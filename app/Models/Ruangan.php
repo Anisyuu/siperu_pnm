@@ -12,7 +12,6 @@ class Ruangan extends Model
         'id_jenis_ruang',
         'id_gedung',
         'lantai',
-        'nomor_ruang',
         'nama_ruang',
         'slug',
     ];

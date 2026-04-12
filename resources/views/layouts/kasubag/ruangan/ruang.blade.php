@@ -104,9 +104,9 @@
             <table class="w-full text-sm">
                 <thead>
                     <tr class="border-b border-slate-100 bg-slate-50/50">
-                        <th class="text-left px-6 py-3.5 text-[11px] font-bold text-slate-400 tracking-widest uppercase w-10">#</th>
+                        <th class="text-left px-6 py-3.5 text-[11px] font-bold text-slate-400 tracking-widest uppercase w-10">No</th>
                         <th class="text-left px-4 py-3.5 text-[11px] font-bold text-slate-400 tracking-widest uppercase">Ruangan</th>
-                        <th class="text-left px-4 py-3.5 text-[11px] font-bold text-slate-400 tracking-widest uppercase">No. Ruang</th>
+                        {{-- <th class="text-left px-4 py-3.5 text-[11px] font-bold text-slate-400 tracking-widest uppercase">No. Ruang</th> --}}
                         <th class="text-left px-4 py-3.5 text-[11px] font-bold text-slate-400 tracking-widest uppercase">Lantai</th>
                         <th class="text-left px-4 py-3.5 text-[11px] font-bold text-slate-400 tracking-widest uppercase">Jenis Ruang</th>
                         <th class="text-left px-4 py-3.5 text-[11px] font-bold text-slate-400 tracking-widest uppercase">Gedung</th>
@@ -126,15 +126,15 @@
                                 </div>
                                 <div>
                                     <p class="font-bold text-slate-800">{{ $item->nama_ruang }}</p>
-                                    <p class="text-xs text-slate-400 mt-0.5">ID: #{{ $item->id }}</p>
+                                    {{-- <p class="text-xs text-slate-400 mt-0.5">ID: #{{ $item->id }}</p> --}}
                                 </div>
                             </div>
                         </td>
-                        <td class="px-4 py-4">
+                        {{-- <td class="px-4 py-4">
                             <span class="inline-flex items-center justify-center w-10 h-10 bg-slate-100 text-slate-700 text-sm font-bold rounded-xl border border-slate-200">
                                 {{ $item->nomor_ruang }}
                             </span>
-                        </td>
+                        </td> --}}
                         <td class="px-4 py-4">
                             <div class="flex items-center gap-2">
                                 <div class="w-8 h-8 bg-blue-50 rounded-lg flex items-center justify-center">
@@ -165,7 +165,6 @@
                                         onclick="openEditModal(
                                             {{ $item->id }},
                                             '{{ addslashes($item->nama_ruang) }}',
-                                            '{{ $item->nomor_ruang }}',
                                             {{ $item->id_jenis_ruang }}
                                         )"
                                         title="Edit"
@@ -286,7 +285,7 @@
             </div>
 
             <div>
-                <label class="block text-sm font-semibold text-slate-700 mb-1.5">Nama Ruang <span class="text-red-500">*</span></label>
+                <label class="block text-sm font-semibold text-slate-700 mb-1.5">Nama Ruang/No Ruang<span class="text-red-500">*</span></label>
                 <div class="relative">
                     <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400 pointer-events-none">
                         <i class="fa-solid fa-door-open text-sm"></i>
@@ -302,7 +301,7 @@
                 @enderror
             </div>
 
-            <div>
+            {{-- <div>
                 <label class="block text-sm font-semibold text-slate-700 mb-1.5">Nomor Ruang <span class="text-red-500">*</span></label>
                 <div class="relative">
                     <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400 pointer-events-none">
@@ -319,7 +318,7 @@
                         <i class="fa-solid fa-circle-exclamation"></i> {{ $message }}
                     </p>
                 @enderror
-            </div>
+            </div> --}}
 
             <div>
                 <label class="block text-sm font-semibold text-slate-700 mb-1.5">Jenis Ruang <span class="text-red-500">*</span></label>
@@ -353,7 +352,7 @@
 
             <div class="flex items-start gap-2 bg-blue-50 text-primary text-xs rounded-xl px-4 py-3">
                 <i class="fa-solid fa-circle-info mt-0.5 shrink-0"></i>
-                <span>Kombinasi <strong>Gedung + Lantai + Nomor Ruang</strong> harus unik.</span>
+                <span>Kombinasi <strong>Gedung + Lantai + Nama Ruang</strong> harus unik.</span>
             </div>
 
             <div class="flex items-center justify-end gap-3 pt-2">
@@ -412,7 +411,7 @@
                 </div>
             </div>
 
-            <div>
+            {{-- <div>
                 <label class="block text-sm font-semibold text-slate-700 mb-1.5">Nomor Ruang <span class="text-red-500">*</span></label>
                 <div class="relative">
                     <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400 pointer-events-none">
@@ -422,7 +421,7 @@
                            style="text-transform:uppercase"
                            class="w-full pl-10 pr-4 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all">
                 </div>
-            </div>
+            </div> --}}
 
             <div>
                 <label class="block text-sm font-semibold text-slate-700 mb-1.5">Jenis Ruang <span class="text-red-500">*</span></label>
@@ -478,12 +477,12 @@
     });
 
     // ── MODAL EDIT ───────────────────────────────────────────────
-    function openEditModal(id, namaRuang, nomorRuang, jenisRuangId) {
+    function openEditModal(id, namaRuang, jenisRuangId) {
         // Set action form ke route Laravel update dengan ID
         document.getElementById('formEditRuangan').action = `/kasubag/ruangan/${id}`;
 
         document.getElementById('editNamaRuang').value  = namaRuang;
-        document.getElementById('editNomorRuang').value = nomorRuang;
+        // document.getElementById('editNomorRuang').value = nomorRuang;
         document.getElementById('editJenisRuang').value = jenisRuangId;
         document.getElementById('editRuanganSubtitle').textContent = namaRuang;
 

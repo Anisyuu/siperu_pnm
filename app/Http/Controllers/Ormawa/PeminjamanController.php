@@ -11,6 +11,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 class PeminjamanController extends Controller
 {
@@ -88,8 +89,9 @@ class PeminjamanController extends Controller
         }
 
         DB::transaction(function () use ($request, $dokumen) {
-            $last = Peminjaman::lockForUpdate()->latest('id')->first();
-            $no   = 'PMJ-' . str_pad(($last ? (int) substr($last->no_peminjaman, 4) + 1 : 1), 5, '0', STR_PAD_LEFT);
+            do {
+                    $no = strtoupper(Str::random(6));
+                } while (Peminjaman::where('no_peminjaman', $no)->exists());
 
             Peminjaman::create([
                 'no_peminjaman'   => $no,

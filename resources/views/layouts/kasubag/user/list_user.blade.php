@@ -13,18 +13,18 @@
                     Manajemen seluruh pengguna sistem
                 </p>
             </div>
-            <div class="flex items-center gap-3">
-                <div class="bg-white border border-slate-200 rounded-2xl px-5 py-4 flex items-center gap-3 shadow-sm">
-                    <div class="w-9 h-9 bg-blue-50 rounded-xl flex items-center justify-center flex-shrink-0">
-                        <i class="fa-solid fa-users text-blue-500 text-sm"></i>
+            <div class="flex items-center gap-2">
+                <div class="bg-white border border-slate-200 rounded-xl px-3 py-2 flex items-center gap-2 shadow-sm">
+                    <div class="w-7 h-7 bg-blue-50 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <i class="fa-solid fa-users text-blue-500 text-xs"></i>
                     </div>
                     <div>
-                        <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Total Pengguna</p>
-                        <p class="text-xl font-extrabold text-slate-800">{{ $users->count() }}</p>
+                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Total Pengguna</p>
+                        <p class="text-base font-extrabold text-slate-800">{{ $users->count() }}</p>
                     </div>
                 </div>
                 <a href="{{ route('kasubag.tambah-user') }}"
-                   class="inline-flex items-center justify-center w-11 h-11 bg-primary text-white rounded-2xl shadow-sm hover:brightness-110 transition">
+                class="inline-flex items-center justify-center w-11 h-11 bg-primary text-white rounded-2xl shadow-sm hover:brightness-110 transition">
                     <i class="fa-solid fa-plus text-sm"></i>
                 </a>
             </div>

@@ -176,6 +176,7 @@
 
                     {{-- Aksi --}}
                     <td class="px-5 py-4 text-center">
+                        @if ($loop->first && $peminjaman->currentPage() == 1)
                         <button onclick="openModal(this)"
                             data-id="{{ $p->id }}"
                             data-no="{{ $p->no_peminjaman }}"
@@ -200,6 +201,7 @@
                             class="inline-flex items-center justify-center w-9 h-9 bg-blue-50 text-blue-500 hover:bg-blue-100 rounded-xl transition-colors opacity-60 group-hover:opacity-100">
                             <i class="fa-regular fa-eye text-sm"></i>
                         </button>
+                        @endif
                     </td>
 
                 </tr>

@@ -29,7 +29,7 @@ class PeminjamanController extends Controller
             $query->where('status', $request->status);
         }
 
-        $peminjaman = $query->latest()->paginate(5);
+        $peminjaman = $query->oldest()->paginate(5);
 
     return view('layouts.sarpras.peminjaman.verifikasi_peminjaman', compact('peminjaman'));
     }
@@ -41,7 +41,7 @@ class PeminjamanController extends Controller
             ->whereHas('verifikasi', function ($q) use ($userId) {
                 $q->where('id_verifikator', $userId);
             });
-        
+
             // SEARCH
         if ($request->filled('search')) {
             $query->where('kegiatan', 'like', '%' . $request->search . '%');

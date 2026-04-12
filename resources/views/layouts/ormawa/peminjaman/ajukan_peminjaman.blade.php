@@ -75,10 +75,10 @@
                                         data-kampus="{{ $r->gedung->kampus->id }}"
                                         data-gedung="{{ $r->gedung->slug }}"
                                         data-lantai="{{ $r->lantai }}"
-                                        data-label="{{ $r->nomor_ruang }} - {{ $r->nama_ruang }}"
+                                        data-label="{{ $r->nama_ruang }}"
                                         data-gedung-nama="{{ $r->gedung->nama }}"
                                         {{ old('ruangan_id') == $r->id ? 'selected' : '' }}>
-                                        {{ $r->nomor_ruang }} - {{ $r->nama_ruang }}
+                                        {{ $r->nama_ruang }}
                                     </option>
                                 @endforeach
                             </select>

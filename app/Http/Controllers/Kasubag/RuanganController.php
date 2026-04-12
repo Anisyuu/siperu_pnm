@@ -57,7 +57,6 @@ class RuanganController extends Controller
             'id_jenis_ruang' => 'required|exists:jenis_ruang,id',
             'gedung_slug'    => 'required|exists:gedung,slug',
             'lantai'         => 'required|integer|min:1',
-            'nomor_ruang'    => 'required|string|max:5',
             'nama_ruang'     => 'required|string|max:25|unique:ruangan,nama_ruang',
         ], [
             'nama_ruang.unique' => 'Nama ruang sudah digunakan.',
@@ -82,25 +81,12 @@ class RuanganController extends Controller
             ])->withInput();
         }
 
-        $exists = Ruangan::where('id_gedung', $gedung->id)
-                         ->where('lantai', $request->lantai)
-                         ->where('nomor_ruang', strtoupper($request->nomor_ruang))
-                         ->exists();
-
-        if ($exists) {
-            Alert::error('Gagal', 'Nomor ruang sudah ada di lantai dan gedung tersebut.');
-            return back()->withErrors([
-                'nomor_ruang' => 'Nomor ruang sudah ada di lantai dan gedung tersebut.',
-            ])->withInput();
-        }
-
         $slug = Str::slug($request->nama_ruang);
 
         Ruangan::create([
             'id_jenis_ruang' => $request->id_jenis_ruang,
             'id_gedung'      => $gedung->id,
             'lantai'         => $request->lantai,
-            'nomor_ruang'    => strtoupper($request->nomor_ruang),
             'nama_ruang'     => $request->nama_ruang,
             'slug'           => $slug,
         ]);
@@ -118,7 +104,6 @@ class RuanganController extends Controller
             'id_jenis_ruang' => 'required|exists:jenis_ruang,id',
             'gedung_slug'    => 'required|exists:gedung,slug',
             'lantai'         => 'required|integer|min:1',
-            'nomor_ruang'    => 'required|string|max:5',
             'nama_ruang'     => 'required|string|max:25',
         ]);
 
@@ -128,19 +113,6 @@ class RuanganController extends Controller
             Alert::error('Gagal', "Lantai {$request->lantai} tidak tersedia. Gedung ini hanya memiliki {$gedung->lantai} lantai.");
             return back()->withErrors([
                 'lantai' => "Lantai {$request->lantai} tidak tersedia. Gedung ini hanya memiliki {$gedung->lantai} lantai.",
-            ])->withInput();
-        }
-
-        $exists = Ruangan::where('id_gedung', $gedung->id)
-                         ->where('lantai', $request->lantai)
-                         ->where('nomor_ruang', strtoupper($request->nomor_ruang))
-                         ->where('id', '!=', $ruangan->id)
-                         ->exists();
-
-        if ($exists) {
-            Alert::error('Gagal', 'Nomor ruang sudah ada di lantai dan gedung tersebut.');
-            return back()->withErrors([
-                'nomor_ruang' => 'Nomor ruang sudah ada di lantai dan gedung tersebut.',
             ])->withInput();
         }
 
@@ -154,7 +126,6 @@ class RuanganController extends Controller
             'id_jenis_ruang' => $request->id_jenis_ruang,
             'id_gedung'      => $gedung->id,
             'lantai'         => $request->lantai,
-            'nomor_ruang'    => strtoupper($request->nomor_ruang),
             'nama_ruang'     => $request->nama_ruang,
             'slug'           => $slug, // tetap pakai slug lama jika nama_ruang tidak berubah
         ]);
