@@ -6,7 +6,7 @@
     {{-- HEADER --}}
     <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-            <h2 class="text-slate-900 text-3xl font-extrabold tracking-tight">Riwayat Verifikasi</h2>
+            <h1 class="text-2xl font-bold tracking-tight text-slate-900">Riwayat Verifikasi</h1>
             <p class="text-slate-500 text-sm mt-1">Riwayat seluruh pengajuan yang telah Anda verifikasi</p>
         </div>
         <button class="inline-flex items-center gap-2 px-5 py-2.5 bg-white border border-slate-200 rounded-2xl text-sm font-semibold text-slate-700 hover:bg-slate-50 transition shadow-sm">
@@ -56,6 +56,7 @@
             <table class="w-full text-sm">
                 <thead>
                     <tr class="border-b border-slate-100 bg-slate-50/60">
+                        <th class="text-left px-5 py-3 text-[11px] font-bold text-slate-400 uppercase tracking-wider">No.</th>
                         <th class="text-left px-5 py-3 text-[11px] font-bold text-slate-400 uppercase tracking-wider">No. Peminjaman</th>
                         <th class="text-left px-4 py-3 text-[11px] font-bold text-slate-400 uppercase tracking-wider">Pemohon</th>
                         <th class="text-left px-4 py-3 text-[11px] font-bold text-slate-400 uppercase tracking-wider">Ruangan</th>
@@ -82,6 +83,11 @@
                     $totalLangkah = $p->verifikasi->count();
                 @endphp
                 <tr class="hover:bg-slate-50/70 transition-colors group">
+
+                    {{-- No. Urut --}}
+                    <td class="px-5 py-4 text-sm text-slate-600 whitespace-nowrap">
+                        {{ $loop->iteration + ($peminjaman->currentPage() - 1) * $peminjaman->perPage() }}
+                    </td>
 
                     {{-- No Peminjaman --}}
                     <td class="px-5 py-4">

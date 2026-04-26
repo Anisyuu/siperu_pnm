@@ -45,7 +45,7 @@
                         </button>
                         <div id="kelolaRuanganSubmenu" class="{{ $isRuanganActive ? '' : 'hidden' }} ml-9 mt-1 border-l border-gray-200 dark:border-gray-700 flex flex-col gap-1">
                             <a href="{{ route('kasubag.jenis-ruang.index') }}" class="pl-4 py-2 text-sm {{ request()->routeIs('kasubag.jenis-ruang.*') ? 'text-blue-600 font-bold' : 'text-gray-500 hover:text-blue-600' }}">Jenis Ruangan</a>
-                            <a href="{{ route('kasubag.kampus.index') }}" class="pl-4 py-2 text-sm {{ request()->routeIs('kasubag.kampus.*') ? 'text-blue-600 font-bold' : 'text-gray-500 hover:text-blue-600' }}">Kampus & Gedung</a>
+                            <a href="{{ route('kasubag.kampus.index') }}" class="pl-4 py-2 text-sm {{ request()->routeIs('kasubag.kampus.*') ? 'text-blue-600 font-bold' : 'text-gray-500 hover:text-blue-600' }}">Lokasi</a>
                         </div>
                     </div>
 

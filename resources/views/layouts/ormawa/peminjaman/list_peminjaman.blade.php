@@ -6,17 +6,13 @@
         {{-- HEADER --}}
         <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
-                <h1 class="text-slate-900 text-3xl font-extrabold tracking-tight">
-                    List Pengajuan Peminjaman
-                </h1>
-                <p class="text-slate-500 text-sm mt-1">
-                    Manajemen seluruh pengajuan peminjaman ruangan
-                </p>
+                <h1 class="text-2xl font-bold tracking-tight text-slate-900">List Pengajuan Peminjaman</h1>
+                <p class="mt-0.5 text-sm text-slate-500">Manajemen seluruh pengajuan peminjaman ruangan</p>
             </div>
-            <div class="flex items-center gap-3">
-                <div class="bg-white border border-slate-200 rounded-2xl px-5 py-4 flex items-center gap-3 shadow-sm">
-                    <div class="w-9 h-9 bg-blue-50 rounded-xl flex items-center justify-center flex-shrink-0">
-                        <i class="fa-solid fa-file-circle-check text-blue-500 text-sm"></i>
+            <div class="flex items-center gap-2">
+                <div class="bg-white border border-slate-200 rounded-xl px-3 py-2 flex items-center gap-2 shadow-sm">
+                    <div class="w-7 h-7 bg-blue-50 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <i class="fa-solid fa-users text-blue-500 text-xs"></i>
                     </div>
                     <div>
                         <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Total Pengajuan</p>
@@ -24,8 +20,9 @@
                     </div>
                 </div>
                 <a href="{{ route('ormawa.ajukan-peminjaman') }}"
-                   class="inline-flex items-center justify-center w-11 h-11 bg-primary text-white rounded-2xl shadow-sm hover:brightness-110 transition">
+                   class="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-primary text-white text-sm font-semibold rounded-2xl shadow-sm hover:brightness-110 active:scale-95 transition">
                     <i class="fa-solid fa-plus text-sm"></i>
+                    Ajukan Peminjaman
                 </a>
             </div>
         </div>
@@ -75,6 +72,7 @@
                 <table class="w-full text-sm">
                     <thead>
                         <tr class="border-b border-slate-100 bg-slate-50/60">
+                            <th class="text-left px-5 py-3 text-[11px] font-bold text-slate-400 uppercase tracking-wider">No.</th>
                             <th class="text-left px-5 py-3 text-[11px] font-bold text-slate-400 uppercase tracking-wider">No. Peminjaman</th>
                             <th class="text-left px-4 py-3 text-[11px] font-bold text-slate-400 uppercase tracking-wider">Diajukan</th>
                             <th class="text-left px-4 py-3 text-[11px] font-bold text-slate-400 uppercase tracking-wider">Kegiatan</th>
@@ -89,6 +87,10 @@
                     <tbody class="divide-y divide-slate-50">
                         @forelse ($peminjaman as $item)
                             <tr class="hover:bg-slate-50/70 transition-colors group">
+
+                                <td class="px-5 py-4 text-sm text-slate-600 whitespace-nowrap">
+                                    {{ $loop->iteration + ($peminjaman->currentPage() - 1) * $peminjaman->perPage() }}
+                                </td>
 
                                 <td class="px-5 py-4">
                                     <span class="font-mono text-xs text-slate-500 bg-slate-100 px-2 py-1 rounded-lg">
@@ -108,7 +110,7 @@
 
                                 <td class="px-4 py-4">
                                     <p class="font-semibold text-slate-700 text-sm leading-tight">
-                                        {{ $item->ruangan->nomor_ruang ?? '-' }} - {{ $item->ruangan->nama_ruang ?? '-' }}
+                                        {{ $item->ruangan->nama_ruang ?? '-' }}
                                     </p>
                                     <p class="text-xs text-slate-400 mt-0.5">
                                         {{ $item->ruangan->gedung->nama ?? '-' }}

@@ -5,12 +5,8 @@
     <!-- HEADER -->
     <div class="mb-7 flex items-center justify-between">
         <div>
-            <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight">
-                Detail Pengajuan
-            </h1>
-            <p class="text-sm text-slate-500 mt-1">
-                Informasi lengkap pengajuan peminjaman
-            </p>
+            <h1 class="text-2xl font-bold tracking-tight text-slate-900">Detail Pengajuan</h1>
+            <p class="mt-0.5 text-sm text-slate-500">Informasi lengkap mengenai pengajuan peminjaman ruangan</p>
         </div>
 
         @php
@@ -41,7 +37,7 @@
                     <div>
                         <p class="text-slate-400 mb-1">Ruangan</p>
                         <p class="font-semibold text-slate-700">
-                            {{ $peminjaman->ruangan->nomor_ruang }} - {{ $peminjaman->ruangan->nama_ruang }}
+                            {{ $peminjaman->ruangan->nama_ruang }}
                         </p>
                     </div>
                     <div>
@@ -211,7 +207,7 @@
                     <div class="flex justify-between items-start gap-4">
                         <span class="text-slate-400 shrink-0">Ruangan</span>
                         <span class="font-semibold text-slate-700 text-right">
-                            {{ $peminjaman->ruangan->nomor_ruang }} - {{ $peminjaman->ruangan->nama_ruang }}
+                            {{ $peminjaman->ruangan->nama_ruang }}
                         </span>
                     </div>
                     <div class="flex justify-between items-start gap-4">
@@ -244,7 +240,7 @@
                 </div>
 
                 <div class="px-5 pb-5">
-                    <a href="{{ route('ormawa.list-peminjaman') }}"
+                    <a href="{{ url()->previous() }}"
                        class="w-full flex items-center justify-center gap-2 py-2.5 border border-slate-200 text-slate-600 font-semibold text-sm rounded-xl hover:bg-slate-50 transition-colors">
                         Kembali
                     </a>

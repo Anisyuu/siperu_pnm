@@ -5,10 +5,10 @@
     {{-- HEADER --}}
     <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-            <h1 class="text-slate-900 text-3xl font-extrabold tracking-tight">
+            <h1 class="text-2xl font-bold tracking-tight text-slate-900">
                 Edit Pengguna
             </h1>
-            <p class="text-slate-500 text-sm mt-1">
+            <p class="mt-0.5 text-sm text-slate-500">
                 Perbarui data pengguna yang sudah ada di dalam sistem
             </p>
         </div>

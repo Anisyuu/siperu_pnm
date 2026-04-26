@@ -22,27 +22,6 @@ protected $table = 'peminjaman';
         'catatan',
     ];
 
-    // protected static function boot()
-    // {
-    //     parent::boot();
-
-    //     static::creating(function ($peminjaman) {
-
-    //         // ambil data terakhir
-    //         $last = self::orderBy('id', 'desc')->first();
-
-    //         if ($last && $last->no_peminjaman) {
-    //             $lastNumber = (int) substr($last->no_peminjaman, 4);
-    //             $newNumber = $lastNumber + 1;
-    //         } else {
-    //             $newNumber = 1;
-    //         }
-
-    //         $peminjaman->no_peminjaman =
-    //             'PMJ-' . str_pad($newNumber, 5, '0', STR_PAD_LEFT);
-    //     });
-    // }
-
         // Relasi ke user pemohon
     public function pemohon()
     {
@@ -67,5 +46,14 @@ protected $table = 'peminjaman';
         return $this->hasOne(Verifikasi::class, 'id_peminjaman')
             ->where('status_verifikasi', 'pending')
             ->orderBy('urutan');
+    }
+
+   public function isBisaDiAksi($collection)
+    {
+        $first = $collection
+            ->where('status', 'pending')
+            ->first();
+
+        return $first && $first->id === $this->id;
     }
 }

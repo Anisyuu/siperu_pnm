@@ -5,8 +5,8 @@
 
     {{-- HEADER --}}
     <div class="mb-7">
-        <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight">Form Peminjaman Ruangan</h1>
-        <p class="text-sm text-slate-500 mt-1">Isi form pengajuan dengan lengkap dan benar.</p>
+        <h1 class="text-2xl font-bold tracking-tight text-slate-900">Form Peminjaman Ruangan</h1>
+        <p class="mt-0.5 text-sm text-slate-500">Isi form pengajuan dengan lengkap dan benar.</p>
     </div>
 
     <form action="{{ route('dosen.simpan-peminjaman') }}" method="POST"
@@ -75,10 +75,10 @@
                                         data-kampus="{{ $r->gedung->kampus->id }}"
                                         data-gedung="{{ $r->gedung->slug }}"
                                         data-lantai="{{ $r->lantai }}"
-                                        data-label="{{ $r->nomor_ruang }} - {{ $r->nama_ruang }}"
+                                        data-nama="{{ $r->nama_ruang }}"
                                         data-gedung-nama="{{ $r->gedung->nama }}"
                                         {{ old('ruangan_id') == $r->id ? 'selected' : '' }}>
-                                        {{ $r->nomor_ruang }} - {{ $r->nama_ruang }}
+                                        {{ $r->nama_ruang }}
                                     </option>
                                 @endforeach
                             </select>

@@ -7,7 +7,8 @@ use Illuminate\Database\Eloquent\Model;
 class Verifikasi extends Model
 {
     protected $table = 'verifikasi';
- 
+
+    // Field yang boleh diisi secara mass assignment (insert/update)
     protected $fillable = [
         'id_peminjaman',
         'id_verifikator',
@@ -17,18 +18,18 @@ class Verifikasi extends Model
         'catatan',
         'waktu_verifikasi',
     ];
- 
+
     protected $casts = [
         'waktu_verifikasi' => 'datetime',
     ];
- 
-    // Relasi ke peminjaman
+
+    // Relasi ke models peminjaman
     public function peminjaman()
     {
         return $this->belongsTo(Peminjaman::class, 'id_peminjaman');
     }
- 
-    // Relasi ke user verifikator
+
+    // Relasi ke user sebagai verifikator
     public function verifikator()
     {
         return $this->belongsTo(User::class, 'id_verifikator', 'nomor_induk');

@@ -12,13 +12,15 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use RealRashid\SweetAlert\Facades\Alert;
 
 class PeminjamanController extends Controller
 {
-    public function listPeminjaman(Request $request)
+    public function listPeminjaman(Request $request) // Menampilkan daftar pengajuan yang masih pending
     {
         $query = Peminjaman::with(['ruangan.gedung'])
-            ->where('pemohon_id', Auth::user()->nomor_induk);
+            ->where('pemohon_id', Auth::user()->nomor_induk)
+            ->where('status', 'pending');
 
         if ($request->filled('search')) {
             $query->where('kegiatan', 'like', '%' . $request->search . '%');
@@ -33,9 +35,10 @@ class PeminjamanController extends Controller
         return view('layouts.ormawa.peminjaman.list_peminjaman', compact('peminjaman'));
     }
 
+    // Menampilkan form pengajuan peminjaman
     public function ajukanPeminjaman()
     {
-        $kampus  = Kampus::orderBy('nama_kampus')->get();
+        $kampus  = Kampus::orderBy('nama_kampus')->get(); // Ambil data kampus, gedung, dan ruangan untuk dropdown
         $gedung  = Gedung::with('kampus')->orderBy('nama')->get();
         $ruangan = Ruangan::with(['gedung.kampus'])->orderBy('nama_ruang')->get();
 
@@ -56,15 +59,18 @@ class PeminjamanController extends Controller
             'kegiatan'      => 'required|string|max:1000',
             'dokumen_bukti' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:2048',
         ], [
+            // Pesan error custom
             'tanggal_mulai.after_or_equal'   => 'Tanggal mulai tidak boleh sebelum hari ini.',
             'tanggal_selesai.after_or_equal' => 'Tanggal selesai tidak boleh sebelum tanggal mulai.',
             'waktu_selesai.after'            => 'Waktu selesai harus setelah waktu mulai.',
         ]);
 
         // Cek bentrok jadwal
+        // Mengecek apakah ruangan sudah dipakai di waktu yang sama
         $bentrok = Peminjaman::where('ruangan_id', $request->ruangan_id)
-            ->where('status', '!=', 'ditolak')
+            ->where('status', 'pending') // cek yang pending
             ->where(function ($q) use ($request) {
+                // Cek bentrok tanggal
                 $q->whereBetween('tanggal_mulai', [$request->tanggal_mulai, $request->tanggal_selesai])
                   ->orWhereBetween('tanggal_selesai', [$request->tanggal_mulai, $request->tanggal_selesai]);
             })
@@ -76,23 +82,28 @@ class PeminjamanController extends Controller
             })
             ->exists();
 
+        // Jika bentrok, tampilkan alert dan kembalikan ke form dengan error
         if ($bentrok) {
+            Alert::error('Jadwal Bentrok', 'Ruangan sudah dipesan pada waktu tersebut. Pilih waktu atau ruangan lain.');
             return back()
                 ->withInput()
                 ->withErrors(['ruangan_id' => 'Ruangan sudah dipesan pada waktu tersebut. Pilih waktu atau ruangan lain.']);
         }
 
+        // Upload dokumen (jika ada)
         $dokumen = null;
         if ($request->hasFile('dokumen_bukti')) {
             $dokumen = $request->file('dokumen_bukti')
                 ->store('dokumen_peminjaman', 'public');
         }
 
+        // Simpan data dalam transaction (biar aman kalau gagal di tengah jalan)
         DB::transaction(function () use ($request, $dokumen) {
             do {
                     $no = strtoupper(Str::random(6));
                 } while (Peminjaman::where('no_peminjaman', $no)->exists());
 
+            // Simpan ke database
             Peminjaman::create([
                 'no_peminjaman'   => $no,
                 'pemohon_id'      => Auth::user()->nomor_induk,
@@ -111,16 +122,19 @@ class PeminjamanController extends Controller
             ->with('success', 'Pengajuan berhasil dikirim.');
     }
 
+    //menampilkan detail peminjaman beserta alur verifikasi dan riwayatnya
     public function detailPeminjaman($id)
     {
         $peminjaman = Peminjaman::with(['ruangan.gedung.kampus', 'verifikasi'])
             ->where('pemohon_id', Auth::user()->nomor_induk)
             ->findOrFail($id);
 
+        // Menentukan jenis pemohon (untuk menentukan alur verifikasi)
         $jenisPemohon = $peminjaman->pemohon->roles->pluck('nama')->first() ?? $peminjaman->pemohon->role;
         // ATAU kalau ambil dari user:
         // $jenisPemohon = Auth::user()->role;
 
+         // Ambil alur verifikasi sesuai jenis pemohon (misal: dosen, ormawa, dll)
         $alur = \App\Models\AlurVerifikasi::where('jenis_pemohon', $jenisPemohon)
             ->orderBy('urutan')
             ->get();
@@ -131,21 +145,26 @@ class PeminjamanController extends Controller
         return view('layouts.ormawa.peminjaman.detail_peminjaman', compact('peminjaman', 'alur', 'riwayat'));
     }
 
+    //membatalkan pengajuan peminjaman yang masih pending (bisa dibatalkan oleh pemohon)
     public function batalkanPeminjaman($id)
     {
+        // Ambil hanya data milik user + status masih pending
         $peminjaman = Peminjaman::where('pemohon_id', Auth::user()->nomor_induk)
             ->where('status', 'pending')
             ->findOrFail($id);
 
+        // Hapus file dokumen jika ada
         if ($peminjaman->dokumen_bukti && Storage::disk('public')->exists($peminjaman->dokumen_bukti)) {
             Storage::disk('public')->delete($peminjaman->dokumen_bukti);
         }
 
+        // Hapus data peminjaman
         $peminjaman->delete();
 
         return redirect()->route('ormawa.list-peminjaman')->with('success', 'Pengajuan berhasil dibatalkan');
     }
 
+    // Menampilkan riwayat peminjaman (yang sudah selesai diproses)
     public function riwayatPeminjaman(Request $request)
     {
         $query = Peminjaman::with(['ruangan.gedung'])

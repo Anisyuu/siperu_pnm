@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Str;
 use RealRashid\SweetAlert\Facades\Alert;
+use Illuminate\Support\Facades\Storage;
 
 class GedungController extends Controller
 {
@@ -19,6 +20,7 @@ class GedungController extends Controller
         $gedungList = Gedung::with(['kampus', 'user'])->withCount('ruangan')
                     ->where('kampus_id', $kampus->id)
                     ->latest()->get();
+                    // dd($gedungList);
 
         $gedung  = Gedung::with(['kampus', 'user'])->withCount('ruangan')
                     ->where('kampus_id', $kampus->id)
@@ -40,6 +42,7 @@ class GedungController extends Controller
             'nama'      => 'required|string|max:25',
             'id_user'   => 'required|exists:user,nomor_induk',
             'lantai'    => 'required|integer|min:1|max:200',
+            'foto' => 'nullable|file|mimes:jpg,jpeg,png,webp|max:2048',
         ]);
 
         $exists = Gedung::where('kampus_id', $request->kampus_id)
@@ -55,10 +58,16 @@ class GedungController extends Controller
 
         $slug = Str::slug($request->nama);
 
+        $fotoPath = null;
+        if ($request->hasFile('foto')) {
+            $fotoPath = $request->file('foto')->store('gedung', 'public');
+        }
+
         $gedung = Gedung::create([
             'kampus_id' => $request->kampus_id,
             'nama'      => $request->nama,
             'slug'      => $slug,
+            'foto'      => $fotoPath,
             'id_user'   => $request->id_user,
             'lantai'    => $request->lantai,
         ]);
@@ -78,6 +87,7 @@ class GedungController extends Controller
             'nama'      => 'required|string|max:25',
             'id_user'   => 'required|exists:user,nomor_induk',
             'lantai'    => 'required|integer|min:1|max:200',
+            'foto' => 'nullable|file|mimes:jpg,jpeg,png,webp|max:2048',
         ]);
 
         $exists = Gedung::where('kampus_id', $request->kampus_id)
@@ -92,6 +102,17 @@ class GedungController extends Controller
             ])->withInput();
         }
 
+        $fotoPath = $gedung->foto;
+
+        if ($request->hasFile('foto')) {
+
+            if ($gedung->foto) {
+                Storage::disk('public')->delete($gedung->foto);
+            }
+
+            $fotoPath = $request->file('foto')->store('gedung', 'public');
+        }
+
         $gedung->update($request->only('kampus_id', 'nama', 'id_user', 'lantai'));
         $gedung->load(['kampus', 'user']);
 
@@ -103,6 +124,11 @@ class GedungController extends Controller
 
     public function destroy(Gedung $gedung)
     {
+
+        if ($gedung->foto) {
+            Storage::disk('public')->delete($gedung->foto);
+        }
+
         $gedung->delete();
 
         Alert::success('Berhasil', 'Gedung berhasil dihapus');

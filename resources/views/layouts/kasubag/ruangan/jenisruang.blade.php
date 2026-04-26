@@ -6,20 +6,20 @@
         {{-- HEADER --}}
         <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
-                <h1 class="text-slate-900 text-3xl font-extrabold tracking-tight">
+                <h1 class="text-2xl font-bold tracking-tight text-slate-900">
                     Jenis Ruang
                 </h1>
-                <p class="text-slate-500 text-sm mt-1">
+                <p class="mt-0.5 text-sm text-slate-500">
                     Kelola kategori ruangan yang tersedia di seluruh gedung kampus.
                 </p>
             </div>
-            <div class="flex items-center gap-3">
-                <div class="bg-white border border-slate-200 rounded-2xl px-5 py-4 flex items-center gap-3 shadow-sm">
-                    <div class="w-9 h-9 bg-blue-50 rounded-xl flex items-center justify-center flex-shrink-0">
-                        <i class="fa-solid fa-tags text-blue-500 text-sm"></i>
+            <div class="flex items-center gap-2">
+                <div class="bg-white border border-slate-200 rounded-xl px-3 py-2 flex items-center gap-2 shadow-sm">
+                    <div class="w-7 h-7 bg-blue-50 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <i class="fa-solid fa-users text-blue-500 text-xs"></i>
                     </div>
                     <div>
-                        <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Total Jenis</p>
+                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Total Jenis</p>
                         <p class="text-xl font-extrabold text-slate-800">{{ $jenisRuang->count() }}</p>
                     </div>
                 </div>
@@ -53,7 +53,7 @@
                 <table class="w-full text-sm">
                     <thead>
                         <tr class="border-b border-slate-100 bg-slate-50/60">
-                            <th class="text-left px-5 py-3 text-[11px] font-bold text-slate-400 uppercase tracking-wider w-10">#</th>
+                            <th class="text-left px-5 py-3 text-[11px] font-bold text-slate-400 uppercase tracking-wider w-10">No.</th>
                             <th class="text-left px-4 py-3 text-[11px] font-bold text-slate-400 uppercase tracking-wider">Nama Jenis Ruang</th>
                             <th class="text-center px-5 py-3 text-[11px] font-bold text-slate-400 uppercase tracking-wider">Aksi</th>
                         </tr>

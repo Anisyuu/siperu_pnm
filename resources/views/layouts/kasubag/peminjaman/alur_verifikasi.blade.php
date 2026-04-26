@@ -6,21 +6,21 @@
         {{-- HEADER --}}
         <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
-                <h1 class="text-slate-900 text-3xl font-extrabold tracking-tight">
+                <h1 class="text-2xl font-bold tracking-tight text-slate-900">
                     Alur Verifikasi
                 </h1>
-                <p class="text-slate-500 text-sm mt-1">
+                <p class="mt-0.5 text-sm text-slate-500">
                     Kelola alur verifikasi untuk berbagai jenis pemohon.
                 </p>
             </div>
-            <div class="flex items-center gap-3">
-                <div class="bg-white border border-slate-200 rounded-2xl px-5 py-4 flex items-center gap-3 shadow-sm">
-                    <div class="w-9 h-9 bg-blue-50 rounded-xl flex items-center justify-center flex-shrink-0">
-                        <i class="fa-solid fa-list-check text-blue-500 text-sm"></i>
+            <div class="flex items-center gap-2">
+                <div class="bg-white border border-slate-200 rounded-xl px-3 py-2 flex items-center gap-2 shadow-sm">
+                    <div class="w-7 h-7 bg-blue-50 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <i class="fa-solid fa-users text-blue-500 text-xs"></i>
                     </div>
                     <div>
-                        <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Total Alur</p>
-                        <p class="text-xl font-extrabold text-slate-800">{{ $totalAlur }}</p>
+                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Total Alur</p>
+                        <p class="text-base font-extrabold text-slate-800">{{ $totalAlur }}</p>
                     </div>
                 </div>
                 <button onclick="openModal()"
@@ -37,7 +37,7 @@
                 <table class="w-full text-sm">
                     <thead>
                         <tr class="border-b border-slate-100 bg-slate-50/60">
-                            <th class="text-left px-5 py-3 text-[11px] font-bold text-slate-400 uppercase tracking-wider w-12">#</th>
+                            <th class="text-left px-5 py-3 text-[11px] font-bold text-slate-400 uppercase tracking-wider w-12">No.</th>
                             <th class="text-left px-4 py-3 text-[11px] font-bold text-slate-400 uppercase tracking-wider">Jenis Pemohon</th>
                             <th class="text-left px-4 py-3 text-[11px] font-bold text-slate-400 uppercase tracking-wider">Alur Verifikasi</th>
                             <th class="text-center px-5 py-3 text-[11px] font-bold text-slate-400 uppercase tracking-wider">Aksi</th>

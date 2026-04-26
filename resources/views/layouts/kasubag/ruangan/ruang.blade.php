@@ -13,7 +13,7 @@
          'url'      => route('kasubag.kampus.index'),
          'subtitle' => $activeGedung?->kampus?->nama_kampus ?? 'Kampus'],
         ['label'    => 'Gedung',
-         'url'      => route('kasubag.gedung.index', $activeGedung?->kampus?->nama_kampus ?? ''),
+         'url'      => route('kasubag.gedung.index', $activeGedung?->kampus?->slug ?? ''),
          'subtitle' => $activeGedung?->nama ?? 'Gedung'],
         ['label'    => 'Lantai ' . $lantai,
          'url'      => route('kasubag.ruangan.index', [$gedungSlug, $lantai]),
@@ -24,8 +24,8 @@
     {{-- HEADER --}}
     <div class="flex items-start justify-between mb-6 flex-wrap gap-4">
         <div>
-            <h1 class="text-3xl font-extrabold text-slate-900 tracking-tight leading-tight">Daftar Ruangan</h1>
-            <p class="text-slate-500 mt-1 text-sm">Kelola dan pantau seluruh ruangan dalam gedung ini.</p>
+            <h1 class="text-2xl font-bold tracking-tight text-slate-900">Daftar Ruangan</h1>
+            <p class="mt-0.5 text-sm text-slate-500">Kelola dan pantau seluruh ruangan dalam gedung ini.</p>
         </div>
         <button onclick="openModal()"
             class="inline-flex items-center gap-2 bg-primary hover:bg-blue-500 active:scale-95 text-white text-sm font-semibold px-6 py-3 rounded-xl  transition-all duration-200 cursor-pointer">

@@ -13,13 +13,13 @@
                     Riwayat seluruh pengajuan peminjaman ruangan
                 </p>
             </div>
-            <div class="flex items-center gap-3">
-                <div class="bg-white border border-slate-200 rounded-2xl px-5 py-4 flex items-center gap-3 shadow-sm">
-                    <div class="w-9 h-9 bg-blue-50 rounded-xl flex items-center justify-center flex-shrink-0">
-                        <i class="fa-solid fa-file-circle-check text-blue-500 text-sm"></i>
+            <div class="flex items-center gap-2">
+                <div class="bg-white border border-slate-200 rounded-xl px-3 py-2 flex items-center gap-2 shadow-sm">
+                    <div class="w-7 h-7 bg-blue-50 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <i class="fa-solid fa-users text-blue-500 text-xs"></i>
                     </div>
                     <div>
-                        <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Total Pengajuan</p>
+                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Total Pengajuan</p>
                         <p class="text-xl font-extrabold text-slate-800">{{ $peminjaman->total() }}</p>
                     </div>
                 </div>
@@ -27,7 +27,7 @@
         </div>
 
         {{-- FILTER --}}
-        <form method="GET" action="{{ route('mahasiswa.list-peminjaman') }}" class="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm">
+        <form method="GET" action="{{ route('mahasiswa.riwayat-peminjaman') }}" class="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm">
             <div class="flex flex-col md:flex-row gap-3">
                 <div class="relative flex-1">
                     <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm pointer-events-none"></i>
@@ -52,7 +52,7 @@
                     Terapkan
                 </button>
                 @if(request()->hasAny(['search', 'status']))
-                <a href="{{ route('mahasiswa.list-peminjaman') }}"
+                <a href="{{ route('mahasiswa.riwayat-peminjaman') }}"
                     class="px-4 py-2.5 border border-slate-200 text-sm text-slate-500 font-semibold rounded-xl hover:bg-slate-50 transition">
                     Reset
                 </a>
@@ -71,6 +71,7 @@
                 <table class="w-full text-sm">
                     <thead>
                         <tr class="border-b border-slate-100 bg-slate-50/60">
+                            <th class="text-left px-5 py-3 text-[11px] font-bold text-slate-400 uppercase tracking-wider">No.</th>
                             <th class="text-left px-5 py-3 text-[11px] font-bold text-slate-400 uppercase tracking-wider">No. Peminjaman</th>
                             <th class="text-left px-4 py-3 text-[11px] font-bold text-slate-400 uppercase tracking-wider">Diajukan</th>
                             <th class="text-left px-4 py-3 text-[11px] font-bold text-slate-400 uppercase tracking-wider">Kegiatan</th>
@@ -86,6 +87,9 @@
                         @forelse ($peminjaman as $item)
                             <tr class="hover:bg-slate-50/70 transition-colors group">
 
+                                <td class="px-5 py-4 text-sm text-slate-600 whitespace-nowrap">
+                                    {{ $loop->iteration + ($peminjaman->currentPage() - 1) * $peminjaman->perPage() }}
+
                                 <td class="px-5 py-4">
                                     <span class="font-mono text-xs text-slate-500 bg-slate-100 px-2 py-1 rounded-lg">
                                         {{ $item->no_peminjaman }}
@@ -93,7 +97,7 @@
                                 </td>
 
                                 <td class="px-4 py-4 text-sm text-slate-600 whitespace-nowrap">
-                                    {{ \Carbon\Carbon::parse($item->created_at)->locale('id')->translatedFormat('d F Y H:i') }}
+                                    {{ \Carbon\Carbon::parse($item->created_at)->locale('id')->translatedFormat('d M Y H:i') }}
                                 </td>
 
                                 <td class="px-4 py-4">
@@ -104,7 +108,7 @@
 
                                 <td class="px-4 py-4">
                                     <p class="font-semibold text-slate-700 text-sm leading-tight">
-                                        {{ $item->ruangan->nomor_ruang ?? '-' }} - {{ $item->ruangan->nama_ruang ?? '-' }}
+                                        {{ $item->ruangan->nama_ruang ?? '-' }}
                                     </p>
                                     <p class="text-xs text-slate-400 mt-0.5">
                                         {{ $item->ruangan->gedung->nama ?? '-' }}
@@ -112,10 +116,10 @@
                                 </td>
 
                                 <td class="px-4 py-4 text-sm text-slate-600">
-                                    {{ \Carbon\Carbon::parse($item->tanggal_mulai)->locale('id')->translatedFormat('d F Y') }}
+                                    {{ \Carbon\Carbon::parse($item->tanggal_mulai)->locale('id')->translatedFormat('d M Y') }}
                                     @if($item->tanggal_mulai !== $item->tanggal_selesai)
                                         <div class="text-xs text-slate-400">
-                                            s/d {{ \Carbon\Carbon::parse($item->tanggal_selesai)->locale('id')->translatedFormat('d F Y') }}
+                                            s/d {{ \Carbon\Carbon::parse($item->tanggal_selesai)->locale('id')->translatedFormat('d M Y') }}
                                         </div>
                                     @endif
                                 </td>

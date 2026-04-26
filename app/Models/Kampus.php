@@ -12,6 +12,7 @@ class Kampus extends Model
     protected $fillable = [
         'nama_kampus',
         'slug',
+        'foto',
     ];
 
     public function gedung()

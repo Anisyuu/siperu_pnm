@@ -25,10 +25,10 @@
     {{-- ===== HEADER ===== --}}
     <div class="flex items-start justify-between mb-10 flex-wrap gap-4">
         <div>
-            <h1 class="text-4xl font-extrabold text-slate-900 tracking-tight leading-tight">
+            <h1 class="text-2xl font-bold tracking-tight text-slate-900">
                 Daftar Kampus
             </h1>
-            <p class="text-slate-500 mt-1 text-sm max-w-sm leading-relaxed">
+            <p class="mt-0.5 text-sm text-slate-500">
                 Kelola data kampus yang memiliki gedung dan ruangan di lingkungan PNM.
             </p>
         </div>
@@ -43,7 +43,7 @@
     <div class="grid grid-cols-2 md:grid-cols-2 gap-4" id="kampusGrid">
 
         @forelse($kampus as $item)
-        <div class="bg-white rounded-xl overflow-hidden  hover:-translate-y-1 transition-all duration-300 group">
+        <div class="bg-white rounded-xl overflow-hidden hover:-translate-y-1 transition-all duration-300 group">
 
             <div class="relative h-56 overflow-hidden m-4 rounded-xl">
                 @if($item->foto)
@@ -59,6 +59,11 @@
 
             {{-- Card Body --}}
             <div class="p-5">
+                <div class="flex items-center gap-2 mb-3">
+                    <span class="w-2 h-2 rounded-full bg-blue-400 shrink-0"></span>
+                    <span class="text-[15px] font-semibold text-slate-800 truncate">{{ $item->nama_kampus }}</span>
+                    <span class="text-[10px] bg-blue-50 text-blue-700 rounded-full px-2.5 py-0.5 font-semibold whitespace-nowrap">PNM</span>
+                </div>
                 <div class="flex items-center justify-between">
                     <div class="flex items-center gap-3">
                         <div class="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center text-blue-500 shrink-0">
@@ -71,8 +76,12 @@
                     </div>
                     <div class="flex items-center gap-2">
 
-                        <button onclick="openEditModal({{ $item->id }}, '{{ $item->nama_kampus }}')"
-                               class="w-8 h-8 flex items-center justify-center bg-orange-200/40 border border-orange-300 text-orange-500 rounded-lg  hover:bg-orange-300/50 hover:border-orange-400 transition-all">
+                        {{-- UBAH: tambah parameter foto --}}
+                        <button onclick="openEditModal(
+                            {{ $item->id }},
+                            '{{ $item->nama_kampus }}',
+                            '{{ $item->foto ? asset('storage/' . $item->foto) : '' }}'
+                        )" class="w-8 h-8 flex items-center justify-center bg-orange-200/40 border border-orange-300 text-orange-500 rounded-lg hover:bg-orange-300/50 hover:border-orange-400 transition-all">
                             <i class="fa-solid fa-pen-to-square text-xs"></i>
                         </button>
 
@@ -86,6 +95,7 @@
                                 <i class="fa-solid fa-trash text-xs"></i>
                             </button>
                         </form>
+
                         <a href="{{ route('kasubag.gedung.index', ['slug' => $item->slug]) }}"
                         class="inline-flex items-center gap-2 border border-slate-200 hover:border-blue-500 hover:text-primary hover:bg-blue-50 text-slate-700 text-sm font-semibold px-5 py-2.5 rounded-xl transition-all duration-200">
                             Lihat Gedung
@@ -97,12 +107,6 @@
 
         </div>
         @empty
-        {{--
-            PERBAIKAN #1:
-            Grid adalah md:grid-cols-2, jadi empty state harus col-span-2.
-            Versi sebelumnya juga col-span-2 tapi tanpa md: prefix,
-            lebih aman pakai md:col-span-2 agar responsive.
-        --}}
         <div class="col-span-1 md:col-span-2 flex flex-col items-center justify-center py-24 text-center">
             <div class="w-20 h-20 bg-slate-100 rounded-2xl flex items-center justify-center mb-5">
                 <i class="fa-solid fa-building text-4xl text-slate-300"></i>
@@ -110,7 +114,7 @@
             <p class="text-slate-700 font-semibold text-lg">Belum ada kampus</p>
             <p class="text-slate-400 text-sm mt-1 max-w-xs">
                 Tambahkan kampus pertama Anda dengan klik tombol
-                <span class="font-semibold text-blue-500">+ Add Campus</span>.
+                <span class="font-semibold text-blue-500">+ Tambah Kampus</span>.
             </p>
         </div>
         @endforelse
@@ -149,9 +153,11 @@
         </div>
 
         <div class="px-6 py-5">
-            <form action="{{ route('kasubag.kampus.store') }}" method="POST" novalidate>
+            {{-- UBAH: tambah enctype --}}
+            <form action="{{ route('kasubag.kampus.store') }}" method="POST" enctype="multipart/form-data" novalidate>
                 @csrf
 
+                {{-- Input Nama --}}
                 <div class="mb-5">
                     <label for="nama_kampus" class="block text-sm font-semibold text-slate-700 mb-1.5">
                         Nama Kampus <span class="text-red-500 ml-0.5">*</span>
@@ -166,12 +172,44 @@
                                value="{{ old('nama_kampus') }}"
                                placeholder="Contoh: Kampus Utama"
                                maxlength="50"
-                               {{-- PERBAIKAN #5: tambah class error jika ada validation error --}}
                                class="w-full pl-10 pr-4 py-2.5 text-sm text-slate-800 bg-slate-50 border {{ $errors->has('nama_kampus') ? 'border-red-400 bg-red-50' : 'border-slate-200' }} rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-slate-300 transition-all duration-200"
                                autofocus>
                     </div>
-                    {{-- PERBAIKAN #5: tampilkan error validasi server --}}
                     @error('nama_kampus')
+                        <p class="mt-1.5 text-xs text-red-500 flex items-center gap-1">
+                            <i class="fa-solid fa-circle-exclamation text-xs"></i>
+                            {{ $message }}
+                        </p>
+                    @enderror
+                </div>
+
+                {{-- TAMBAH: Input Foto --}}
+                <div class="mb-5">
+                    <label class="block text-sm font-semibold text-slate-700 mb-1.5">
+                        Foto Kampus
+                        <span class="text-slate-400 text-xs font-normal">(opsional)</span>
+                    </label>
+
+                    {{-- Preview --}}
+                    <div id="previewCreate" class="hidden mb-2 rounded-xl overflow-hidden h-36 bg-slate-100">
+                        <img id="previewImgCreate" src="" class="w-full h-full object-cover">
+                    </div>
+
+                    <label class="flex items-center gap-3 border-2 border-dashed border-slate-200
+                                   hover:border-blue-400 rounded-xl p-4 cursor-pointer transition-all group">
+                        <div class="w-9 h-9 bg-blue-50 rounded-lg flex items-center justify-center
+                                    text-blue-400 group-hover:bg-blue-100 shrink-0">
+                            <i class="fa-solid fa-cloud-arrow-up"></i>
+                        </div>
+                        <div>
+                            <p class="text-sm font-semibold text-slate-700">Klik untuk upload foto</p>
+                            <p class="text-xs text-slate-400">JPG, PNG, WEBP — maks. 2MB</p>
+                        </div>
+                        <input type="file" name="foto" accept="image/*" class="hidden"
+                               onchange="previewFoto(this, 'previewCreate', 'previewImgCreate')">
+                    </label>
+
+                    @error('foto')
                         <p class="mt-1.5 text-xs text-red-500 flex items-center gap-1">
                             <i class="fa-solid fa-circle-exclamation text-xs"></i>
                             {{ $message }}
@@ -191,7 +229,7 @@
                         Batal
                     </button>
                     <button type="submit"
-                            class="inline-flex items-center gap-2 px-6 py-2.5 text-sm font-semibold text-white bg-primary hover:bg-blue-500 rounded-xl  transition-all duration-200">
+                            class="inline-flex items-center gap-2 px-6 py-2.5 text-sm font-semibold text-white bg-primary hover:bg-blue-500 rounded-xl transition-all duration-200">
                         <i class="fa-solid fa-floppy-disk text-xs"></i>
                         Simpan Kampus
                     </button>
@@ -212,7 +250,7 @@
     <div class="absolute inset-0 bg-slate-900/50 backdrop-blur-sm"
          onclick="closeEditModal()"></div>
 
-    <div class="relative bg-white rounded-2xl  w-full max-w-md transform transition-all duration-300 scale-95 opacity-0"
+    <div class="relative bg-white rounded-2xl w-full max-w-md transform transition-all duration-300 scale-95 opacity-0"
          id="modalEditPanel">
 
         <div class="flex items-center justify-between px-6 pt-6 pb-4 border-b border-slate-100">
@@ -232,10 +270,12 @@
         </div>
 
         <div class="px-6 py-5">
-            <form id="editKampusForm" method="POST" novalidate>
+            {{-- UBAH: tambah enctype --}}
+            <form id="editKampusForm" method="POST" enctype="multipart/form-data" novalidate>
                 @csrf
                 @method('PUT')
 
+                {{-- Input Nama --}}
                 <div class="mb-5">
                     <label class="block text-sm font-semibold text-slate-700 mb-1.5">
                         Nama Kampus <span class="text-red-500">*</span>
@@ -255,6 +295,33 @@
                     </p>
                 </div>
 
+                {{-- TAMBAH: Input Foto Edit --}}
+                <div class="mb-5">
+                    <label class="block text-sm font-semibold text-slate-700 mb-1.5">
+                        Foto Kampus
+                        <span class="text-slate-400 text-xs font-normal">(kosongkan jika tidak diubah)</span>
+                    </label>
+
+                    {{-- Preview foto existing atau baru --}}
+                    <div id="previewEdit" class="hidden mb-2 rounded-xl overflow-hidden h-36 bg-slate-100">
+                        <img id="previewImgEdit" src="" class="w-full h-full object-cover">
+                    </div>
+
+                    <label class="flex items-center gap-3 border-2 border-dashed border-slate-200
+                                   hover:border-amber-400 rounded-xl p-4 cursor-pointer transition-all group">
+                        <div class="w-9 h-9 bg-amber-50 rounded-lg flex items-center justify-center
+                                    text-amber-400 group-hover:bg-amber-100 shrink-0">
+                            <i class="fa-solid fa-cloud-arrow-up"></i>
+                        </div>
+                        <div>
+                            <p class="text-sm font-semibold text-slate-700">Klik untuk ganti foto</p>
+                            <p class="text-xs text-slate-400">JPG, PNG, WEBP — maks. 2MB</p>
+                        </div>
+                        <input type="file" name="foto" accept="image/*" class="hidden"
+                               onchange="previewFoto(this, 'previewEdit', 'previewImgEdit')">
+                    </label>
+                </div>
+
                 <div class="flex items-center justify-end gap-3">
                     <button type="button" onclick="closeEditModal()"
                             class="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl transition-all">
@@ -270,7 +337,6 @@
         </div>
     </div>
 </div>
-
 
 
 @push('js')
@@ -292,7 +358,6 @@
         setTimeout(() => modal.classList.add('hidden'), 300);
     }
 
-    // PERBAIKAN #7: Buka modal otomatis jika ada validation error dari server
     @if($errors->any())
         openModal();
     @endif
@@ -304,10 +369,22 @@
     const editModal      = document.getElementById('modalEditKampus');
     const editModalPanel = document.getElementById('modalEditPanel');
 
-    function openEditModal(id, namaKampus) {
+    // UBAH: tambah parameter fotoUrl
+    function openEditModal(id, namaKampus, fotoUrl = null) {
         document.getElementById('editKampusForm').action = `/kasubag/kampus/${id}`;
         document.getElementById('edit_nama_kampus').value = namaKampus;
         document.getElementById('editModalSubtitle').textContent = namaKampus;
+
+        // Tampilkan foto existing jika ada
+        const previewEdit    = document.getElementById('previewEdit');
+        const previewImgEdit = document.getElementById('previewImgEdit');
+        if (fotoUrl && fotoUrl !== '') {
+            previewEdit.classList.remove('hidden');
+            previewImgEdit.src = fotoUrl;
+        } else {
+            previewEdit.classList.add('hidden');
+            previewImgEdit.src = '';
+        }
 
         editModal.classList.remove('hidden');
         setTimeout(() => editModalPanel.classList.remove('scale-95', 'opacity-0'), 10);
@@ -319,6 +396,26 @@
         setTimeout(() => editModal.classList.add('hidden'), 300);
     }
 
+
+    // ============================================================
+    // PREVIEW FOTO (TAMBAH BARU)
+    // ============================================================
+    function previewFoto(input, previewWrapId, previewImgId) {
+        const file = input.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            document.getElementById(previewWrapId).classList.remove('hidden');
+            document.getElementById(previewImgId).src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+    }
+
+
+    // ============================================================
+    // KONFIRMASI HAPUS
+    // ============================================================
     function confirmDeleteKampus(id, namaKampus) {
         event.preventDefault();
 
@@ -339,12 +436,14 @@
         });
     }
 
-    // Tutup modal dengan Escape
+
+    // ============================================================
+    // TUTUP MODAL DENGAN ESCAPE
+    // ============================================================
     document.addEventListener('keydown', e => {
         if (e.key === 'Escape') {
             closeModal();
             closeEditModal();
-            closeDeleteModal();
         }
     });
 

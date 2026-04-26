@@ -9,13 +9,13 @@
 
     <div class="flex items-start justify-between mb-8 flex-wrap gap-4">
         <div>
-            <h1 class="text-3xl font-extrabold text-slate-900 tracking-tight leading-tight">Daftar Gedung</h1>
-            <p class="text-slate-500 mt-1 text-sm">
-                Kelola gedung-gedung yang ada di kampus <span class="font-semibold text-slate-700">{{ $kampus->nama_kampus }}</span>
+            <h1 class="text-2xl font-bold tracking-tight text-slate-900">Daftar Gedung</h1>
+            <p class="mt-0.5 text-sm text-slate-500">
+                Kelola gedung-gedung yang ada di <span class="font-semibold text-slate-700">{{ $kampus->nama_kampus }}</span>
             </p>
         </div>
         <button onclick="openModal()"
-            class="inline-flex items-center gap-2 bg-primary hover:bg-blue-500 active:scale-95 text-white text-sm font-semibold px-6 py-3 rounded-xl  transition-all duration-200 cursor-pointer">
+            class="inline-flex items-center gap-2 bg-primary hover:bg-blue-500 active:scale-95 text-white text-sm font-semibold px-6 py-3 rounded-xl transition-all duration-200 cursor-pointer">
             <i class="fa-solid fa-plus text-xs"></i> Tambah Gedung
         </button>
     </div>
@@ -43,7 +43,7 @@
                             <span class="font-semibold">{{ $item->user->nama_lengkap ?? 'Belum ditentukan' }}</span>
                         </div>
                     </div>
-                    <div class="flex items-center gap-1 5">
+                    <div class="flex items-center gap-1.5">
                         <div class="flex items-center gap-1.5 text-xs text-slate-500">
                             <i class="fa-solid fa-map-pin text-blue-400 text-[11px]"></i>
                             <span class="font-semibold">{{ $item->kampus->nama_kampus }}</span>
@@ -62,20 +62,22 @@
                 </div>
 
                 <div class="flex items-center gap-2 shrink-0">
-                    {{-- Edit: buka modal edit, set action form ke route update --}}
+                    {{-- UBAH: tambah parameter fotoUrl --}}
                     <button type="button"
                             onclick="event.stopPropagation(); openEditGedung(
                                 '{{ $item->slug }}',
                                 '{{ addslashes($item->nama) }}',
                                 {{ $item->lantai }},
-                                '{{ $item->id_user }}'
+                                '{{ $item->id_user }}',
+                                '{{ $item->foto ? asset('storage/' . $item->foto) : '' }}'
                             )"
                             class="w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 hover:text-amber-600 hover:bg-amber-50 transition-all"
                             title="Edit">
                         <i class="fa-solid fa-pen-to-square text-sm"></i>
                     </button>
 
-                    <form action="{{ route('kasubag.gedung.destroy', $item->slug) }}" method="POST" onsubmit="return confirmDeleteGedung(event, '{{ $item->nama }}')" >
+                    <form action="{{ route('kasubag.gedung.destroy', $item->slug) }}" method="POST"
+                          onsubmit="return confirmDeleteGedung(event, '{{ $item->nama }}')">
                         @csrf
                         @method('DELETE')
                         <button type="submit"
@@ -114,7 +116,7 @@
             </div>
             <p class="text-slate-700 font-semibold text-lg">Belum ada gedung</p>
             <p class="text-slate-400 text-sm mt-1 max-w-xs">
-                Tambahkan gedung pertama dengan klik <span class="font-semibold text-blue-500">+ Add Building</span>.
+                Tambahkan gedung pertama dengan klik <span class="font-semibold text-blue-500">+ Tambah Gedung</span>.
             </p>
         </div>
         @endforelse
@@ -124,7 +126,7 @@
 
 
 {{-- ============================================================ --}}
-{{-- MODAL CREATE — route: kasubag.gedung.store                   --}}
+{{-- MODAL CREATE                                                  --}}
 {{-- ============================================================ --}}
 <div id="modalGedung" class="fixed inset-0 z-50 flex items-center justify-center p-4 hidden" aria-modal="true">
     <div class="absolute inset-0 bg-slate-900/50 backdrop-blur-sm" onclick="closeModal()"></div>
@@ -145,10 +147,12 @@
             </button>
         </div>
 
-        <form action="{{ route('kasubag.gedung.store') }}" method="POST" class="px-6 py-5 space-y-4">
+        {{-- UBAH: tambah enctype --}}
+        <form action="{{ route('kasubag.gedung.store') }}" method="POST" enctype="multipart/form-data" class="px-6 py-5 space-y-4">
             @csrf
             <input type="hidden" name="kampus_id" value="{{ $kampus->id }}">
 
+            {{-- Kampus (readonly) --}}
             <div>
                 <label class="block text-sm font-semibold text-slate-700 mb-1.5">Kampus</label>
                 <div class="relative">
@@ -160,6 +164,7 @@
                 </div>
             </div>
 
+            {{-- Nama Gedung --}}
             <div>
                 <label class="block text-sm font-semibold text-slate-700 mb-1.5">Nama Gedung <span class="text-red-500">*</span></label>
                 <div class="relative">
@@ -176,6 +181,7 @@
                 @enderror
             </div>
 
+            {{-- Manager --}}
             <div>
                 <label class="block text-sm font-semibold text-slate-700 mb-1.5">Manager / PIC Sarpras</label>
                 <div class="relative">
@@ -196,6 +202,7 @@
                 </div>
             </div>
 
+            {{-- Jumlah Lantai --}}
             <div>
                 <label class="block text-sm font-semibold text-slate-700 mb-1.5">Jumlah Lantai <span class="text-red-500">*</span></label>
                 <div class="relative">
@@ -208,6 +215,39 @@
                 <p class="mt-1 text-xs text-slate-400">Jumlah lantai menentukan pilihan lantai saat tambah ruangan.</p>
                 @error('lantai')
                     <p class="mt-1 text-xs text-red-500 flex items-center gap-1">
+                        <i class="fa-solid fa-circle-exclamation"></i> {{ $message }}
+                    </p>
+                @enderror
+            </div>
+
+            {{-- TAMBAH: Input Foto --}}
+            <div>
+                <label class="block text-sm font-semibold text-slate-700 mb-1.5">
+                    Foto Gedung
+                    <span class="text-slate-400 text-xs font-normal">(opsional)</span>
+                </label>
+
+                {{-- Preview --}}
+                <div id="previewCreate" class="hidden mb-2 rounded-xl overflow-hidden h-36 bg-slate-100">
+                    <img id="previewImgCreate" src="" class="w-full h-full object-cover">
+                </div>
+
+                <label class="flex items-center gap-3 border-2 border-dashed border-slate-200
+                               hover:border-indigo-400 rounded-xl p-4 cursor-pointer transition-all group">
+                    <div class="w-9 h-9 bg-indigo-50 rounded-lg flex items-center justify-center
+                                text-indigo-400 group-hover:bg-indigo-100 shrink-0">
+                        <i class="fa-solid fa-cloud-arrow-up"></i>
+                    </div>
+                    <div>
+                        <p class="text-sm font-semibold text-slate-700">Klik untuk upload foto</p>
+                        <p class="text-xs text-slate-400">JPG, PNG, WEBP — maks. 2MB</p>
+                    </div>
+                    <input type="file" name="foto" accept="image/*" class="hidden"
+                           onchange="previewFoto(this, 'previewCreate', 'previewImgCreate')">
+                </label>
+
+                @error('foto')
+                    <p class="mt-1.5 text-xs text-red-500 flex items-center gap-1">
                         <i class="fa-solid fa-circle-exclamation"></i> {{ $message }}
                     </p>
                 @enderror
@@ -229,12 +269,11 @@
 
 
 {{-- ============================================================ --}}
-{{-- MODAL EDIT — route: kasubag.gedung.update + @method('PUT')  --}}
-{{-- action di-set via JS saat tombol edit diklik                 --}}
+{{-- MODAL EDIT                                                    --}}
 {{-- ============================================================ --}}
 <div id="modalEditGedung" class="fixed inset-0 z-50 flex items-center justify-center p-4 hidden" aria-modal="true">
     <div class="absolute inset-0 bg-slate-900/50 backdrop-blur-sm" onclick="closeEditGedung()"></div>
-    <div id="modalEditGedungPanel" class="relative bg-white rounded-2xl  w-full max-w-lg transform transition-all duration-300 scale-95 opacity-0">
+    <div id="modalEditGedungPanel" class="relative bg-white rounded-2xl w-full max-w-lg transform transition-all duration-300 scale-95 opacity-0">
 
         <div class="flex items-center justify-between px-6 pt-6 pb-4 border-b border-slate-100">
             <div class="flex items-center gap-3">
@@ -251,12 +290,13 @@
             </button>
         </div>
 
-        {{-- action diisi JS: route('kasubag.gedung.update', $slug) --}}
-        <form id="formEditGedung" method="POST" class="px-6 py-5 space-y-4">
+        {{-- UBAH: tambah enctype --}}
+        <form id="formEditGedung" method="POST" enctype="multipart/form-data" class="px-6 py-5 space-y-4">
             @csrf
             @method('PUT')
-            <input type="hidden" name="id_kampus" value="{{ $kampus->id }}">
+            <input type="hidden" name="kampus_id" value="{{ $kampus->id }}">
 
+            {{-- Nama Gedung --}}
             <div>
                 <label class="block text-sm font-semibold text-slate-700 mb-1.5">Nama Gedung <span class="text-red-500">*</span></label>
                 <div class="relative">
@@ -271,6 +311,7 @@
                 </p>
             </div>
 
+            {{-- Manager --}}
             <div>
                 <label class="block text-sm font-semibold text-slate-700 mb-1.5">Manager / PIC</label>
                 <div class="relative">
@@ -290,6 +331,7 @@
                 </div>
             </div>
 
+            {{-- Jumlah Lantai --}}
             <div>
                 <label class="block text-sm font-semibold text-slate-700 mb-1.5">Jumlah Lantai <span class="text-red-500">*</span></label>
                 <div class="relative">
@@ -299,6 +341,33 @@
                     <input type="number" id="editGedungLantai" name="lantai" min="1"
                            class="w-full pl-10 pr-4 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all">
                 </div>
+            </div>
+
+            {{-- TAMBAH: Input Foto Edit --}}
+            <div>
+                <label class="block text-sm font-semibold text-slate-700 mb-1.5">
+                    Foto Gedung
+                    <span class="text-slate-400 text-xs font-normal">(kosongkan jika tidak diubah)</span>
+                </label>
+
+                {{-- Preview foto existing atau baru --}}
+                <div id="previewEdit" class="hidden mb-2 rounded-xl overflow-hidden h-36 bg-slate-100">
+                    <img id="previewImgEdit" src="" class="w-full h-full object-cover">
+                </div>
+
+                <label class="flex items-center gap-3 border-2 border-dashed border-slate-200
+                               hover:border-amber-400 rounded-xl p-4 cursor-pointer transition-all group">
+                    <div class="w-9 h-9 bg-amber-50 rounded-lg flex items-center justify-center
+                                text-amber-400 group-hover:bg-amber-100 shrink-0">
+                        <i class="fa-solid fa-cloud-arrow-up"></i>
+                    </div>
+                    <div>
+                        <p class="text-sm font-semibold text-slate-700">Klik untuk ganti foto</p>
+                        <p class="text-xs text-slate-400">JPG, PNG, WEBP — maks. 2MB</p>
+                    </div>
+                    <input type="file" name="foto" accept="image/*" class="hidden"
+                           onchange="previewFoto(this, 'previewEdit', 'previewImgEdit')">
+                </label>
             </div>
 
             <div class="flex items-center justify-end gap-3 pt-2">
@@ -314,6 +383,7 @@
         </form>
     </div>
 </div>
+
 
 @push('js')
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -346,7 +416,6 @@
             return;
         }
 
-        // Tutup yang lain
         openFloors.forEach(s => {
             document.getElementById(`floor-panel-${s}`)?.classList.add('hidden');
             const i = document.getElementById(`arrow-icon-${s}`);
@@ -378,16 +447,38 @@
         }
     }
 
+    // ── PREVIEW FOTO ─────────────────────────────────────────────
+    function previewFoto(input, previewWrapId, previewImgId) {
+        const file = input.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            document.getElementById(previewWrapId).classList.remove('hidden');
+            document.getElementById(previewImgId).src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+    }
+
     // ── MODAL EDIT ───────────────────────────────────────────────
-    // Hanya set action form ke route update — submit tetap via HTML form biasa
-    function openEditGedung(slug, nama, lantai, userId) {
-        // Set action form ke route Laravel update dengan slug
+    // UBAH: tambah parameter fotoUrl
+    function openEditGedung(slug, nama, lantai, userId, fotoUrl = null) {
         document.getElementById('formEditGedung').action = `/kasubag/gedung/${slug}`;
 
         document.getElementById('editGedungNama').value   = nama;
         document.getElementById('editGedungLantai').value = lantai;
         document.getElementById('editGedungUser').value   = userId;
         document.getElementById('editGedungSubtitle').textContent = nama;
+
+        // Tampilkan foto existing jika ada
+        const previewEdit    = document.getElementById('previewEdit');
+        const previewImgEdit = document.getElementById('previewImgEdit');
+        if (fotoUrl && fotoUrl !== '') {
+            previewEdit.classList.remove('hidden');
+            previewImgEdit.src = fotoUrl;
+        } else {
+            previewEdit.classList.add('hidden');
+            previewImgEdit.src = '';
+        }
 
         const errEl = document.getElementById('editGedungErrNama');
         errEl.classList.add('hidden'); errEl.classList.remove('flex');
@@ -398,19 +489,18 @@
             document.getElementById('editGedungNama').focus();
         }, 10);
     }
+
     function closeEditGedung() {
         document.getElementById('modalEditGedungPanel').classList.add('scale-95', 'opacity-0');
         setTimeout(() => document.getElementById('modalEditGedung').classList.add('hidden'), 300);
     }
 
-    // ── MODAL DELETE ─────────────────────────────────────────────
+    // ── KONFIRMASI HAPUS ─────────────────────────────────────────
     function confirmDeleteGedung(event, nama) {
+        event.preventDefault();
+        event.stopPropagation();
 
-        event.preventDefault()
-        event.stopPropagation() // ini yang menghentikan trigger ke arrow
-
-        const form = event.currentTarget
-
+        const form = event.currentTarget;
         Swal.fire({
             title: 'Yakin ingin menghapus?',
             text: `Gedung "${nama}" akan dihapus secara permanen!`,
@@ -421,21 +511,20 @@
             confirmButtonText: 'Ya, hapus!',
             cancelButtonText: 'Batal'
         }).then((result) => {
-
             if (result.isConfirmed) {
-                form.submit()
+                form.submit();
             }
+        });
 
-        })
-
-        return false
+        return false;
     }
-    // Escape key
+
+    // ── ESCAPE KEY ───────────────────────────────────────────────
     document.addEventListener('keydown', e => {
         if (e.key !== 'Escape') return;
-        closeModal(); closeEditGedung(); closeDeleteGedung();
+        closeModal();
+        closeEditGedung();
     });
-
 </script>
 @endpush
 

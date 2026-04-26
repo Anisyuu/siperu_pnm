@@ -6,63 +6,100 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Jadwal;
 use App\Models\Ruangan;
+use App\Models\Peminjaman;
 use Illuminate\Support\Carbon;
-
 
 class JadwalController extends Controller
 {
     public function jadwalRuangan(Request $request)
     {
-        // tanggal acuan (kalau kosong => hari ini)
-        $anchor = $request->filled('tanggal')
-            ? Carbon::parse($request->tanggal)
-            : now();
+        // ===== 1. Tentukan minggu =====
+        $anchor    = $request->filled('tanggal') ? Carbon::parse($request->tanggal) : now();
+        $weekStart = $anchor->copy()->startOfWeek(Carbon::MONDAY);
+        $weekEnd   = $weekStart->copy()->addDays(6);
 
-        // minggu dimulai Senin
-        $weekStart = $anchor->copy()->startOfWeek(Carbon::MONDAY)->startOfDay();
-        $weekEnd   = $weekStart->copy()->addDays(6)->endOfDay();
+        // ===== 2. Ambil jadwal =====
+        $jadwal = Jadwal::with('ruangan')
+            ->whereBetween('tanggal', [$weekStart, $weekEnd])
+            ->when($request->ruangan_id, fn ($q) =>
+                $q->where('ruangan_id', $request->ruangan_id)
+            )
+            ->when($request->keyword, function ($q) use ($request) {
+                $kw = $request->keyword;
+                $q->where(fn ($sub) =>
+                    $sub->where('mata_kuliah', 'like', "%$kw%")
+                        ->orWhere('dosen_pengampu', 'like', "%$kw%")
+                        ->orWhere('catatan', 'like', "%$kw%")
+                );
+            })
+            ->orderBy('tanggal')
+            ->orderBy('waktu_mulai')
+            ->get();
 
-        // query jadwal (week range)
-        $q = Jadwal::query()->with('ruangan')
-            ->whereBetween('tanggal', [$weekStart->toDateString(), $weekEnd->toDateString()]);
+        // ===== 3. Ambil peminjaman =====
+        $peminjaman = Peminjaman::with('ruangan')
+            ->whereIn('status', ['disetujui'])
+            ->where(function ($q) use ($weekStart, $weekEnd) {
+                $q->whereBetween('tanggal_mulai', [$weekStart, $weekEnd])
+                  ->orWhereBetween('tanggal_selesai', [$weekStart, $weekEnd]);
+            })
+            ->get();
 
-        // filter ruangan
-        if ($request->filled('ruangan_id')) {
-            $q->where('ruangan_id', $request->ruangan_id);
-        }
+        // ===== 4. Mapping ke format event =====
+        $events = collect()
+            ->merge($this->mapJadwal($jadwal))
+            ->merge($this->mapPeminjaman($peminjaman))
+            ->sortBy(['tanggal', 'waktu_mulai'])
+            ->values();
 
-        // keyword (mata kuliah / dosen / catatan)
-        if ($request->filled('keyword')) {
-            $kw = $request->keyword;
-            $q->where(function ($sub) use ($kw) {
-                $sub->where('mata_kuliah', 'like', "%{$kw}%")
-                    ->orWhere('dosen_pengampu', 'like', "%{$kw}%")
-                    ->orWhere('catatan', 'like', "%{$kw}%");
-            });
-        }
+        // ===== 5. Grouping =====
+        $eventsByDate = $events->groupBy(fn ($e) =>
+            Carbon::parse($e['tanggal'])->toDateString()
+        );
 
-        $jadwal = $q->orderBy('tanggal')->orderBy('waktu_mulai')->get();
+        // ===== 6. Generate hari =====
+        $days = collect(range(0, 6))
+            ->map(fn ($i) => $weekStart->copy()->addDays($i));
 
-        // list ruangan untuk dropdown (sesuaikan field nama kalau beda)
-        $ruangan = Ruangan::orderBy('nama_ruang')->get();
+        return view('layouts.pimpinan.jadwal.jadwal_ruangan', [
+            'ruangan'       => Ruangan::orderBy('nama_ruang')->get(),
+            'events'        => $events,
+            'eventsByDate'  => $eventsByDate,
+            'days'          => $days,
+            'weekStart'     => $weekStart,
+            'weekEnd'       => $weekEnd,
+            'monthLabel'    => $weekStart->translatedFormat('F Y'),
+        ]);
+    }
 
-        // array 7 hari (Sen–Min)
-        $days = collect(range(0, 6))->map(fn ($i) => $weekStart->copy()->addDays($i));
+    // ===== Helper: mapping jadwal =====
+    private function mapJadwal($data)
+    {
+        return $data->map(fn ($item) => [
+            'tanggal'        => $item->tanggal,
+            'waktu_mulai'    => $item->waktu_mulai,
+            'waktu_selesai'  => $item->waktu_selesai,
+            'title'          => $item->mata_kuliah,
+            'subtitle'       => $item->dosen_pengampu,
+            'ruangan'        => $item->ruangan->nama_ruang ?? '-',
+            'type'           => 'jadwal',
+        ]);
+    }
 
-        // group event by tanggal (Y-m-d)
-        $eventsByDate = $jadwal->groupBy(fn ($row) => Carbon::parse($row->tanggal)->toDateString());
+    // ===== Helper: mapping peminjaman =====
+    private function mapPeminjaman($data)
+    {
+        {
+        return $data->map(fn ($item) => [
+            'tanggal'        => $item->tanggal_mulai,
+            'waktu_mulai'    => $item->waktu_mulai,
+            'waktu_selesai'  => $item->waktu_selesai,
+            'title'          => "Peminjaman Pada Ruang " . $item->ruangan->nama_ruang,
+            'subtitle'       => $item->kegiatan,
+            'ruangan'        => $item->ruangan->nama_ruang ?? '-',
+            'type'           => 'peminjaman',
+        ]);
+    }
 
-        // label bulan (pakai start week)
-        $monthLabel = $weekStart->locale('id')->translatedFormat('F Y');
-
-        return view('layouts.pimpinan.jadwal.jadwal_ruangan', compact(
-            'ruangan',
-            'jadwal',
-            'days',
-            'eventsByDate',
-            'weekStart',
-            'weekEnd',
-            'monthLabel'
-        ));
     }
 }

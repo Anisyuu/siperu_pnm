@@ -6,8 +6,8 @@
     {{-- HEADER --}}
     <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-            <h2 class="text-slate-900 text-3xl font-extrabold tracking-tight">Verifikasi Peminjaman</h2>
-            <p class="text-slate-500 text-sm mt-1">Kelola dan verifikasi seluruh pengajuan peminjaman ruangan</p>
+            <h1 class="text-2xl font-bold tracking-tight text-slate-900">Verifikasi Peminjaman</h1>
+            <p class="mt-0.5 text-sm text-slate-500">Kelola dan verifikasi seluruh pengajuan peminjaman ruangan</p>
         </div>
         <button class="inline-flex items-center gap-2 px-5 py-2.5 bg-white border border-slate-200 rounded-2xl text-sm font-semibold text-slate-700 hover:bg-slate-50 transition shadow-sm">
             <i class="fa-solid fa-file-export text-slate-400"></i>
@@ -91,7 +91,9 @@
             <table class="w-full text-sm">
                 <thead>
                     <tr class="border-b border-slate-100 bg-slate-50/60">
+                        <th class="text-left px-5 py-3 text-[11px] font-bold text-slate-400 uppercase tracking-wider">No.</th>
                         <th class="text-left px-5 py-3 text-[11px] font-bold text-slate-400 uppercase tracking-wider">No. Peminjaman</th>
+                        <th class="text-left px-4 py-3 text-[11px] font-bold text-slate-400 uppercase tracking-wider">Diajukan</th>
                         <th class="text-left px-4 py-3 text-[11px] font-bold text-slate-400 uppercase tracking-wider">Pemohon</th>
                         <th class="text-left px-4 py-3 text-[11px] font-bold text-slate-400 uppercase tracking-wider">Ruangan</th>
                         <th class="text-left px-4 py-3 text-[11px] font-bold text-slate-400 uppercase tracking-wider">Tanggal</th>
@@ -104,11 +106,21 @@
                 @forelse($peminjaman as $p)
                 <tr class="hover:bg-slate-50/70 transition-colors group">
 
+                    {{-- No. Urut --}}
+                    <td class="px-5 py-4 text-sm text-slate-500">
+                        {{ ($peminjaman->currentPage() - 1) * $peminjaman->perPage() + $loop->iteration }}
+                    </td>
+
                     {{-- No Peminjaman --}}
                     <td class="px-5 py-4">
                         <span class="font-mono text-xs text-slate-500 bg-slate-100 px-2 py-1 rounded-lg">
                             {{ $p->no_peminjaman }}
                         </span>
+                    </td>
+
+                    {{-- Diajukan --}}
+                    <td class="px-4 py-4 text-sm text-slate-600 whitespace-nowrap">
+                        {{ \Carbon\Carbon::parse($p->created_at)->locale('id')->translatedFormat('d M Y H:i') }}
                     </td>
 
                     {{-- Pemohon --}}
@@ -176,6 +188,7 @@
 
                     {{-- Aksi --}}
                     <td class="px-5 py-4 text-center">
+                        @if ($p->status == 'pending' && $p->isBisaDiAksi($peminjaman))
                         <button onclick="openModal(this)"
                             data-id="{{ $p->id }}"
                             data-no="{{ $p->no_peminjaman }}"
@@ -186,8 +199,8 @@
                             data-gedung="{{ $p->ruangan->gedung->nama }}"
                             data-lantai="{{ $p->ruangan->lantai }}"
                             data-kampus="{{ $p->ruangan->gedung->kampus->nama_kampus ?? '' }}"
-                            data-tanggal-mulai="{{ \Carbon\Carbon::parse($p->tanggal_mulai)->locale('id')->translatedFormat('d F Y') }}"
-                            data-tanggal-selesai="{{ \Carbon\Carbon::parse($p->tanggal_selesai)->locale('id')->translatedFormat('d F Y') }}"
+                            data-tanggal-mulai="{{ \Carbon\Carbon::parse($p->tanggal_mulai)->locale('id')->translatedFormat('d M Y') }}"
+                            data-tanggal-selesai="{{ \Carbon\Carbon::parse($p->tanggal_selesai)->locale('id')->translatedFormat('d M Y') }}"
                             data-tanggal-sama="{{ $p->tanggal_mulai === $p->tanggal_selesai ? '1' : '0' }}"
                             data-waktu-mulai="{{ \Carbon\Carbon::parse($p->waktu_mulai)->format('H:i') }}"
                             data-waktu-selesai="{{ \Carbon\Carbon::parse($p->waktu_selesai)->format('H:i') }}"
@@ -209,6 +222,7 @@
                             class="inline-flex items-center justify-center w-9 h-9 bg-blue-50 text-blue-500 hover:bg-blue-100 rounded-xl transition-colors opacity-60 group-hover:opacity-100">
                             <i class="fa-regular fa-eye text-sm"></i>
                         </button>
+                        @endif
                     </td>
 
                 </tr>

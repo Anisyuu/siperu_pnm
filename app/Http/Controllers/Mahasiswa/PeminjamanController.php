@@ -11,6 +11,7 @@ use App\Models\Ruangan;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use RealRashid\SweetAlert\Facades\Alert;
 
 class PeminjamanController extends Controller
@@ -18,7 +19,8 @@ class PeminjamanController extends Controller
     public function listPeminjaman(Request $request)
     {
         $query = Peminjaman::with(['ruangan.gedung'])
-            ->where('pemohon_id', Auth::user()->nomor_induk);
+            ->where('pemohon_id', Auth::user()->nomor_induk)
+            ->where('status', 'pending');
 
         if ($request->filled('search')) {
             $query->where('kegiatan', 'like', '%' . $request->search . '%');
@@ -63,7 +65,7 @@ class PeminjamanController extends Controller
 
         // Cek bentrok jadwal
         $bentrok = Peminjaman::where('ruangan_id', $request->ruangan_id)
-            ->where('status', '!=', 'ditolak')
+            ->where('status', 'pending')
             ->where(function ($q) use ($request) {
                 $q->whereBetween('tanggal_mulai', [$request->tanggal_mulai, $request->tanggal_selesai])
                   ->orWhereBetween('tanggal_selesai', [$request->tanggal_mulai, $request->tanggal_selesai]);
@@ -90,8 +92,9 @@ class PeminjamanController extends Controller
         }
 
         DB::transaction(function () use ($request, $dokumen) {
-            $last = Peminjaman::lockForUpdate()->latest('id')->first();
-            $no   = 'PMJ-' . str_pad(($last ? (int) substr($last->no_peminjaman, 4) + 1 : 1), 5, '0', STR_PAD_LEFT);
+             do {
+                    $no = strtoupper(Str::random(6));
+                } while (Peminjaman::where('no_peminjaman', $no)->exists());
 
             Peminjaman::create([
                 'no_peminjaman'   => $no,

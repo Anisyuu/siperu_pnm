@@ -5,8 +5,8 @@
 
     {{-- HEADER --}}
     <div class="mb-7">
-        <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight">Form Peminjaman Ruangan</h1>
-        <p class="text-sm text-slate-500 mt-1">Isi form pengajuan dengan lengkap dan benar.</p>
+        <h1 class="text-2xl font-bold tracking-tight text-slate-900">Form Peminjaman Ruangan</h1>
+        <p class="mt-0.5 text-sm text-slate-500">Isi form pengajuan dengan lengkap dan benar.</p>
     </div>
 
     <form action="{{ route('ormawa.simpan-peminjaman') }}" method="POST"

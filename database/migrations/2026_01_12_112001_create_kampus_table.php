@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('nama_kampus',50)->unique();
             $table->string('slug',100)->unique()->nullable();
+            $table->string('foto')->nullable();
             $table->timestamps();
         });
     }

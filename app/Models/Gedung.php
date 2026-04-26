@@ -13,6 +13,7 @@ class Gedung extends Model
         'id_user',
         'kampus_id',
         'lantai',
+        'foto',
         'slug',
     ];
 

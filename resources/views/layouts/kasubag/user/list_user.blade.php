@@ -6,12 +6,8 @@
         {{-- HEADER --}}
         <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
-                <h1 class="text-slate-900 text-3xl font-extrabold tracking-tight">
-                    Kelola Pengguna
-                </h1>
-                <p class="text-slate-500 text-sm mt-1">
-                    Manajemen seluruh pengguna sistem
-                </p>
+                <h1 class="text-2xl font-bold tracking-tight text-slate-900">Kelola Pengguna</h1>
+                <p class="mt-0.5 text-sm text-slate-500">Manajemen seluruh pengguna sistem</p>
             </div>
             <div class="flex items-center gap-2">
                 <div class="bg-white border border-slate-200 rounded-xl px-3 py-2 flex items-center gap-2 shadow-sm">
@@ -24,8 +20,9 @@
                     </div>
                 </div>
                 <a href="{{ route('kasubag.tambah-user') }}"
-                class="inline-flex items-center justify-center w-11 h-11 bg-primary text-white rounded-2xl shadow-sm hover:brightness-110 transition">
-                    <i class="fa-solid fa-plus text-sm"></i>
+                class="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-primary text-white text-sm font-semibold rounded-2xl shadow-sm hover:brightness-110 active:scale-95 transition">
+                    <i class="fa-solid fa-plus text-xs"></i>
+                    Tambah Pengguna
                 </a>
             </div>
         </div>
@@ -74,7 +71,7 @@
                 <table class="w-full text-sm">
                     <thead>
                         <tr class="border-b border-slate-100 bg-slate-50/60">
-                            <th class="text-left px-5 py-3 text-[11px] font-bold text-slate-400 uppercase tracking-wider">No</th>
+                            <th class="text-left px-5 py-3 text-[11px] font-bold text-slate-400 uppercase tracking-wider">No.</th>
                             <th class="text-left px-4 py-3 text-[11px] font-bold text-slate-400 uppercase tracking-wider">Pengguna</th>
                             <th class="text-left px-4 py-3 text-[11px] font-bold text-slate-400 uppercase tracking-wider">Email</th>
                             <th class="text-left px-4 py-3 text-[11px] font-bold text-slate-400 uppercase tracking-wider">Nomor Induk</th>

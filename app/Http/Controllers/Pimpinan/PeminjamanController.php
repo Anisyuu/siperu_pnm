@@ -11,13 +11,38 @@ class PeminjamanController extends Controller
 {
     public function verifikasiPeminjaman(Request $request)
     {
-        $userId = Auth::user()->nomor_induk;
+        $user = Auth::user();
+        $userRoles = $user->roles->pluck('nama');
 
-        $query = Peminjaman::with(['ruangan.gedung.kampus', 'pemohon'])
+        $query = Peminjaman::with([
+                'ruangan.gedung.kampus',
+                'pemohon.roles',
+                'verifikasiAktif'
+            ])
             ->where('status', 'pending')
-            ->whereDoesntHave('verifikasi', function ($q) use ($userId) {
-                $q->where('id_verifikator', $userId);
+
+            // ❗ hanya ambil yang step verifikasinya cocok dengan user login
+            ->where(function ($q) use ($userRoles) {
+                $q->whereDoesntHave('verifikasi') // ⬅️ BELUM ADA VERIFIKASI (pengajuan baru)
+                ->orWhereHas('verifikasiAktif', function ($q2) use ($userRoles) {
+                    $q2->whereIn('role_verifikator', $userRoles);
+                });
+            })
+
+            // ❗ pastikan jenis pemohon sesuai dengan alur
+            ->whereHas('pemohon.roles', function ($q) use ($userRoles) {
+                $q->whereIn('nama', function ($sub) use ($userRoles) {
+                    $sub->select('jenis_pemohon')
+                        ->from('alur_verifikasi')
+                        ->whereIn('role_verifikator', $userRoles);
+                });
+            })
+
+            // ❗ belum diverifikasi oleh user ini
+            ->whereDoesntHave('verifikasi', function ($q) use ($user) {
+                $q->where('id_verifikator', $user->nomor_induk);
             });
+
 
         // SEARCH
         if ($request->filled('search')) {

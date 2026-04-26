@@ -266,7 +266,7 @@ Route::middleware(['auth'])->group(function () {
         Route::delete('/batalkan-peminjaman/{id}', [DosenPeminjamanController::class, 'batalkanPeminjaman'])
             ->name('batalkan-peminjaman');
 
-        Route::get('/riwayat-peminjaman', [DosenRiwayatController::class, 'riwayatPeminjaman'])
+        Route::get('/riwayat-peminjaman', [DosenPeminjamanController::class, 'riwayatPeminjaman'])
             ->name('riwayat-peminjaman');
     });
 

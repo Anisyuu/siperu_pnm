@@ -6,7 +6,7 @@
     {{-- HEADER --}}
     <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-            <h2 class="text-slate-900 text-3xl font-extrabold tracking-tight">Verifikasi Peminjaman</h2>
+            <h1 class="text-2xl font-bold tracking-tight text-slate-900">Verifikasi Peminjaman</h1>
             <p class="text-slate-500 text-sm mt-1">Kelola dan verifikasi seluruh pengajuan peminjaman ruangan</p>
         </div>
         <button class="inline-flex items-center gap-2 px-5 py-2.5 bg-white border border-slate-200 rounded-2xl text-sm font-semibold text-slate-700 hover:bg-slate-50 transition shadow-sm">
@@ -22,7 +22,7 @@
                 <i class="fa-solid fa-inbox text-slate-500 text-sm"></i>
             </div>
             <div>
-                <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Total</p>
+                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Total</p>
                 <p class="text-xl font-extrabold text-slate-800">{{ $peminjaman->total() }}</p>
             </div>
         </div>
@@ -91,7 +91,9 @@
             <table class="w-full text-sm">
                 <thead>
                     <tr class="border-b border-slate-100 bg-slate-50/60">
+                        <th class="text-left px-5 py-3 text-[11px] font-bold text-slate-400 uppercase tracking-wider">No.</th>
                         <th class="text-left px-5 py-3 text-[11px] font-bold text-slate-400 uppercase tracking-wider">No. Peminjaman</th>
+                        <th class="text-left px-4 py-3 text-[11px] font-bold text-slate-400 uppercase tracking-wider">Diajukan</th>
                         <th class="text-left px-4 py-3 text-[11px] font-bold text-slate-400 uppercase tracking-wider">Pemohon</th>
                         <th class="text-left px-4 py-3 text-[11px] font-bold text-slate-400 uppercase tracking-wider">Ruangan</th>
                         <th class="text-left px-4 py-3 text-[11px] font-bold text-slate-400 uppercase tracking-wider">Tanggal</th>
@@ -104,11 +106,21 @@
                 @forelse($peminjaman as $p)
                 <tr class="hover:bg-slate-50/70 transition-colors group">
 
+                    {{-- No. --}}
+                    <td class="px-5 py-4 text-sm text-slate-600 whitespace-nowrap">
+                        {{ $loop->iteration + ($peminjaman->currentPage() - 1) * $peminjaman->perPage() }}
+                    </td>
+
                     {{-- No Peminjaman --}}
                     <td class="px-5 py-4">
                         <span class="font-mono text-xs text-slate-500 bg-slate-100 px-2 py-1 rounded-lg">
                             {{ $p->no_peminjaman }}
                         </span>
+                    </td>
+
+                    {{-- Diajukan --}}
+                    <td class="px-4 py-4 text-sm text-slate-600 whitespace-nowrap">
+                        {{ \Carbon\Carbon::parse($p->created_at)->locale('id')->translatedFormat('d F Y H:i') }}
                     </td>
 
                     {{-- Pemohon --}}
@@ -175,8 +187,9 @@
                     </td>
 
                     {{-- Aksi --}}
+
                     <td class="px-5 py-4 text-center">
-                        @if ($loop->first && $peminjaman->currentPage() == 1)
+                       @if ($p->status == 'pending' && $p->isBisaDiAksi($peminjaman))
                         <button onclick="openModal(this)"
                             data-id="{{ $p->id }}"
                             data-no="{{ $p->no_peminjaman }}"
@@ -299,6 +312,17 @@
                         </div>
                     </div>
                 </div>
+
+                {{-- <div>
+                    <p class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-1.5">
+                        <i class="fa-solid fa-door-open text-blue-400"></i> Dokumen Bukti
+                    </p>
+                    <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 grid grid-cols-2 gap-4 text-sm">
+                        @foreach ($peminjaman as $p)
+                            <a href="{{ $p->dokumen_bukti }}">Link</a>
+                        @endforeach
+                    </div>
+                </div> --}}
 
                 {{-- DETAIL RUANGAN --}}
                 <div>

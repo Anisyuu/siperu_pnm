@@ -6,20 +6,16 @@
         {{-- HEADER --}}
         <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
-                <h1 class="text-slate-900 text-3xl font-extrabold tracking-tight">
-                    Riwayat Peminjaman
-                </h1>
-                <p class="text-slate-500 text-sm mt-1">
-                    Riwayat seluruh pengajuan peminjaman ruangan
-                </p>
+                <h1 class="text-2xl font-bold tracking-tight text-slate-900">Riwayat Peminjaman</h1>
+                <p class="mt-0.5 text-sm text-slate-500">Riwayat seluruh pengajuan peminjaman ruangan</p>
             </div>
-            <div class="flex items-center gap-3">
-                <div class="bg-white border border-slate-200 rounded-2xl px-5 py-4 flex items-center gap-3 shadow-sm">
-                    <div class="w-9 h-9 bg-blue-50 rounded-xl flex items-center justify-center flex-shrink-0">
-                        <i class="fa-solid fa-file-circle-check text-blue-500 text-sm"></i>
+            <div class="flex items-center gap-2">
+                <div class="bg-white border border-slate-200 rounded-xl px-3 py-2 flex items-center gap-2 shadow-sm">
+                    <div class="w-7 h-7 bg-blue-50 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <i class="fa-solid fa-users text-blue-500 text-xs"></i>
                     </div>
                     <div>
-                        <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Total Pengajuan</p>
+                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Total Pengajuan</p>
                         <p class="text-xl font-extrabold text-slate-800">{{ $peminjaman->total() }}</p>
                     </div>
                 </div>
@@ -93,7 +89,7 @@
                                 </td>
 
                                 <td class="px-4 py-4 text-sm text-slate-600 whitespace-nowrap">
-                                    {{ \Carbon\Carbon::parse($item->created_at)->locale('id')->translatedFormat('d F Y H:i') }}
+                                    {{ \Carbon\Carbon::parse($item->created_at)->locale('id')->translatedFormat('d M Y H:i') }}
                                 </td>
 
                                 <td class="px-4 py-4">
@@ -104,7 +100,7 @@
 
                                 <td class="px-4 py-4">
                                     <p class="font-semibold text-slate-700 text-sm leading-tight">
-                                        {{ $item->ruangan->nomor_ruang ?? '-' }} - {{ $item->ruangan->nama_ruang ?? '-' }}
+                                        {{ $item->ruangan->nama_ruang ?? '-' }}
                                     </p>
                                     <p class="text-xs text-slate-400 mt-0.5">
                                         {{ $item->ruangan->gedung->nama ?? '-' }}
@@ -112,10 +108,10 @@
                                 </td>
 
                                 <td class="px-4 py-4 text-sm text-slate-600">
-                                    {{ \Carbon\Carbon::parse($item->tanggal_mulai)->locale('id')->translatedFormat('d F Y') }}
+                                    {{ \Carbon\Carbon::parse($item->tanggal_mulai)->locale('id')->translatedFormat('d M Y') }}
                                     @if($item->tanggal_mulai !== $item->tanggal_selesai)
                                         <div class="text-xs text-slate-400">
-                                            s/d {{ \Carbon\Carbon::parse($item->tanggal_selesai)->locale('id')->translatedFormat('d F Y') }}
+                                            s/d {{ \Carbon\Carbon::parse($item->tanggal_selesai)->locale('id')->translatedFormat('d M Y') }}
                                         </div>
                                     @endif
                                 </td>

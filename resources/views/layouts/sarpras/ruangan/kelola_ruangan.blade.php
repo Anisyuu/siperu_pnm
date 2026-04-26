@@ -6,11 +6,11 @@
     <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
 
         <div>
-            <h2 class="text-3xl font-extrabold tracking-tight text-text-main dark:text-white">
+            <h1 class="text-2xl font-bold tracking-tight text-slate-900">
                 Kelola Ruangan
-            </h2>
+            </h1>
 
-            <p class="text-sm text-text-secondary mt-1">
+            <p class="text-slate-500 text-sm mt-1">
                 Manajemen data ruangan kampus
             </p>
         </div>

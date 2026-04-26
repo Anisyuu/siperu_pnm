@@ -17,6 +17,7 @@ return new class extends Migration
             $table->string('nama', 25);
             $table->integer('lantai');
             $table->string('slug', 50)->unique()->nullable();
+            $table->string('foto')->nullable();
             $table->string('id_user'); // atau sesuai tipe kolomnya
             $table->foreign('id_user')->references('nomor_induk')->on('user')->onDelete('cascade');
             $table->timestamps();

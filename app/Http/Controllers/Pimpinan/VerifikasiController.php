@@ -142,6 +142,10 @@ class VerifikasiController extends Controller
             return back()->with('error', 'Peminjaman ini sudah diproses sebelumnya.');
         }
 
+        // if (!$peminjaman->isBisaDiAksi($peminjaman)) {
+        //     return back()->with('error', 'Harus menunggu antrian sebelumnya.');
+        // }
+
         $cek = $this->cekGiliran($peminjaman);
         Log::info('[approve] cekGiliran result', $cek);
 

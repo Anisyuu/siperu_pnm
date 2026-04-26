@@ -5,12 +5,8 @@
     {{-- HEADER --}}
     <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-            <h1 class="text-slate-900 text-3xl font-extrabold tracking-tight">
-                Tambah Pengguna
-            </h1>
-            <p class="text-slate-500 text-sm mt-1">
-                Tambahkan pengguna baru ke dalam sistem
-            </p>
+            <h1 class="text-2xl font-bold tracking-tight text-slate-900">Tambah Pengguna</h1>
+            <p class="mt-0.5 text-sm text-slate-500">Tambahkan pengguna baru ke dalam sistem</p>
         </div>
         {{-- <a href="{{ route('kasubag.list-user') }}"
            class="inline-flex items-center gap-2 px-4 py-2.5 border border-slate-200 text-sm text-slate-600 font-semibold rounded-xl hover:bg-slate-50 transition self-start md:self-auto">
