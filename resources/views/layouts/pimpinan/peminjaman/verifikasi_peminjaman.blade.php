@@ -7,7 +7,7 @@
     <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
             <h1 class="text-2xl font-bold tracking-tight text-slate-900">Verifikasi Peminjaman</h1>
-            <p class="text-slate-500 text-sm mt-1">Kelola dan verifikasi seluruh pengajuan peminjaman ruangan</p>
+            <p class="mt-0.5 text-sm text-slate-500">Kelola dan verifikasi seluruh pengajuan peminjaman ruangan</p>
         </div>
         <button class="inline-flex items-center gap-2 px-5 py-2.5 bg-white border border-slate-200 rounded-2xl text-sm font-semibold text-slate-700 hover:bg-slate-50 transition shadow-sm">
             <i class="fa-solid fa-file-export text-slate-400"></i>
@@ -22,7 +22,7 @@
                 <i class="fa-solid fa-inbox text-slate-500 text-sm"></i>
             </div>
             <div>
-                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Total</p>
+                <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Total</p>
                 <p class="text-xl font-extrabold text-slate-800">{{ $peminjaman->total() }}</p>
             </div>
         </div>
@@ -106,9 +106,9 @@
                 @forelse($peminjaman as $p)
                 <tr class="hover:bg-slate-50/70 transition-colors group">
 
-                    {{-- No. --}}
-                    <td class="px-5 py-4 text-sm text-slate-600 whitespace-nowrap">
-                        {{ $loop->iteration + ($peminjaman->currentPage() - 1) * $peminjaman->perPage() }}
+                    {{-- No. Urut --}}
+                    <td class="px-5 py-4 text-sm text-slate-500">
+                        {{ ($peminjaman->currentPage() - 1) * $peminjaman->perPage() + $loop->iteration }}
                     </td>
 
                     {{-- No Peminjaman --}}
@@ -120,7 +120,7 @@
 
                     {{-- Diajukan --}}
                     <td class="px-4 py-4 text-sm text-slate-600 whitespace-nowrap">
-                        {{ \Carbon\Carbon::parse($p->created_at)->locale('id')->translatedFormat('d F Y H:i') }}
+                        {{ \Carbon\Carbon::parse($p->created_at)->locale('id')->translatedFormat('d M Y H:i') }}
                     </td>
 
                     {{-- Pemohon --}}
@@ -187,21 +187,21 @@
                     </td>
 
                     {{-- Aksi --}}
-
                     <td class="px-5 py-4 text-center">
-                       @if ($p->status == 'pending' && $p->isBisaDiAksi($peminjaman))
+                        @if ($p->status == 'pending' && $p->isBisaDiAksi($peminjaman))
                         <button onclick="openModal(this)"
                             data-id="{{ $p->id }}"
                             data-no="{{ $p->no_peminjaman }}"
                             data-nama="{{ $pemohon->nama_lengkap ?? '-' }}"
                             data-nim="{{ $pemohon->nomor_induk ?? '-' }}"
                             data-email="{{ $pemohon->email ?? '-' }}"
+                            data-jenis-pemohon="{{ $p->pemohon->roles->pluck('nama')->join(', ') }}"
                             data-ruangan="{{ $p->ruangan->nama_ruang }}"
                             data-gedung="{{ $p->ruangan->gedung->nama }}"
                             data-lantai="{{ $p->ruangan->lantai }}"
                             data-kampus="{{ $p->ruangan->gedung->kampus->nama_kampus ?? '' }}"
-                            data-tanggal-mulai="{{ \Carbon\Carbon::parse($p->tanggal_mulai)->locale('id')->translatedFormat('d F Y') }}"
-                            data-tanggal-selesai="{{ \Carbon\Carbon::parse($p->tanggal_selesai)->locale('id')->translatedFormat('d F Y') }}"
+                            data-tanggal-mulai="{{ \Carbon\Carbon::parse($p->tanggal_mulai)->locale('id')->translatedFormat('d M Y') }}"
+                            data-tanggal-selesai="{{ \Carbon\Carbon::parse($p->tanggal_selesai)->locale('id')->translatedFormat('d M Y') }}"
                             data-tanggal-sama="{{ $p->tanggal_mulai === $p->tanggal_selesai ? '1' : '0' }}"
                             data-waktu-mulai="{{ \Carbon\Carbon::parse($p->waktu_mulai)->format('H:i') }}"
                             data-waktu-selesai="{{ \Carbon\Carbon::parse($p->waktu_selesai)->format('H:i') }}"
@@ -211,6 +211,15 @@
                             data-catatan="{{ $p->catatan ?? '' }}"
                             data-approve-url="{{ route('pimpinan.peminjaman.approve', $p->id) }}"
                             data-reject-url="{{ route('pimpinan.peminjaman.reject', $p->id) }}"
+                            data-semua-langkah="{{ $p->verifikasi->map(fn($v) => [
+                                'urutan'            => $v->urutan,
+                                'role_verifikator'  => $v->role_verifikator,
+                                'status_verifikasi' => $v->status_verifikasi,
+                                'waktu_verifikasi'  => $v->waktu_verifikasi
+                                    ? \Carbon\Carbon::parse($v->waktu_verifikasi)->locale('id')->translatedFormat('d M Y, H:i')
+                                    : null,
+                                'catatan'           => $v->catatan,
+                            ])->toJson() }}"
                             class="inline-flex items-center justify-center w-9 h-9 bg-blue-50 text-blue-500 hover:bg-blue-100 rounded-xl transition-colors opacity-60 group-hover:opacity-100">
                             <i class="fa-regular fa-eye text-sm"></i>
                         </button>
@@ -307,22 +316,11 @@
                             </div>
                             <div>
                                 <p class="text-xs text-slate-400 mb-0.5">Jenis Pemohon</p>
-                                <p class="font-semibold text-slate-700 text-xs">Organisasi Mahasiswa</p>
+                                <p id="modal_jenis_pemohon" class="font-semibold text-slate-700 text-xs"></p>
                             </div>
                         </div>
                     </div>
                 </div>
-
-                {{-- <div>
-                    <p class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-1.5">
-                        <i class="fa-solid fa-door-open text-blue-400"></i> Dokumen Bukti
-                    </p>
-                    <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 grid grid-cols-2 gap-4 text-sm">
-                        @foreach ($peminjaman as $p)
-                            <a href="{{ $p->dokumen_bukti }}">Link</a>
-                        @endforeach
-                    </div>
-                </div> --}}
 
                 {{-- DETAIL RUANGAN --}}
                 <div>
@@ -388,6 +386,13 @@
                     </div>
                 </div>
 
+                <div>
+                    <p class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-1.5">
+                        <i class="fa-solid fa-list-check text-blue-400"></i> Alur Verifikasi
+                    </p>
+                    <div id="modal_alur" class="space-y-2"></div>
+                </div>
+
             </div>
         </div>
 
@@ -446,6 +451,7 @@
         document.getElementById('modal_nama').textContent    = d.nama;
         document.getElementById('modal_nim').textContent     = d.nim;
         document.getElementById('modal_email').textContent   = d.email;
+        document.getElementById('modal_jenis_pemohon').textContent = d.jenisPemohon || '—';
 
         // Ruangan
         document.getElementById('modal_ruangan').textContent = d.ruangan;
@@ -490,6 +496,52 @@
         const s = statusMap[d.status] || statusMap.pending;
         badge.className = `px-3 py-1 text-xs font-bold rounded-full ${s.cls}`;
         badge.textContent = s.label;
+
+        const alurEl = document.getElementById('modal_alur');
+        alurEl.innerHTML = '';
+
+        let langkah = [];
+        try { langkah = JSON.parse(d.semuaLangkah || '[]'); } catch(e) {}
+
+        langkah.forEach((v, i) => {
+            const stepStatus = v.status_verifikasi;
+            const warna = stepStatus === 'disetujui'
+                ? { ring: 'border-green-200 bg-green-50', dot: 'bg-green-500', text: 'text-green-700', badge: 'bg-green-50 text-green-700 border border-green-100', label: 'Disetujui' }
+                : stepStatus === 'ditolak'
+                ? { ring: 'border-red-200 bg-red-50',   dot: 'bg-red-400',   text: 'text-red-600',   badge: 'bg-red-50 text-red-600 border border-red-100',     label: 'Ditolak' }
+                : { ring: 'border-slate-200 bg-slate-50', dot: 'bg-amber-400', text: 'text-amber-700', badge: 'bg-amber-50 text-amber-700 border border-amber-100', label: 'Pending' };
+
+            const catatan = v.catatan
+                ? `<p class="text-xs text-slate-500 mt-1 italic">"${v.catatan}"</p>`
+                : '';
+
+            const waktu = v.waktu_verifikasi
+                ? `<p class="text-xs text-slate-400 mt-0.5">${v.waktu_verifikasi}</p>`
+                : '';
+
+            alurEl.innerHTML += `
+                <div class="flex items-start gap-3 border ${warna.ring} rounded-xl px-4 py-3">
+                    <div class="flex flex-col items-center gap-1 flex-shrink-0 mt-0.5">
+                        <span class="w-6 h-6 rounded-full border-2 border-white shadow flex items-center justify-center text-[10px] font-extrabold text-white ${warna.dot}">
+                            ${v.urutan}
+                        </span>
+                        ${i < langkah.length - 1 ? '<div class="w-px h-3 bg-slate-200"></div>' : ''}
+                    </div>
+                    <div class="flex-1">
+                        <div class="flex items-center justify-between gap-2">
+                            <p class="text-sm font-semibold text-slate-700 capitalize">${v.role_verifikator}</p>
+                            <span class="px-2 py-0.5 text-[11px] font-bold rounded-full ${warna.badge}">${warna.label}</span>
+                        </div>
+                        ${waktu}
+                        ${catatan}
+                    </div>
+                </div>
+            `;
+        });
+
+        if (!langkah.length) {
+            alurEl.innerHTML = '<p class="text-xs text-slate-400">Belum ada data verifikasi.</p>';
+        }
 
         // Footer: tampilkan aksi hanya jika pending
         const footerAction = document.getElementById('modalFooter');

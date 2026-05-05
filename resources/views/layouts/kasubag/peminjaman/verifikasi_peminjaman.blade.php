@@ -195,6 +195,7 @@
                             data-nama="{{ $pemohon->nama_lengkap ?? '-' }}"
                             data-nim="{{ $pemohon->nomor_induk ?? '-' }}"
                             data-email="{{ $pemohon->email ?? '-' }}"
+                            data-jenis-pemohon="{{ $p->pemohon->roles->pluck('nama')->join(', ') }}"
                             data-ruangan="{{ $p->ruangan->nama_ruang }}"
                             data-gedung="{{ $p->ruangan->gedung->nama }}"
                             data-lantai="{{ $p->ruangan->lantai }}"
@@ -315,7 +316,7 @@
                             </div>
                             <div>
                                 <p class="text-xs text-slate-400 mb-0.5">Jenis Pemohon</p>
-                                <p class="font-semibold text-slate-700 text-xs">Organisasi Mahasiswa</p>
+                                <p id="modal_jenis_pemohon" class="font-semibold text-slate-700 text-xs"></p>
                             </div>
                         </div>
                     </div>
@@ -450,6 +451,7 @@
         document.getElementById('modal_nama').textContent    = d.nama;
         document.getElementById('modal_nim').textContent     = d.nim;
         document.getElementById('modal_email').textContent   = d.email;
+        document.getElementById('modal_jenis_pemohon').textContent = d.jenisPemohon || '—';
 
         // Ruangan
         document.getElementById('modal_ruangan').textContent = d.ruangan;
@@ -575,6 +577,7 @@
     function handleBackdrop(e) {
         if (e.target === modal) closeModal();
     }
+
 </script>
 @endpush
 

@@ -72,6 +72,7 @@
                 <table class="w-full text-sm">
                     <thead>
                         <tr class="border-b border-slate-100 bg-slate-50/60">
+                            <th class="text-left px-5 py-3 text-[11px] font-bold text-slate-400 uppercase tracking-wider">No.</th>
                             <th class="text-left px-5 py-3 text-[11px] font-bold text-slate-400 uppercase tracking-wider">No. Peminjaman</th>
                             <th class="text-left px-4 py-3 text-[11px] font-bold text-slate-400 uppercase tracking-wider">Diajukan</th>
                             <th class="text-left px-4 py-3 text-[11px] font-bold text-slate-400 uppercase tracking-wider">Kegiatan</th>
@@ -86,6 +87,10 @@
                     <tbody class="divide-y divide-slate-50">
                         @forelse ($peminjaman as $item)
                             <tr class="hover:bg-slate-50/70 transition-colors group">
+
+                                <td class="px-5 py-4 text-sm text-slate-600 whitespace-nowrap">
+                                    {{ $loop->iteration + ($peminjaman->currentPage() - 1) * $peminjaman->perPage() }}
+                                </td>
 
                                 <td class="px-5 py-4">
                                     <span class="font-mono text-xs text-slate-500 bg-slate-100 px-2 py-1 rounded-lg">
@@ -157,7 +162,7 @@
                                             <i class="fa-regular fa-eye text-sm"></i>
                                         </a>
 
-                                        @if ($item->status == 'pending')
+                                        @if ($item->status == 'pending' && $item->verifikasi->count() == 0)
                                             <form action="{{ route('dosen.batalkan-peminjaman', $item->id) }}" method="POST" class="inline"
                                                   onsubmit="return confirm('Yakin ingin membatalkan pengajuan ini?')">
                                                 @csrf

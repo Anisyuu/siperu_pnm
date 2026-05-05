@@ -162,7 +162,7 @@
                                             <i class="fa-regular fa-eye text-sm"></i>
                                         </a>
 
-                                        @if ($item->status == 'pending')
+                                        @if ($item->status == 'pending' && $item->verifikasi->count() == 0)
                                             <form action="{{ route('ormawa.batalkan-peminjaman', $item->id) }}" method="POST" class="inline"
                                                   onsubmit="return confirm('Yakin ingin membatalkan pengajuan ini?')">
                                                 @csrf

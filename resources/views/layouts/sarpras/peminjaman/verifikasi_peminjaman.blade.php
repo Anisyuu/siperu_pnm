@@ -7,7 +7,7 @@
     <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
             <h1 class="text-2xl font-bold tracking-tight text-slate-900">Verifikasi Peminjaman</h1>
-            <p class="text-slate-500 text-sm mt-1">Kelola dan verifikasi seluruh pengajuan peminjaman ruangan</p>
+            <p class="mt-0.5 text-sm text-slate-500">Kelola dan verifikasi seluruh pengajuan peminjaman ruangan</p>
         </div>
         <button class="inline-flex items-center gap-2 px-5 py-2.5 bg-white border border-slate-200 rounded-2xl text-sm font-semibold text-slate-700 hover:bg-slate-50 transition shadow-sm">
             <i class="fa-solid fa-file-export text-slate-400"></i>
@@ -107,8 +107,8 @@
                 <tr class="hover:bg-slate-50/70 transition-colors group">
 
                     {{-- No. Urut --}}
-                    <td class="px-5 py-4 text-sm text-slate-600 whitespace-nowrap">
-                        {{ $loop->iteration + ($peminjaman->currentPage() - 1) * $peminjaman->perPage() }}
+                    <td class="px-5 py-4 text-sm text-slate-500">
+                        {{ ($peminjaman->currentPage() - 1) * $peminjaman->perPage() + $loop->iteration }}
                     </td>
 
                     {{-- No Peminjaman --}}
@@ -120,7 +120,7 @@
 
                     {{-- Diajukan --}}
                     <td class="px-4 py-4 text-sm text-slate-600 whitespace-nowrap">
-                        {{ \Carbon\Carbon::parse($p->created_at)->locale('id')->translatedFormat('d F Y H:i') }}
+                        {{ \Carbon\Carbon::parse($p->created_at)->locale('id')->translatedFormat('d M Y H:i') }}
                     </td>
 
                     {{-- Pemohon --}}
@@ -195,12 +195,13 @@
                             data-nama="{{ $pemohon->nama_lengkap ?? '-' }}"
                             data-nim="{{ $pemohon->nomor_induk ?? '-' }}"
                             data-email="{{ $pemohon->email ?? '-' }}"
+                            data-jenis-pemohon="{{ $p->pemohon->roles->pluck('nama')->join(', ') }}"
                             data-ruangan="{{ $p->ruangan->nama_ruang }}"
                             data-gedung="{{ $p->ruangan->gedung->nama }}"
                             data-lantai="{{ $p->ruangan->lantai }}"
                             data-kampus="{{ $p->ruangan->gedung->kampus->nama_kampus ?? '' }}"
-                            data-tanggal-mulai="{{ \Carbon\Carbon::parse($p->tanggal_mulai)->locale('id')->translatedFormat('d F Y') }}"
-                            data-tanggal-selesai="{{ \Carbon\Carbon::parse($p->tanggal_selesai)->locale('id')->translatedFormat('d F Y') }}"
+                            data-tanggal-mulai="{{ \Carbon\Carbon::parse($p->tanggal_mulai)->locale('id')->translatedFormat('d M Y') }}"
+                            data-tanggal-selesai="{{ \Carbon\Carbon::parse($p->tanggal_selesai)->locale('id')->translatedFormat('d M Y') }}"
                             data-tanggal-sama="{{ $p->tanggal_mulai === $p->tanggal_selesai ? '1' : '0' }}"
                             data-waktu-mulai="{{ \Carbon\Carbon::parse($p->waktu_mulai)->format('H:i') }}"
                             data-waktu-selesai="{{ \Carbon\Carbon::parse($p->waktu_selesai)->format('H:i') }}"
@@ -315,7 +316,7 @@
                             </div>
                             <div>
                                 <p class="text-xs text-slate-400 mb-0.5">Jenis Pemohon</p>
-                                <p class="font-semibold text-slate-700 text-xs">Organisasi Mahasiswa</p>
+                                <p id="modal_jenis_pemohon" class="font-semibold text-slate-700 text-xs"></p>
                             </div>
                         </div>
                     </div>
@@ -450,6 +451,7 @@
         document.getElementById('modal_nama').textContent    = d.nama;
         document.getElementById('modal_nim').textContent     = d.nim;
         document.getElementById('modal_email').textContent   = d.email;
+        document.getElementById('modal_jenis_pemohon').textContent = d.jenisPemohon || '—';
 
         // Ruangan
         document.getElementById('modal_ruangan').textContent = d.ruangan;

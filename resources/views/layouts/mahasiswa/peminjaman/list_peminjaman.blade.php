@@ -166,7 +166,7 @@
                                             <i class="fa-regular fa-eye text-sm"></i>
                                         </a>
 
-                                        @if ($item->status == 'pending')
+                                        @if ($item->status == 'pending' && $item->verifikasi->count() == 0)
                                             <button type="button"
                                                 onclick="confirmDeletePeminjaman('{{ $item->id }}', '{{ $item->kegiatan }}')"
                                                 class="inline-flex items-center justify-center w-9 h-9 bg-red-50 text-red-500 hover:bg-red-100 rounded-xl transition-colors opacity-60 group-hover:opacity-100">

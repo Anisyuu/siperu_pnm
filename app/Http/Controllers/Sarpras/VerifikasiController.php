@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use RealRashid\SweetAlert\Facades\Alert;
 
 class VerifikasiController extends Controller
 {
@@ -94,12 +95,31 @@ class VerifikasiController extends Controller
         // 7. Cocokkan role user dengan role giliran
         $roleStep = strtolower(trim($giliranAlur->role_verifikator));
 
+        // 1. CEK ROLE SESUAI ALUR
         if ($roleUser !== $roleStep) {
             return [
                 'boleh' => false,
-                'pesan' => "Belum giliran Anda. "
-                         . "Giliran saat ini: '{$roleStep}' (urutan {$giliranAlur->urutan}).",
+                'pesan' => "Belum giliran Anda.",
             ];
+        }
+
+        // 2. KHUSUS SARPRAS → CEK GEDUNG
+        if ($roleUser === 'sarpras') {
+            $gedungPeminjaman = $peminjaman->ruangan->gedung;
+
+            if (!$gedungPeminjaman) {
+                return [
+                    'boleh' => false,
+                    'pesan' => 'Gedung tidak ditemukan.',
+                ];
+            }
+
+            if ($gedungPeminjaman->id_user !== $user->nomor_induk) {
+                return [
+                    'boleh' => false,
+                    'pesan' => 'Anda tidak berhak memverifikasi gedung ini.',
+                ];
+            }
         }
 
         // 8. Jika sudah ada record pending di step ini,
@@ -191,7 +211,8 @@ class VerifikasiController extends Controller
             ? 'Pengajuan disetujui. Semua langkah verifikasi selesai.'
             : "Langkah {$cek['urutan']} dari {$cek['total_urutan']} disetujui. Menunggu verifikasi berikutnya.";
 
-        return back()->with('success', $pesan);
+        Alert::success('Berhasil', $pesan);
+        return back();
     }
 
     // ──────────────────────────────────────────────────────────────
@@ -259,6 +280,7 @@ class VerifikasiController extends Controller
             return back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
         }
 
-        return back()->with('success', 'Pengajuan berhasil ditolak.');
+        Alert::success('Berhasil', "Pengajuan ditolak pada langkah {$cek['urutan']}.");
+        return back();
     }
 }

@@ -18,7 +18,7 @@ class PeminjamanController extends Controller
 {
     public function listPeminjaman(Request $request)
     {
-        $query = Peminjaman::with(['ruangan.gedung'])
+        $query = Peminjaman::with(['ruangan.gedung', 'verifikasi'])
             ->where('pemohon_id', Auth::user()->nomor_induk)
             ->where('status', 'pending');
 

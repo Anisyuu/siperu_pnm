@@ -55,7 +55,7 @@
                             <select id="lantai"
                                 class="w-full px-3 py-2.5 text-sm text-slate-700 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-300 focus:border-blue-400 transition">
                                 <option value="">-- Pilih Lantai --</option>
-                                @foreach($ruangan->unique('lantai')->sortBy('lantai') as $r)
+                                @foreach($ruangan->unique(fn($r) => $r->gedung->slug . '_' . $r->lantai)->sortBy('lantai') as $r)
                                     <option value="{{ $r->lantai }}"
                                         data-kampus="{{ $r->gedung->kampus->id }}"
                                         data-gedung="{{ $r->gedung->slug }}">
