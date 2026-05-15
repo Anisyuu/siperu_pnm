@@ -100,6 +100,31 @@
                     </div>
                 @endhasRole
 
+                 @hasRole('kalab')
+                    <a href="{{ route('kalab.dashboard') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg group {{ request()->routeIs('kalab.dashboard') ? $activeClass : $inactiveClass }}">
+                        <i class="fa-solid fa-border-all w-5 {{ request()->routeIs('kalab.dashboard') ? $iconActive : $iconInactive }}"></i>
+                        <span class="text-sm font-semibold">Dashboard</span>
+                    </a>
+                    <a href="{{ route('kalab.jadwal-ruangan') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg group {{ request()->routeIs('kalab.jadwal-ruangan') ? $activeClass : $inactiveClass }}">
+                        <i class="fa-regular fa-calendar w-5 {{ request()->routeIs('kalab.jadwal-ruangan') ? $iconActive : $iconInactive }}"></i>
+                        <span class="text-sm font-semibold">Jadwal</span>
+                    </a>
+                    <div class="flex flex-col">
+                        @php $isPeminjamanSarprasActive = request()->routeIs('kalab.verifikasi-peminjaman') || request()->routeIs('kalab.riwayat-verifikasi'); @endphp
+                        <button id="verfikasiPeminjamanBtn" type="button" class="flex items-center justify-between px-3 py-2.5 rounded-lg group {{ $isPeminjamanSarprasActive ? 'text-blue-600' : $inactiveClass }}">
+                            <div class="flex items-center gap-3">
+                                <i class="fa-regular fa-building w-5"></i>
+                                <span class="text-sm font-semibold">Peminjaman</span>
+                            </div>
+                            <i id="verfikasiPeminjamanIcon" class="fa-solid fa-chevron-down text-[10px] transition-transform duration-300 {{ $isPeminjamanSarprasActive ? 'rotate-180' : '' }}"></i>
+                        </button>
+                        <div id="verfikasiPeminjamanSubmenu" class="{{ $isPeminjamanSarprasActive ? '' : 'hidden' }} ml-9 mt-1 border-l border-gray-200 flex flex-col gap-1">
+                            <a href="{{ route('kalab.verifikasi-peminjaman') }}" class="pl-4 py-2 text-sm {{ request()->routeIs('kalab.verifikasi-peminjaman') ? 'text-blue-600 font-bold' : 'text-gray-500' }}">Verifikasi</a>
+                            <a href="{{ route('kalab.riwayat-verifikasi') }}" class="pl-4 py-2 text-sm {{ request()->routeIs('kalab.riwayat-verifikasi') ? 'text-blue-600 font-bold' : 'text-gray-500' }}">Riwayat</a>
+                        </div>
+                    </div>
+                @endhasRole
+
                 @hasRole('pimpinan')
                     <a href="{{ route('pimpinan.dashboard') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg group {{ request()->routeIs('pimpinan.dashboard') ? $activeClass : $inactiveClass }}">
                         <i class="fa-solid fa-border-all w-5 {{ request()->routeIs('pimpinan.dashboard') ? $iconActive : $iconInactive }}"></i>
@@ -127,21 +152,34 @@
 
                 @foreach(['ormawa', 'mahasiswa', 'dosen'] as $role)
                     @hasRole($role)
-                        <a href="{{ route($role.'.dashboard') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg group {{ request()->routeIs($role.'.dashboard') ? $activeClass : $inactiveClass }}">
-                            <i class="fa-solid fa-border-all w-5"></i>
+                        <a href="{{ route($role.'.dashboard') }}"
+                        class="flex items-center gap-3 px-3 py-2.5 rounded-lg group {{ request()->routeIs($role.'.dashboard') ? $activeClass : $inactiveClass }}">
+                            <i class="fa-solid fa-border-all w-5 {{ request()->routeIs($role.'.dashboard') ? $iconActive : $iconInactive }}"></i>
                             <span class="text-sm font-semibold">Dashboard</span>
                         </a>
-                        <a href="{{ route($role.'.jadwal-ruangan') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg group {{ request()->routeIs($role.'.jadwal-ruangan') ? $activeClass : $inactiveClass }}">
-                            <i class="fa-regular fa-calendar w-5"></i>
+
+                        <a href="{{ route($role.'.jadwal-ruangan') }}"
+                        class="flex items-center gap-3 px-3 py-2.5 rounded-lg group {{ request()->routeIs($role.'.jadwal-ruangan') ? $activeClass : $inactiveClass }}">
+                            <i class="fa-regular fa-calendar w-5 {{ request()->routeIs($role.'.jadwal-ruangan') ? $iconActive : $iconInactive }}"></i>
                             <span class="text-sm font-semibold">Jadwal</span>
                         </a>
-                        <a href="{{ route($role.'.list-peminjaman') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg group {{ request()->routeIs($role.'.list-peminjaman') ? $activeClass : $inactiveClass }}">
-                            <i class="fa-regular fa-building w-5"></i>
+
+                        <a href="{{ route($role.'.list-peminjaman') }}"
+                        class="flex items-center gap-3 px-3 py-2.5 rounded-lg group {{ request()->routeIs($role.'.list-peminjaman') ? $activeClass : $inactiveClass }}">
+                            <i class="fa-regular fa-building w-5 {{ request()->routeIs($role.'.list-peminjaman') ? $iconActive : $iconInactive }}"></i>
                             <span class="text-sm font-semibold">Peminjaman</span>
                         </a>
-                        <a href="{{ route($role.'.riwayat-peminjaman') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg group {{ request()->routeIs($role.'.riwayat-peminjaman') ? $activeClass : $inactiveClass }}">
-                            <i class="fa-solid fa-clock-rotate-left w-5"></i>
+
+                        <a href="{{ route($role.'.riwayat-peminjaman') }}"
+                        class="flex items-center gap-3 px-3 py-2.5 rounded-lg group {{ request()->routeIs($role.'.riwayat-peminjaman') ? $activeClass : $inactiveClass }}">
+                            <i class="fa-solid fa-clock-rotate-left w-5 {{ request()->routeIs($role.'.riwayat-peminjaman') ? $iconActive : $iconInactive }}"></i>
                             <span class="text-sm font-semibold">Riwayat</span>
+                        </a>
+
+                        <a href="{{ route($role.'.informasi-peminjaman') }}"
+                        class="flex items-center gap-3 px-3 py-2.5 rounded-lg group {{ request()->routeIs($role.'.informasi-peminjaman') ? $activeClass : $inactiveClass }}">
+                            <i class="fa-regular fa-circle-question w-5 {{ request()->routeIs($role.'.informasi-peminjaman') ? $iconActive : $iconInactive }}"></i>
+                            <span class="text-sm font-semibold">Informasi</span>
                         </a>
                     @endhasRole
                 @endforeach

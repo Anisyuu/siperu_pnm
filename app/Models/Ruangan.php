@@ -13,6 +13,7 @@ class Ruangan extends Model
         'id_gedung',
         'lantai',
         'nama_ruang',
+        "id_user",
         'slug',
     ];
 
@@ -31,4 +32,10 @@ class Ruangan extends Model
     {
         return $this->belongsTo(Gedung::class, 'id_gedung');
     }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class,'id_user','nomor_induk');
+    }
+
 }

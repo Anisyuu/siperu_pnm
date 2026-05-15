@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Str;
 use RealRashid\SweetAlert\Facades\Alert;
+use App\Models\User;
 
 class RuanganController extends Controller
 {
@@ -16,6 +17,13 @@ class RuanganController extends Controller
     {
         $jenisRuang = JenisRuang::all();
         $gedungList = Gedung::with(['kampus'])->get();
+
+
+        $users = User::with('roles')->where(function($query) {
+            $query->whereHas('roles', function($q) {
+                $q->whereIn('nama', ['kalab']);
+            });
+        })->get();
 
         $query = Ruangan::with(['gedung.kampus', 'jenisRuangan']);
 
@@ -47,7 +55,8 @@ class RuanganController extends Controller
             'gedungList',
             'gedungSlug',   // slug dari URL untuk filter & breadcrumb
             'lantai',
-            'jenisRuang'
+            'jenisRuang',
+            'users',
         ));
     }
 
@@ -55,6 +64,7 @@ class RuanganController extends Controller
     {
         $request->validate([
             'id_jenis_ruang' => 'required|exists:jenis_ruang,id',
+            'id_user'        => 'required|exists:user,nomor_induk',
             'gedung_slug'    => 'required|exists:gedung,slug',
             'lantai'         => 'required|integer|min:1',
             'nama_ruang'     => 'required|string|max:25|unique:ruangan,nama_ruang',
@@ -86,6 +96,7 @@ class RuanganController extends Controller
         Ruangan::create([
             'id_jenis_ruang' => $request->id_jenis_ruang,
             'id_gedung'      => $gedung->id,
+            'id_user'        => $request->id_user,
             'lantai'         => $request->lantai,
             'nama_ruang'     => $request->nama_ruang,
             'slug'           => $slug,
@@ -103,6 +114,7 @@ class RuanganController extends Controller
         $request->validate([
             'id_jenis_ruang' => 'required|exists:jenis_ruang,id',
             'gedung_slug'    => 'required|exists:gedung,slug',
+                'id_user'        => 'required|exists:user,nomor_induk',
             'lantai'         => 'required|integer|min:1',
             'nama_ruang'     => 'required|string|max:25',
         ]);
@@ -125,6 +137,7 @@ class RuanganController extends Controller
         $ruangan->update([
             'id_jenis_ruang' => $request->id_jenis_ruang,
             'id_gedung'      => $gedung->id,
+            'id_user'        => $request->id_user,
             'lantai'         => $request->lantai,
             'nama_ruang'     => $request->nama_ruang,
             'slug'           => $slug, // tetap pakai slug lama jika nama_ruang tidak berubah

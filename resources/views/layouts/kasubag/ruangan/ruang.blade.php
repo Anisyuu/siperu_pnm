@@ -110,6 +110,7 @@
                         <th class="text-left px-4 py-3.5 text-[11px] font-bold text-slate-400 tracking-widest uppercase">Lantai</th>
                         <th class="text-left px-4 py-3.5 text-[11px] font-bold text-slate-400 tracking-widest uppercase">Jenis Ruang</th>
                         <th class="text-left px-4 py-3.5 text-[11px] font-bold text-slate-400 tracking-widest uppercase">Gedung</th>
+                        <th class="text-left px-4 py-3.5 text-[11px] font-bold text-slate-400 tracking-widest uppercase">PIC</th>
                         <th class="text-right px-6 py-3.5 text-[11px] font-bold text-slate-400 tracking-widest uppercase">Aksi</th>
                     </tr>
                 </thead>
@@ -158,6 +159,18 @@
                                 </p>
                             </div>
                         </td>
+                        <td class="px-4 py-4">
+                            @if($item->user)
+                            <div class="flex items-center gap-2">
+                                <div class="w-8 h-8 rounded-lg flex items-center justify-center bg-green-50 text-green-500">
+                                    <i class="fa-solid fa-user-tie text-xs"></i>
+                                </div>
+                                <span class="text-sm font-semibold text-slate-700">{{ $item->user->nama_lengkap }}</span>
+                            </div>
+                            @else
+                            <span class="text-sm text-slate-400 italic">-</span>
+                            @endif
+                        </td>
                         <td class="px-6 py-4">
                             <div class="flex items-center justify-end gap-1">
                                 {{-- Edit: buka modal, set action form --}}
@@ -165,7 +178,8 @@
                                         onclick="openEditModal(
                                             {{ $item->id }},
                                             '{{ addslashes($item->nama_ruang) }}',
-                                            {{ $item->id_jenis_ruang }}
+                                            {{ $item->id_jenis_ruang }},
+                                            '{{ $item->id_user ?? '' }}'
                                         )"
                                         title="Edit"
                                         class="w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 hover:text-amber-600 hover:bg-amber-50 transition-all">
@@ -346,6 +360,28 @@
                 @enderror
             </div>
 
+
+            {{-- Manager --}}
+            <div id="fieldPicRuangan" class="hidden">
+                <label class="block text-sm font-semibold text-slate-700 mb-1.5">PIC Ruangan</label>
+                <div class="relative">
+                    <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400 pointer-events-none">
+                        <i class="fa-solid fa-user-tie text-sm"></i>
+                    </span>
+                    <select name="id_user" class="w-full pl-10 pr-4 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all appearance-none">
+                        <option value="">-- Pilih Manager --</option>
+                        @foreach($users as $u)
+                        <option value="{{ $u->nomor_induk }}" {{ old('id_user') == $u->nomor_induk ? 'selected' : '' }}>
+                            {{ $u->nama_lengkap }}
+                        </option>
+                        @endforeach
+                    </select>
+                    <span class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 pointer-events-none">
+                        <i class="fa-solid fa-chevron-down text-xs"></i>
+                    </span>
+                </div>
+            </div>
+
             {{-- Hidden: gedung_slug & lantai dari URL --}}
             <input type="hidden" name="gedung_slug" value="{{ $gedungSlug }}">
             <input type="hidden" name="lantai"      value="{{ $lantai }}">
@@ -442,6 +478,26 @@
                 </div>
             </div>
 
+            <div id="fieldPicRuanganEdit" class="hidden">
+                <label class="block text-sm font-semibold text-slate-700 mb-1.5">PIC Ruangan</label>
+                <div class="relative">
+                    <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400 pointer-events-none">
+                        <i class="fa-solid fa-user-tie text-sm"></i>
+                    </span>
+                    <select name="id_user" class="w-full pl-10 pr-4 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all appearance-none">
+                        <option value="">-- Pilih Manager --</option>
+                        @foreach($users as $u)
+                        <option value="{{ $u->nomor_induk }}" {{ old('id_user') == $u->nomor_induk ? 'selected' : '' }}>
+                            {{ $u->nama_lengkap }}
+                        </option>
+                        @endforeach
+                    </select>
+                    <span class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 pointer-events-none">
+                        <i class="fa-solid fa-chevron-down text-xs"></i>
+                    </span>
+                </div>
+            </div>
+
             <div class="flex items-center justify-end gap-3 pt-2">
                 <button type="button" onclick="closeEditModal()"
                         class="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl transition-all">
@@ -477,7 +533,7 @@
     });
 
     // ── MODAL EDIT ───────────────────────────────────────────────
-    function openEditModal(id, namaRuang, jenisRuangId) {
+    function openEditModal(id, namaRuang, jenisRuangId, idUser) {
         // Set action form ke route Laravel update dengan ID
         document.getElementById('formEditRuangan').action = `/kasubag/ruangan/${id}`;
 
@@ -485,6 +541,10 @@
         // document.getElementById('editNomorRuang').value = nomorRuang;
         document.getElementById('editJenisRuang').value = jenisRuangId;
         document.getElementById('editRuanganSubtitle').textContent = namaRuang;
+
+        // Set & cek PIC
+        const editJenisSelect = document.getElementById('editJenisRuang');
+        checkEditJenisRuang(editJenisSelect, idUser);
 
         document.getElementById('modalEditRuangan').classList.remove('hidden');
         setTimeout(() => {
@@ -529,6 +589,52 @@
         closeModal(); closeEditModal(); closeDeleteModal();
     });
 
+</script>
+
+<script>
+    // ── SHOW/HIDE PIC berdasarkan Jenis Ruang ────────────────────
+    const selectJenis = document.querySelector('[name="id_jenis_ruang"]');
+    const fieldPic    = document.getElementById('fieldPicRuangan');
+
+    function checkJenisRuang(selectEl) {
+        const selectedText = selectEl.options[selectEl.selectedIndex]?.text?.toLowerCase() ?? '';
+        const isLab = selectedText.includes('lab');
+        fieldPic.classList.toggle('hidden', !isLab);
+        // Kosongkan value jika disembunyikan agar tidak terkirim
+        if (!isLab) {
+            fieldPic.querySelector('select').value = '';
+        }
+    }
+
+    selectJenis?.addEventListener('change', function() {
+        checkJenisRuang(this);
+    });
+
+    // Cek juga saat modal dibuka ulang karena ada error validasi
+    document.addEventListener('DOMContentLoaded', () => {
+        if (selectJenis) checkJenisRuang(selectJenis);
+    });
+
+    // ── SHOW/HIDE PIC Edit berdasarkan Jenis Ruang ───────────────
+    const editJenisSelect = document.getElementById('editJenisRuang');
+    const fieldPicEdit    = document.getElementById('fieldPicRuanganEdit');
+
+    function checkEditJenisRuang(selectEl, preselectedUser = null) {
+        const selectedText = selectEl.options[selectEl.selectedIndex]?.text?.toLowerCase() ?? '';
+        const isLab = selectedText.includes('lab');
+        fieldPicEdit.classList.toggle('hidden', !isLab);
+
+        const picSelect = fieldPicEdit.querySelector('select');
+        if (isLab && preselectedUser) {
+            picSelect.value = preselectedUser;
+        } else if (!isLab) {
+            picSelect.value = '';
+        }
+    }
+
+    editJenisSelect?.addEventListener('change', function() {
+        checkEditJenisRuang(this);
+    });
 </script>
 @endpush
 

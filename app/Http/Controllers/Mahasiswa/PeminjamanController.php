@@ -114,25 +114,41 @@ class PeminjamanController extends Controller
             ->with('success', 'Pengajuan berhasil dikirim.');
     }
 
-    public function detailPeminjaman($id)
-    {
-        $peminjaman = Peminjaman::with(['ruangan.gedung.kampus', 'verifikasi'])
-            ->where('pemohon_id', Auth::user()->nomor_induk)
-            ->findOrFail($id);
+   public function detailPeminjaman($id)
+{
+    $peminjaman = Peminjaman::with([
+            'ruangan.gedung.kampus',
+            'ruangan.jenisRuangan',
+            'verifikasi',
+            'pemohon.roles',
+        ])
+        ->where('pemohon_id', Auth::user()->nomor_induk)
+        ->findOrFail($id);
 
-        $jenisPemohon = $peminjaman->pemohon->roles->pluck('nama')->first() ?? $peminjaman->pemohon->role;
-        // ATAU kalau ambil dari user:
-        // $jenisPemohon = Auth::user()->role;
+    $jenisPemohon = $peminjaman->pemohon->roles->pluck('nama')->first()
+                    ?? $peminjaman->pemohon->role;
 
-        $alur = \App\Models\AlurVerifikasi::where('jenis_pemohon', $jenisPemohon)
-            ->orderBy('urutan')
-            ->get();
+    // Cek apakah ruangan bertipe lab
+    $isLab = str_contains(
+        strtolower(optional($peminjaman->ruangan->jenisRuangan)->nama ?? ''),
+        'lab'
+    );
 
-        // relasi ke tabel verifikasi (misal: verifikasi_peminjaman)
-        $riwayat = $peminjaman->verifikasi ?? collect();
+    // Ambil alur, skip step kalab jika bukan lab
+    $alur = \App\Models\AlurVerifikasi::where('jenis_pemohon', $jenisPemohon)
+        ->orderBy('urutan')
+        ->get()
+        ->when(!$isLab, fn($collection) =>
+            $collection->filter(fn($step) =>
+                strtolower(trim($step->role_verifikator)) !== 'kalab'
+            )->values()
+        );
 
-        return view('layouts.mahasiswa.peminjaman.detail_peminjaman', compact('peminjaman', 'alur', 'riwayat'));
-    }
+    $riwayat = $peminjaman->verifikasi ?? collect();
+
+    return view('layouts.mahasiswa.peminjaman.detail_peminjaman',
+        compact('peminjaman', 'alur', 'riwayat'));
+}
 
     public function batalkanPeminjaman($id)
     {

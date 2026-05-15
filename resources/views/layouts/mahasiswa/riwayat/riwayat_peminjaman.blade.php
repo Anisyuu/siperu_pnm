@@ -6,12 +6,8 @@
         {{-- HEADER --}}
         <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
-                <h1 class="text-slate-900 text-3xl font-extrabold tracking-tight">
-                    Riwayat Peminjaman
-                </h1>
-                <p class="text-slate-500 text-sm mt-1">
-                    Riwayat seluruh pengajuan peminjaman ruangan
-                </p>
+                <h1 class="text-2xl font-bold tracking-tight text-slate-900">Riwayat Peminjaman</h1>
+                <p class="mt-0.5 text-sm text-slate-500">Riwayat seluruh pengajuan peminjaman ruangan</p>
             </div>
             <div class="flex items-center gap-2">
                 <div class="bg-white border border-slate-200 rounded-xl px-3 py-2 flex items-center gap-2 shadow-sm">

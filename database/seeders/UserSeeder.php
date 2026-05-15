@@ -20,6 +20,7 @@ class UserSeeder extends Seeder
         $roles = [
             'kasubag',
             'sarpras',
+            'kalab',
             'pimpinan',
             'ormawa',
             'dosen',
@@ -39,6 +40,16 @@ class UserSeeder extends Seeder
             [
                 'nama_lengkap' => 'Kasubag',
                 'email' => 'kasubag@mail.com',
+                'password' => Hash::make('aniscantik'),
+                'is_active' => 'active',
+            ]
+        );
+
+        user::firstOrCreate(
+            ['nomor_induk' => '233307119'],
+            [
+                'nama_lengkap' => 'Kalab',
+                'email' => 'kalab@mail.com',
                 'password' => Hash::make('aniscantik'),
                 'is_active' => 'active',
             ]
@@ -107,6 +118,7 @@ class UserSeeder extends Seeder
 
         $superadmin = User::where('nomor_induk', '123654789')->first();
         $pimpinan  = User::where('nomor_induk', '987456321')->first();
+        $kalab     = User::where('nomor_induk', '233307119')->first();
         $mahasiswa  = User::where('nomor_induk', '233307094')->first();
         $ormawa     = User::where('nomor_induk', '233307095')->first();
         $dosen      = User::where('nomor_induk', '233307096')->first();
@@ -120,6 +132,10 @@ class UserSeeder extends Seeder
 
         if ($pimpinan) {
             $pimpinan->syncRoles(['pimpinan']);
+        }
+
+        if ($kalab) {
+            $kalab->syncRoles(['kalab']);
         }
 
         if ($mahasiswa) {

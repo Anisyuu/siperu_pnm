@@ -6,12 +6,8 @@
         {{-- HEADER --}}
         <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
-                <h1 class="text-slate-900 text-3xl font-extrabold tracking-tight">
-                    List Pengajuan Peminjaman
-                </h1>
-                <p class="text-slate-500 text-sm mt-1">
-                    Manajemen seluruh pengajuan peminjaman ruangan
-                </p>
+                <h1 class="text-2xl font-bold tracking-tight text-slate-900">List Pengajuan Peminjaman</h1>
+                <p class="mt-0.5 text-sm text-slate-500">Manajemen seluruh pengajuan peminjaman ruangan</p>
             </div>
             <div class="flex items-center gap-2">
                 <div class="bg-white border border-slate-200 rounded-xl px-3 py-2 flex items-center gap-2 shadow-sm">
@@ -19,12 +15,12 @@
                         <i class="fa-solid fa-users text-blue-500 text-xs"></i>
                     </div>
                     <div>
-                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Total Pengajuan</p>
+                        <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Total Pengajuan</p>
                         <p class="text-xl font-extrabold text-slate-800">{{ $peminjaman->total() }}</p>
                     </div>
                 </div>
                 <a href="{{ route('mahasiswa.ajukan-peminjaman') }}"
-                   class="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-primary text-white text-sm font-semibold rounded-2xl shadow-sm hover:brightness-110 active:scale-95 transition">
+                class="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-primary text-white text-sm font-semibold rounded-2xl shadow-sm hover:brightness-110 active:scale-95 transition">
                     <i class="fa-solid fa-plus text-sm"></i>
                     Ajukan Peminjaman
                 </a>

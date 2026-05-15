@@ -20,9 +20,10 @@
             {{-- HEADER --}}
             <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <h2 class="text-slate-900 text-3xl font-extrabold tracking-tight">
+                    <h2 class="text-2xl font-bold tracking-tight text-slate-900">
                         Selamat Datang, {{ auth()->user()->nama_lengkap }}!
                     </h2>
+
                     <div class="flex items-center gap-2 text-sm text-slate-500 mt-1">
                         <i class="fa-regular fa-calendar-days"></i>
                         <span id="realtime-date"></span>

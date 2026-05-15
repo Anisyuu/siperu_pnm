@@ -6,56 +6,80 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Peminjaman;
 use Illuminate\Support\Facades\Auth;
-
+use Illuminate\Support\Facades\DB;
 
 class PeminjamanController extends Controller
 {
-        public function verifikasiPeminjaman(Request $request)
-    {
-        $user = Auth::user();
-        $userRoles = $user->roles->pluck('nama');
+    public function verifikasiPeminjaman(Request $request)
+{
+    $user      = Auth::user();
+    $userRoles = $user->roles->pluck('nama')->toArray();
 
-        $query = Peminjaman::with([
-                'ruangan.gedung.kampus',
-                'pemohon.roles',
-                'verifikasiAktif'
-            ])
-            ->where('status', 'pending')
+    // Ambil ID gedung milik sarpras ini
+    $gedungIds = \App\Models\Gedung::query()
+                ->where('id_user', '=', $user->nomor_induk)
+                ->pluck('id')
+                ->toArray();
 
-            // ❗ hanya ambil yang step verifikasinya cocok dengan user login
-            // ->whereHas('verifikasiAktif', function ($q) use ($userRoles) {
-            //     $q->whereIn('role_verifikator', $userRoles);
-            // })
+    // Ambil jenis_pemohon yang boleh diverifikasi oleh role ini
+    // (dipindah ke luar query agar tidak ada nested closure)
+    $jenisPemohonDiizinkan = DB::table('alur_verifikasi')
+                    ->whereIn('role_verifikator', $userRoles)
+                    ->pluck('jenis_pemohon')
+                    ->toArray();
 
-            // ❗ pastikan jenis pemohon sesuai dengan alur
-            ->whereHas('pemohon.roles', function ($q) use ($userRoles) {
-                $q->whereIn('nama', function ($sub) use ($userRoles) {
-                    $sub->select('jenis_pemohon')
-                        ->from('alur_verifikasi')
-                        ->whereIn('role_verifikator', $userRoles);
-                });
-            })
+    $query = Peminjaman::with([
+            'ruangan.gedung.kampus',
+            'pemohon.roles',
+            'verifikasi',
+            'verifikasiAktif',
+        ])
+        ->where('status', 'pending')
 
-            // ❗ belum diverifikasi oleh user ini
-            ->whereDoesntHave('verifikasi', function ($q) use ($user) {
-                $q->where('id_verifikator', $user->nomor_induk);
-            });
+        // Hanya ruangan di gedung milik sarpras ini
+        ->whereHas('ruangan', function ($q) use ($gedungIds) {
+            $q->whereIn('id_gedung', $gedungIds);
+        })
 
+        // Jenis pemohon sesuai alur verifikasi role ini
+        ->whereHas('pemohon.roles', function ($q) use ($jenisPemohonDiizinkan) {
+            $q->whereIn('nama', $jenisPemohonDiizinkan);
+        })
 
-        // SEARCH
-        if ($request->filled('search')) {
-            $query->where('kegiatan', 'like', '%' . $request->search . '%');
-        }
+        // Belum diverifikasi oleh user ini
+        ->whereDoesntHave('verifikasi', function ($q) use ($user) {
+            $q->where('id_verifikator', $user->nomor_induk);
+        });
 
-        // FILTER STATUS
-        if ($request->filled('status')) {
-            $query->where('status', $request->status);
-        }
-
-        $peminjaman = $query->oldest()->paginate(5);
-
-    return view('layouts.sarpras.peminjaman.verifikasi_peminjaman', compact('peminjaman'));
+    if ($request->filled('search')) {
+        $query->where('kegiatan', 'like', '%' . $request->search . '%');
     }
+
+    if ($request->filled('status')) {
+        $query->where('status', $request->status);
+    }
+
+    $peminjaman = $query->oldest()->paginate(5);
+
+    // ID peminjaman pending paling lama di gedung ini
+    $firstPendingId = Peminjaman::query()
+        ->where('status', '=', 'pending')
+        ->whereHas('ruangan', function ($q) use ($gedungIds) {
+            $q->whereIn('id_gedung', $gedungIds);
+        })
+
+        ->whereHas('pemohon.roles', function ($q) use ($jenisPemohonDiizinkan) {
+        $q->whereIn('nama', $jenisPemohonDiizinkan);
+        })
+
+        ->whereDoesntHave('verifikasi', function ($q) use ($user) {
+            $q->where('id_verifikator', $user->nomor_induk);
+        })
+        ->oldest()
+        ->value('id');
+
+    return view('layouts.sarpras.peminjaman.verifikasi_peminjaman', compact('peminjaman', 'firstPendingId'));
+}
 
     public function riwayatVerifikasi( Request $request)
     {

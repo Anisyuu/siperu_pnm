@@ -21,11 +21,19 @@ use App\Http\Controllers\Kasubag\{
 };
 
 // Controller sarpras
+use App\Http\Controllers\Sarpras\DashboardController as SarprasDashboardController;
 use App\Http\Controllers\Sarpras\JadwalController as SarprasJadwalController;
 use App\Http\Controllers\Sarpras\PeminjamanController as SarprasPeminjamanController;
 use App\Http\Controllers\Sarpras\RiwayatController as SarprasRiwayatController;
 
+// Controller kalab
+use App\Http\Controllers\Kalab\DashboardController as KalabDashboardController;
+use App\Http\Controllers\Kalab\JadwalController as KalabJadwalController;
+use App\Http\Controllers\Kalab\PeminjamanController as KalabPeminjamanController;
+use App\Http\Controllers\Kalab\RiwayatController as KalabRiwayatController;
+
 // Controller pimpinan
+use App\Http\Controllers\Pimpinan\DashboardController as PimpinanDashboardController;
 use App\Http\Controllers\Pimpinan\JadwalController as PimpinanJadwalController;
 use App\Http\Controllers\Pimpinan\RiwayatController as PimpinanRiwayatController;
 use App\Http\Controllers\Pimpinan\PeminjamanController as PimpinanPeminjamanController;
@@ -63,12 +71,14 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/logout', [AuthController::class, 'logout'])
             ->name('logout');
     Route::get('/kasubag', [KasubagDashboardController::class, 'dashboard'])->name('kasubag.dashboard');
-    Route::get('/pimpinan', fn () => view('layouts.pimpinan.dashboard'))->name('pimpinan.dashboard');
-    Route::get('/sarpras', fn () => view('layouts.sarpras.dashboard'))->name('sarpras.dashboard');
+    Route::get('/pimpinan', [PimpinanDashboardController::class, 'dashboard'])->name('pimpinan.dashboard');
+    Route::get('/sarpras', [SarprasDashboardController::class, 'dashboard'])->name('sarpras.dashboard');
+    Route::get('/kalab', [KalabDashboardController::class, 'dashboard'])->name('kalab.dashboard');
     Route::get('/ormawa', [OrmawaDashboardController::class, 'dashboard'])->name('ormawa.dashboard');
     Route::get('/dosen', [DosenDashboardController::class, 'dashboard'])->name('dosen.dashboard');
-    // Route::get('/karyawan', fn () => view('layouts.karyawan.dashboard'))->name('karyawan.dashboard');
     Route::get('/mahasiswa', [MahasiswaDashboardController::class, 'dashboard'])->name('mahasiswa.dashboard');
+    // Route::get('/karyawan', fn () => view('layouts.karyawan.dashboard'))->name('karyawan.dashboard');
+
 });
 
     // Kasubag
@@ -166,7 +176,7 @@ Route::middleware(['auth'])->group(function () {
     ->name('sarpras.')
     ->group(function () {
 
-        Route::get('/dashboard', fn () => view('layouts.sarpras.dashboard'))
+        Route::get('/dashboard', [SarprasDashboardController::class, 'dashboard'])
             ->name('dashboard');
 
         Route::get('/verifikasi-peminjaman', [SarprasPeminjamanController::class, 'verifikasiPeminjaman'])
@@ -206,13 +216,44 @@ Route::middleware(['auth'])->group(function () {
             ->name('peminjaman.reject');
     });
 
+    // Kalab
+    Route::middleware(['auth', 'role:kalab'])
+    ->prefix('kalab')
+    ->name('kalab.')
+    ->group(function () {
+
+        Route::get('/dashboard', [KalabDashboardController::class, 'dashboard'])
+            ->name('dashboard');
+
+        Route::get('/jadwal-ruangan', [KalabJadwalController::class, 'jadwalRuangan'])
+            ->name('jadwal-ruangan');
+
+        Route::get('/verifikasi-peminjaman', [KalabPeminjamanController::class, 'verifikasiPeminjaman'])
+            ->name('verifikasi-peminjaman');
+
+        Route::get('/riwayat-verifikasi', [KalabPeminjamanController::class, 'riwayatVerifikasi'])
+            ->name('riwayat-verifikasi');
+
+        Route::get('/verifikasi', [App\Http\Controllers\Kalab\VerifikasiController::class, 'index'])
+            ->name('verifikasi.index');
+
+        // Approve satu langkah
+        Route::patch('/verifikasi/{peminjaman}/approve', [App\Http\Controllers\Kalab\VerifikasiController::class, 'approve'])
+            ->name('peminjaman.approve');
+
+        // Reject (selesaikan semua langkah)
+        Route::patch('/verifikasi/{peminjaman}/reject', [App\Http\Controllers\Kalab\VerifikasiController::class, 'reject'])
+            ->name('peminjaman.reject');
+    });
+
+
     // Pimpinan
     Route::middleware(['auth', 'role:pimpinan'])
     ->prefix('pimpinan')
     ->name('pimpinan.')
     ->group(function () {
 
-        Route::get('/dashboard', fn () => view('layouts.pimpinan.dashboard'))
+        Route::get('/dashboard', [PimpinanDashboardController::class, 'dashboard'])
             ->name('dashboard');
 
         Route::get('/jadwal-ruangan', [PimpinanJadwalController::class, 'jadwalRuangan'])
@@ -268,6 +309,9 @@ Route::middleware(['auth'])->group(function () {
 
         Route::get('/riwayat-peminjaman', [DosenPeminjamanController::class, 'riwayatPeminjaman'])
             ->name('riwayat-peminjaman');
+
+        Route::view('/informasi-peminjaman', 'layouts.dosen.informasi_peminjaman')
+            ->name('informasi-peminjaman');
     });
 
     // Ormawa
@@ -299,6 +343,9 @@ Route::middleware(['auth'])->group(function () {
 
         Route::get('/riwayat-peminjaman', [OrmawaPeminjamanController::class, 'riwayatPeminjaman'])
             ->name('riwayat-peminjaman');
+
+        Route::view('/informasi-peminjaman', 'layouts.ormawa.informasi_peminjaman')
+            ->name('informasi-peminjaman');
     });
 
     // Mahasiswa
@@ -330,6 +377,9 @@ Route::middleware(['auth'])->group(function () {
 
         Route::get('/riwayat-peminjaman', [MahasiswaPeminjamanController::class, 'riwayatPeminjaman'])
             ->name('riwayat-peminjaman');
+
+        Route::view('/informasi-peminjaman', 'layouts.mahasiswa.informasi_peminjaman')
+            ->name('informasi-peminjaman');
     });
 // Contoh Pengelompoka route auth sesuai role
 // Route::middleware(['auth', 'role:pimpinan'])->group(function () {

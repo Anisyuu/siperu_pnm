@@ -209,8 +209,8 @@
                             data-dokumen="{{ $p->dokumen_bukti ? asset('storage/'.$p->dokumen_bukti) : '' }}"
                             data-status="{{ $p->status }}"
                             data-catatan="{{ $p->catatan ?? '' }}"
-                            data-approve-url="{{ route('kasubag.peminjaman.approve', $p->id) }}"
-                            data-reject-url="{{ route('kasubag.peminjaman.reject', $p->id) }}"
+                            data-approve-url="{{ route('kalab.peminjaman.approve', $p->id) }}"
+                            data-reject-url="{{ route('kalab.peminjaman.reject', $p->id) }}"
                             data-semua-langkah="{{ $p->verifikasi->map(fn($v) => [
                                 'urutan'            => $v->urutan,
                                 'role_verifikator'  => $v->role_verifikator,
@@ -577,7 +577,6 @@
     function handleBackdrop(e) {
         if (e.target === modal) closeModal();
     }
-
 </script>
 @endpush
 

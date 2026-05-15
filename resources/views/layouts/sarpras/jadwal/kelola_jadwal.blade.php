@@ -6,26 +6,23 @@
     {{-- HEADER --}}
     <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-            <h1 class="text-2xl font-bold tracking-tight text-slate-900">
-                Kelola Jadwal
-            </h1>
-            <p class="text-slate-500 text-sm mt-1">
-                Manajemen jadwal penggunaan ruangan
-            </p>
+            <h1 class="text-2xl font-bold tracking-tight text-slate-900">Kelola Jadwal</h1>
+            <p class="mt-0.5 text-sm text-slate-500">Manajemen jadwal penggunaan ruangan</p>
         </div>
-        <div class="flex items-center gap-3">
-            <div class="bg-white border border-slate-200 rounded-2xl px-5 py-4 flex items-center gap-3 shadow-sm">
-                <div class="w-9 h-9 bg-blue-50 rounded-xl flex items-center justify-center flex-shrink-0">
-                    <i class="fa-solid fa-calendar text-blue-500 text-sm"></i>
+        <div class="flex items-center gap-2">
+            <div class="bg-white border border-slate-200 rounded-xl px-3 py-2 flex items-center gap-2 shadow-sm">
+                <div class="w-7 h-7 bg-blue-50 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <i class="fa-solid fa-calendar text-blue-500 text-xs"></i>
                 </div>
                 <div>
-                    <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Total Jadwal</p>
-                    <p class="text-xl font-extrabold text-slate-800">{{ $jadwal->total() }}</p>
+                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Total Jadwal</p>
+                    <p class="text-base font-extrabold text-slate-800">{{ $jadwal->total() }}</p>
                 </div>
             </div>
             <a href="{{ route('sarpras.tambah-jadwal') }}"
-               class="inline-flex items-center justify-center w-11 h-11 bg-primary text-white rounded-2xl shadow-sm hover:brightness-110 transition">
-                <i class="fa-solid fa-plus text-sm"></i>
+            class="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-primary text-white text-sm font-semibold rounded-2xl shadow-sm hover:brightness-110 active:scale-95 transition">
+                <i class="fa-solid fa-plus text-xs"></i>
+                Tambah Jadwal
             </a>
         </div>
     </div>

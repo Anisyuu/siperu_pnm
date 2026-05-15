@@ -188,7 +188,7 @@
 
                     {{-- Aksi --}}
                     <td class="px-5 py-4 text-center">
-                        @if ($p->status == 'pending' && $p->isBisaDiAksi($peminjaman))
+                        @if ($p->status == 'pending' && $p->isBisaDiAksi($firstPendingId))
                         <button onclick="openModal(this)"
                             data-id="{{ $p->id }}"
                             data-no="{{ $p->no_peminjaman }}"

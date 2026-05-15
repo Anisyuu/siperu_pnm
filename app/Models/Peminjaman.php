@@ -48,12 +48,8 @@ protected $table = 'peminjaman';
             ->orderBy('urutan');
     }
 
-   public function isBisaDiAksi($collection)
-    {
-        $first = $collection
-            ->where('status', 'pending')
-            ->first();
-
-        return $first && $first->id === $this->id;
-    }
+public function isBisaDiAksi(int|null $firstPendingId): bool
+{
+    return $firstPendingId !== null && $this->id == $firstPendingId;
+}
 }

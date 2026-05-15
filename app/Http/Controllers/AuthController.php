@@ -54,6 +54,10 @@ class AuthController extends Controller
             return redirect()->intended(route('sarpras.dashboard'));
         }
 
+        if ($user->hasRole('kalab')) {
+            return redirect()->intended(route('kalab.dashboard'));
+        }
+
         if ($user->hasRole('ormawa')) {
             return redirect()->intended(route('ormawa.dashboard'));
         }

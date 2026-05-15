@@ -6,54 +6,56 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Peminjaman;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class PeminjamanController extends Controller
 {
     public function verifikasiPeminjaman(Request $request)
     {
         $user = Auth::user();
-        $userRoles = $user->roles->pluck('nama');
+    $userRoles = $user->roles->pluck('nama')->toArray();
 
-        $query = Peminjaman::with([
-                'ruangan.gedung.kampus',
-                'pemohon.roles',
-                'verifikasiAktif'
-            ])
-            ->where('status', 'pending')
+    $jenisPemohonDiizinkan = \DB::table('alur_verifikasi')
+        ->whereIn('role_verifikator', $userRoles)
+        ->pluck('jenis_pemohon')
+        ->toArray();
 
-            // ❗ hanya ambil yang step verifikasinya cocok dengan user login
-            // ->whereHas('verifikasiAktif', function ($q) use ($userRoles) {
-            //     $q->whereIn('role_verifikator', $userRoles);
-            // })
+    $query = Peminjaman::with([
+            'ruangan.gedung.kampus',
+            'pemohon.roles',
+            'verifikasi',
+            'verifikasiAktif'
+        ])
+        ->where('status', 'pending')
+        ->whereHas('pemohon.roles', function ($q) use ($jenisPemohonDiizinkan) {
+            $q->whereIn('nama', $jenisPemohonDiizinkan);
+        })
+        ->whereDoesntHave('verifikasi', function ($q) use ($user) {
+            $q->where('id_verifikator', $user->nomor_induk);
+        });
 
-            // ❗ pastikan jenis pemohon sesuai dengan alur
-            ->whereHas('pemohon.roles', function ($q) use ($userRoles) {
-                $q->whereIn('nama', function ($sub) use ($userRoles) {
-                    $sub->select('jenis_pemohon')
-                        ->from('alur_verifikasi')
-                        ->whereIn('role_verifikator', $userRoles);
-                });
-            })
+    if ($request->filled('search')) {
+        $query->where('kegiatan', 'like', '%' . $request->search . '%');
+    }
 
-            // ❗ belum diverifikasi oleh user ini
-            ->whereDoesntHave('verifikasi', function ($q) use ($user) {
-                $q->where('id_verifikator', $user->nomor_induk);
-            });
+    if ($request->filled('status')) {
+        $query->where('status', $request->status);
+    }
 
+    $peminjaman = $query->oldest()->paginate(5);
 
-        // SEARCH
-        if ($request->filled('search')) {
-            $query->where('kegiatan', 'like', '%' . $request->search . '%');
-        }
+    // Ambil ID peminjaman pending paling lama
+    $firstPendingId = Peminjaman::where('status', 'pending')
+        ->whereHas('pemohon.roles', function ($q) use ($jenisPemohonDiizinkan) {
+            $q->whereIn('nama', $jenisPemohonDiizinkan);
+        })
+        ->whereDoesntHave('verifikasi', function ($q) use ($user) {
+            $q->where('id_verifikator', $user->nomor_induk);
+        })
+        ->oldest()
+        ->value('id');
 
-        // FILTER STATUS
-        if ($request->filled('status')) {
-            $query->where('status', $request->status);
-        }
-
-        $peminjaman = $query->oldest()->paginate(5);
-
-        return view('layouts.kasubag.peminjaman.verifikasi_peminjaman', compact('peminjaman'));
+    return view('layouts.kasubag.peminjaman.verifikasi_peminjaman', compact('peminjaman', 'firstPendingId'));
     }
 
     public function riwayatVerifikasi( Request $request)

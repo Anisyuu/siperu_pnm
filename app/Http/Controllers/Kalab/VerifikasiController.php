@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Kasubag;
+namespace App\Http\Controllers\Kalab;
 
 use App\Http\Controllers\Controller;
 use App\Models\Peminjaman;
@@ -14,7 +14,6 @@ use RealRashid\SweetAlert\Facades\Alert;
 
 class VerifikasiController extends Controller
 {
-
     private function cekGiliran(Peminjaman $peminjaman): array
     {
         $user     = Auth::user();

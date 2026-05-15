@@ -111,4 +111,9 @@ class User extends Authenticatable
     {
         return $this->hasMany(Gedung::class,'id_user','nomor_induk');
     }
+
+    public function ruangan()
+    {
+        return $this->hasMany(Ruangan::class,'id_user','nomor_induk');
+    }
 }
