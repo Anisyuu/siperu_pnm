@@ -5,98 +5,214 @@ namespace App\Http\Controllers\Kasubag;
 use App\Http\Controllers\Controller;
 use App\Models\Jadwal;
 use App\Models\Ruangan;
-use App\Models\Peminjaman;
+use App\Models\Kampus;
+use App\Models\Gedung;
+use App\Models\JenisRuang;
 use Illuminate\Http\Request;
-use Illuminate\Support\Carbon;
+use RealRashid\SweetAlert\Facades\Alert;
 
 class JadwalController extends Controller
 {
-    public function jadwalRuangan(Request $request)
+    public function kelolaJadwal(Request $request)
     {
-        // ===== 1. Tentukan minggu =====
-        $anchor    = $request->filled('tanggal') ? Carbon::parse($request->tanggal) : now();
-        $weekStart = $anchor->copy()->startOfWeek(Carbon::MONDAY);
-        $weekEnd   = $weekStart->copy()->addDays(6);
+        $search          = $request->input('search');
+        $ruanganId       = $request->input('ruangan_id');
+        $tanggalMulai    = $request->input('tanggal_mulai');
+        $tanggalSelesai  = $request->input('tanggal_selesai');
+        $kampusId        = $request->input('kampus_id');
+        $gedungSlug      = $request->input('gedung_slug');
+        $jenisRuangId    = $request->input('jenis_ruang_id');
 
-        // ===== 2. Ambil jadwal =====
-        $jadwal = Jadwal::with('ruangan')
-            ->whereBetween('tanggal', [$weekStart, $weekEnd])
-            ->when($request->ruangan_id, fn ($q) =>
-                $q->where('ruangan_id', $request->ruangan_id)
-            )
-            ->when($request->keyword, function ($q) use ($request) {
-                $kw = $request->keyword;
-                $q->where(fn ($sub) =>
-                    $sub->where('mata_kuliah', 'like', "%$kw%")
-                        ->orWhere('dosen_pengampu', 'like', "%$kw%")
-                        ->orWhere('catatan', 'like', "%$kw%")
-                );
+        $jadwal = Jadwal::with([
+                'ruangan.jenisRuangan',
+                'ruangan.gedung.kampus'
+            ])
+            ->when($search, function ($q) use ($search) {
+                $q->where(function ($qq) use ($search) {
+                    $qq->where('kegiatan', 'like', "%{$search}%")
+                       ->orWhere('penanggung_jawab', 'like', "%{$search}%")
+                       ->orWhere('catatan', 'like', "%{$search}%");
+                });
             })
-            ->orderBy('tanggal')
-            ->orderBy('waktu_mulai')
+            ->when($ruanganId, fn ($q) => $q->where('ruangan_id', $ruanganId))
+
+            // Filter kalau tanggal mulai dan tanggal selesai diisi
+            ->when($tanggalMulai && $tanggalSelesai, function ($q) use ($tanggalMulai, $tanggalSelesai) {
+                $q->whereDate('tanggal_mulai', '<=', $tanggalSelesai)
+                  ->whereDate('tanggal_selesai', '>=', $tanggalMulai);
+            })
+
+            // Filter kalau hanya tanggal mulai yang diisi
+            ->when($tanggalMulai && !$tanggalSelesai, function ($q) use ($tanggalMulai) {
+                $q->whereDate('tanggal_mulai', '<=', $tanggalMulai)
+                  ->whereDate('tanggal_selesai', '>=', $tanggalMulai);
+            })
+
+            ->when($kampusId, function ($q) use ($kampusId) {
+                $q->whereHas('ruangan.gedung.kampus', function ($qq) use ($kampusId) {
+                    $qq->where('id', $kampusId);
+                });
+            })
+            ->when($gedungSlug, function ($q) use ($gedungSlug) {
+                $q->whereHas('ruangan.gedung', function ($qq) use ($gedungSlug) {
+                    $qq->where('slug', $gedungSlug);
+                });
+            })
+            ->when($jenisRuangId, function ($q) use ($jenisRuangId) {
+                $q->whereHas('ruangan.jenisRuangan', function ($qq) use ($jenisRuangId) {
+                    $qq->where('id', $jenisRuangId);
+                });
+            })
+            ->orderBy('tanggal_mulai', 'desc')
+            ->orderBy('waktu_mulai', 'asc')
+            ->paginate(10)
+            ->withQueryString();
+
+        $kampus = Kampus::orderBy('nama_kampus')->get();
+        $gedung = Gedung::with('kampus')->orderBy('nama')->get();
+        $jenisRuang = JenisRuang::orderBy('nama')->get();
+
+        $ruangan = Ruangan::with(['gedung.kampus', 'jenisRuangan'])
+            ->orderBy('nama_ruang')
             ->get();
 
-        // ===== 3. Ambil peminjaman =====
-        $peminjaman = Peminjaman::with('ruangan')
-            ->whereIn('status', ['disetujui'])
-            ->where(function ($q) use ($weekStart, $weekEnd) {
-                $q->whereBetween('tanggal_mulai', [$weekStart, $weekEnd])
-                  ->orWhereBetween('tanggal_selesai', [$weekStart, $weekEnd]);
-            })
+        return view('layouts.kasubag.jadwal.kelola_jadwal', compact(
+            'jadwal',
+            'kampus',
+            'gedung',
+            'jenisRuang',
+            'ruangan'
+        ));
+    }
+
+    public function tambahJadwal()
+    {
+        $kampus = Kampus::orderBy('nama_kampus')->get();
+        $gedung = Gedung::with('kampus')->orderBy('nama')->get();
+        $jenisRuang = JenisRuang::orderBy('nama')->get();
+
+        $ruangan = Ruangan::with(['gedung.kampus', 'jenisRuangan'])
+            ->orderBy('nama_ruang')
             ->get();
 
-        // ===== 4. Mapping ke format event =====
-        $events = collect()
-            ->merge($this->mapJadwal($jadwal))
-            ->merge($this->mapPeminjaman($peminjaman))
-            ->sortBy(['tanggal', 'waktu_mulai'])
-            ->values();
-
-        // ===== 5. Grouping =====
-        $eventsByDate = $events->groupBy(fn ($e) =>
-            Carbon::parse($e['tanggal'])->toDateString()
-        );
-
-        // ===== 6. Generate hari =====
-        $days = collect(range(0, 6))
-            ->map(fn ($i) => $weekStart->copy()->addDays($i));
-
-        return view('layouts.kasubag.jadwal.jadwal_ruangan', [
-            'ruangan'       => Ruangan::orderBy('nama_ruang')->get(),
-            'events'        => $events,
-            'eventsByDate'  => $eventsByDate,
-            'days'          => $days,
-            'weekStart'     => $weekStart,
-            'weekEnd'       => $weekEnd,
-            'monthLabel'    => $weekStart->translatedFormat('F Y'),
-        ]);
+        return view('layouts.kasubag.jadwal.tambah_jadwal', compact(
+            'kampus',
+            'gedung',
+            'jenisRuang',
+            'ruangan'
+        ));
     }
 
-    // ===== Helper: mapping jadwal =====
-    private function mapJadwal($data)
+    public function simpanJadwal(Request $request)
     {
-        return $data->map(fn ($item) => [
-            'tanggal'        => $item->tanggal,
-            'waktu_mulai'    => $item->waktu_mulai,
-            'waktu_selesai'  => $item->waktu_selesai,
-            'title'          => $item->mata_kuliah,
-            'subtitle'       => $item->dosen_pengampu,
-            'ruangan'        => $item->ruangan->nama_ruang ?? '-',
-            'type'           => 'jadwal',
+        $validated = $request->validate([
+            'ruangan_id'         => 'required|exists:ruangan,id',
+            'tanggal_mulai'      => 'required|date',
+            'tanggal_selesai'    => 'required|date|after_or_equal:tanggal_mulai',
+            'waktu_mulai'        => 'required|date_format:H:i',
+            'waktu_selesai'      => 'required|date_format:H:i|after:waktu_mulai',
+            'kegiatan'           => 'required|string|max:150',
+            'penanggung_jawab'   => 'nullable|string|max:100',
+            'catatan'            => 'nullable|string',
         ]);
+
+        $bentrok = Jadwal::where('ruangan_id', $validated['ruangan_id'])
+            ->whereDate('tanggal_mulai', '<=', $validated['tanggal_selesai'])
+            ->whereDate('tanggal_selesai', '>=', $validated['tanggal_mulai'])
+            ->whereTime('waktu_mulai', '<', $validated['waktu_selesai'])
+            ->whereTime('waktu_selesai', '>', $validated['waktu_mulai'])
+            ->exists();
+
+        if ($bentrok) {
+            return back()
+                ->withInput()
+                ->withErrors([
+                    'waktu_mulai' => 'Ruangan sudah memiliki jadwal pada tanggal dan jam tersebut.'
+                ]);
+        }
+
+        Jadwal::create($validated);
+
+        Alert::success('Berhasil', 'Jadwal penggunaan ruangan berhasil ditambahkan');
+
+        return redirect()
+            ->route('kasubag.kelola-jadwal')
+            ->with('success', 'Jadwal penggunaan ruangan berhasil ditambahkan.');
     }
 
-    // ===== Helper: mapping peminjaman =====
-    private function mapPeminjaman($data)
+    public function editJadwal($id)
     {
-        return $data->map(fn ($item) => [
-            'tanggal'        => $item->tanggal_mulai,
-            'waktu_mulai'    => $item->waktu_mulai,
-            'waktu_selesai'  => $item->waktu_selesai,
-            'title'          => "Peminjaman Pada Ruang " . $item->ruangan->nama_ruang,
-            'subtitle'       => $item->kegiatan,
-            'ruangan'        => $item->ruangan->nama_ruang ?? '-',
-            'type'           => 'peminjaman',
+        $jadwal = Jadwal::with([
+            'ruangan.gedung.kampus',
+            'ruangan.jenisRuangan'
+        ])->findOrFail($id);
+
+        $kampus = Kampus::orderBy('nama_kampus')->get();
+        $gedung = Gedung::with('kampus')->orderBy('nama')->get();
+        $jenisRuang = JenisRuang::orderBy('nama')->get();
+
+        $ruangan = Ruangan::with(['gedung.kampus', 'jenisRuangan'])
+            ->orderBy('nama_ruang')
+            ->get();
+
+        return view('layouts.kasubag.jadwal.edit_jadwal', compact(
+            'jadwal',
+            'kampus',
+            'gedung',
+            'jenisRuang',
+            'ruangan'
+        ));
+    }
+
+    public function updateJadwal(Request $request, $id)
+    {
+        $jadwal = Jadwal::findOrFail($id);
+
+        $validated = $request->validate([
+            'ruangan_id'         => 'required|exists:ruangan,id',
+            'tanggal_mulai'      => 'required|date',
+            'tanggal_selesai'    => 'required|date|after_or_equal:tanggal_mulai',
+            'waktu_mulai'        => 'required|date_format:H:i',
+            'waktu_selesai'      => 'required|date_format:H:i|after:waktu_mulai',
+            'kegiatan'           => 'required|string|max:150',
+            'penanggung_jawab'   => 'nullable|string|max:100',
+            'catatan'            => 'nullable|string',
         ]);
+
+        $bentrok = Jadwal::where('id', '!=', $jadwal->id)
+            ->where('ruangan_id', $validated['ruangan_id'])
+            ->whereDate('tanggal_mulai', '<=', $validated['tanggal_selesai'])
+            ->whereDate('tanggal_selesai', '>=', $validated['tanggal_mulai'])
+            ->whereTime('waktu_mulai', '<', $validated['waktu_selesai'])
+            ->whereTime('waktu_selesai', '>', $validated['waktu_mulai'])
+            ->exists();
+
+        if ($bentrok) {
+            return back()
+                ->withInput()
+                ->withErrors([
+                    'waktu_mulai' => 'Ruangan sudah memiliki jadwal pada tanggal dan jam tersebut.'
+                ]);
+        }
+
+        $jadwal->update($validated);
+
+        Alert::success('Berhasil', 'Jadwal penggunaan ruangan berhasil diperbarui');
+
+        return redirect()
+            ->route('kasubag.kelola-jadwal')
+            ->with('success', 'Jadwal penggunaan ruangan berhasil diperbarui.');
+    }
+
+    public function hapusJadwal($id)
+    {
+        $jadwal = Jadwal::findOrFail($id);
+        $jadwal->delete();
+
+        Alert::success('Berhasil', 'Jadwal penggunaan ruangan berhasil dihapus');
+
+        return redirect()
+            ->route('kasubag.kelola-jadwal')
+            ->with('success', 'Jadwal penggunaan ruangan berhasil dihapus.');
     }
 }

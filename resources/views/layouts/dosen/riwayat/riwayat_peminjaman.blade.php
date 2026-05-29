@@ -23,7 +23,7 @@
         </div>
 
         {{-- FILTER --}}
-        <form method="GET" action="{{ route('dosen.list-peminjaman') }}" class="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm">
+        <form method="GET" action="{{ route('dosen.riwayat-peminjaman') }}" class="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm">
             <div class="flex flex-col md:flex-row gap-3">
                 <div class="relative flex-1">
                     <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm pointer-events-none"></i>
@@ -48,16 +48,16 @@
                     Terapkan
                 </button>
                 @if(request()->hasAny(['search', 'status']))
-                <a href="{{ route('dosen.list-peminjaman') }}"
+                <a href="{{ route('dosen.riwayat-peminjaman') }}"
                     class="px-4 py-2.5 border border-slate-200 text-sm text-slate-500 font-semibold rounded-xl hover:bg-slate-50 transition">
                     Reset
                 </a>
                 @endif
-                <button type="button"
-                    class="inline-flex items-center gap-2 px-5 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 hover:bg-slate-50 transition">
-                    <i class="fa-solid fa-file-export text-slate-400"></i>
-                    Export
-                </button>
+                <a href="{{ route('dosen.riwayat-peminjaman.export', request()->query()) }}"
+                class="inline-flex items-center gap-2 px-5 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 hover:bg-slate-50 transition">
+                    <i class="fa-solid fa-file-csv text-blue-500"></i>
+                    Unduh CSV
+                </a>
             </div>
         </form>
 

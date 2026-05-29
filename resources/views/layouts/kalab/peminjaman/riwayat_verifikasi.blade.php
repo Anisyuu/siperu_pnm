@@ -9,10 +9,11 @@
             <h1 class="text-2xl font-bold tracking-tight text-slate-900">Riwayat Verifikasi</h1>
             <p class="text-slate-500 text-sm mt-1">Riwayat seluruh pengajuan yang telah Anda verifikasi</p>
         </div>
-        <button class="inline-flex items-center gap-2 px-5 py-2.5 bg-white border border-slate-200 rounded-2xl text-sm font-semibold text-slate-700 hover:bg-slate-50 transition shadow-sm">
-            <i class="fa-solid fa-file-export text-slate-400"></i>
-            Ekspor Riwayat
-        </button>
+        <a href="{{ route('kalab.riwayat-verifikasi.export', request()->query()) }}"
+        class="inline-flex items-center gap-2 px-5 py-2.5 bg-white border border-slate-200 rounded-2xl text-sm font-semibold text-slate-700 hover:bg-slate-50 transition shadow-sm">
+            <i class="fa-solid fa-file-csv text-blue-500"></i>
+            Ekspor CSV
+        </a>
     </div>
 
     {{-- FILTER --}}

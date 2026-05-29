@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use RealRashid\SweetAlert\Facades\Alert;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 
 class JenisRuangController extends Controller
 {
@@ -37,34 +38,38 @@ class JenisRuangController extends Controller
         return redirect()->back();
     }
 
-    public function update(Request $request, JenisRuang $jenisRuang)
+
+    public function update(Request $request, $slug)
+{
+    $jenisRuang = JenisRuang::where('slug', $slug)->firstOrFail();
+
+    $validated = $request->validate([
+        'nama' => [
+            'required',
+            'string',
+            'max:25',
+            Rule::unique('jenis_ruang', 'nama')->ignore($jenisRuang->id),
+        ],
+    ]);
+
+    $newSlug = $validated['nama'] !== $jenisRuang->nama
+        ? Str::slug($validated['nama'])
+        : $jenisRuang->slug;
+
+    $jenisRuang->update([
+        'nama' => $validated['nama'],
+        'slug' => $newSlug,
+    ]);
+
+    Alert::success('Berhasil', 'Jenis ruang berhasil diperbarui');
+
+    return redirect()->back();
+}
+
+    public function destroy($slug)
     {
-        $request->validate([
-            'nama' => [
-                'required',
-                'string',
-                'max:25',
-                \Illuminate\Validation\Rule::unique('jenis_ruang','nama')
-                    ->ignore($jenisRuang->id),
-            ],
-        ]);
+        $jenisRuang = JenisRuang::where('slug', $slug)->firstOrFail();
 
-        $slug = $request->nama !== $jenisRuang->nama
-            ? Str::slug($request->nama)
-            : $jenisRuang->slug;
-
-        $jenisRuang->update([
-            'nama' => $request->nama,
-            'slug' => $slug
-        ]);
-
-        Alert::success('Berhasil', 'Jenis ruang berhasil diperbarui');
-
-        return redirect()->back();
-    }
-
-    public function destroy(JenisRuang $jenisRuang)
-    {
         if ($jenisRuang->ruangan()->exists()) {
 
             Alert::error(
@@ -84,6 +89,6 @@ class JenisRuangController extends Controller
             "Jenis ruang {$nama} berhasil dihapus"
         );
 
-        return redirect()->route('kasubag.jenis-ruang.index', compact('nama'));
+        return redirect()->back();
     }
 }

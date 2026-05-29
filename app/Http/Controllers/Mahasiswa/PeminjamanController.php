@@ -8,14 +8,18 @@ use App\Models\Peminjaman;
 use App\Models\Kampus;
 use App\Models\Gedung;
 use App\Models\Ruangan;
+use App\Models\Jadwal;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use RealRashid\SweetAlert\Facades\Alert;
+use App\Traits\ExportRiwayatCsv;
 
 class PeminjamanController extends Controller
 {
+    use ExportRiwayatCsv;
+
     public function listPeminjaman(Request $request)
     {
         $query = Peminjaman::with(['ruangan.gedung', 'verifikasi'])
@@ -46,55 +50,66 @@ class PeminjamanController extends Controller
         );
     }
 
-
     public function store(Request $request)
     {
         $request->validate([
-            'ruangan_id'    => 'required|exists:ruangan,id',
-            'tanggal_mulai' => 'required|date|after_or_equal:today',
-            'tanggal_selesai' => 'required|date|after_or_equal:tanggal_mulai',
-            'waktu_mulai'   => 'required|date_format:H:i',
-            'waktu_selesai' => 'required|date_format:H:i|after:waktu_mulai',
-            'kegiatan'      => 'required|string|max:1000',
-            'dokumen_bukti' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:2048',
+            'ruangan_id'       => 'required|exists:ruangan,id',
+            'tanggal_mulai'    => 'required|date|after_or_equal:today',
+            'tanggal_selesai'  => 'required|date|after_or_equal:tanggal_mulai',
+            'waktu_mulai'      => 'required|date_format:H:i',
+            'waktu_selesai'    => 'required|date_format:H:i|after:waktu_mulai',
+            'kegiatan'         => 'required|string|max:1000',
+            'dokumen_bukti'    => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:2048',
         ], [
             'tanggal_mulai.after_or_equal'   => 'Tanggal mulai tidak boleh sebelum hari ini.',
             'tanggal_selesai.after_or_equal' => 'Tanggal selesai tidak boleh sebelum tanggal mulai.',
             'waktu_selesai.after'            => 'Waktu selesai harus setelah waktu mulai.',
         ]);
 
-        // Cek bentrok jadwal
-        $bentrok = Peminjaman::where('ruangan_id', $request->ruangan_id)
-            ->where('status', 'pending')
+        // Cek bentrok dengan peminjaman lain yang masih pending atau sudah disetujui
+        $ruanganBentrokPeminjaman = Peminjaman::where('ruangan_id', $request->ruangan_id)
+            ->whereIn('status', ['pending', 'disetujui'])
             ->where(function ($q) use ($request) {
-                $q->whereBetween('tanggal_mulai', [$request->tanggal_mulai, $request->tanggal_selesai])
-                  ->orWhereBetween('tanggal_selesai', [$request->tanggal_mulai, $request->tanggal_selesai]);
+                $q->whereDate('tanggal_mulai', '<=', $request->tanggal_selesai)
+                    ->whereDate('tanggal_selesai', '>=', $request->tanggal_mulai);
             })
             ->where(function ($q) use ($request) {
-                $q->where(function ($q2) use ($request) {
-                    $q2->where('waktu_mulai', '<', $request->waktu_selesai)
-                       ->where('waktu_selesai', '>', $request->waktu_mulai);
-                });
+                $q->whereTime('waktu_mulai', '<', $request->waktu_selesai)
+                    ->whereTime('waktu_selesai', '>', $request->waktu_mulai);
             })
             ->exists();
 
-        if ($bentrok) {
-            Alert::error('Gagal', 'Ruangan sudah dipesan pada waktu tersebut. Pilih waktu atau ruangan lain.');
+        // Cek bentrok dengan jadwal tetap
+        $ruanganBentrokJadwal = Jadwal::where('ruangan_id', $request->ruangan_id)
+            ->where(function ($q) use ($request) {
+                $q->whereDate('tanggal_mulai', '<=', $request->tanggal_selesai)
+                    ->whereDate('tanggal_selesai', '>=', $request->tanggal_mulai);
+            })
+            ->where(function ($q) use ($request) {
+                $q->whereTime('waktu_mulai', '<', $request->waktu_selesai)
+                    ->whereTime('waktu_selesai', '>', $request->waktu_mulai);
+            })
+            ->exists();
+
+        if ($ruanganBentrokPeminjaman || $ruanganBentrokJadwal) {
             return back()
                 ->withInput()
-                ->withErrors(['ruangan_id' => 'Ruangan sudah dipesan pada waktu tersebut. Pilih waktu atau ruangan lain.']);
+                ->withErrors([
+                    'ruangan_id' => 'Ruangan sudah tidak tersedia pada tanggal dan jam tersebut.'
+                ]);
         }
 
         $dokumen = null;
+
         if ($request->hasFile('dokumen_bukti')) {
             $dokumen = $request->file('dokumen_bukti')
                 ->store('dokumen_peminjaman', 'public');
         }
 
         DB::transaction(function () use ($request, $dokumen) {
-             do {
-                    $no = strtoupper(Str::random(6));
-                } while (Peminjaman::where('no_peminjaman', $no)->exists());
+            do {
+                $no = strtoupper(Str::random(6));
+            } while (Peminjaman::where('no_peminjaman', $no)->exists());
 
             Peminjaman::create([
                 'no_peminjaman'   => $no,
@@ -114,41 +129,35 @@ class PeminjamanController extends Controller
             ->with('success', 'Pengajuan berhasil dikirim.');
     }
 
-   public function detailPeminjaman($id)
-{
-    $peminjaman = Peminjaman::with([
-            'ruangan.gedung.kampus',
+    public function detailPeminjaman($id)
+    {
+        $peminjaman = Peminjaman::with([
+            'ruangan.gedung',
             'ruangan.jenisRuangan',
             'verifikasi',
             'pemohon.roles',
         ])
-        ->where('pemohon_id', Auth::user()->nomor_induk)
-        ->findOrFail($id);
+            ->where('pemohon_id', Auth::user()->nomor_induk)
+            ->findOrFail($id);
 
-    $jenisPemohon = $peminjaman->pemohon->roles->pluck('nama')->first()
-                    ?? $peminjaman->pemohon->role;
+        $jenisPemohon = strtolower(trim(
+            $peminjaman->pemohon->roles->pluck('nama')->first() ?? $peminjaman->pemohon->role
+        ));
 
-    // Cek apakah ruangan bertipe lab
-    $isLab = str_contains(
-        strtolower(optional($peminjaman->ruangan->jenisRuangan)->nama ?? ''),
-        'lab'
-    );
+        $jenisRuangSlug = strtolower(trim($peminjaman->ruangan->jenisRuangan->slug ?? ''));
+        $jenisRuangNama = strtolower(trim($peminjaman->ruangan->jenisRuangan->nama ?? ''));
+        $isLab = str_contains($jenisRuangSlug, 'lab') || str_contains($jenisRuangNama, 'lab');
 
-    // Ambil alur, skip step kalab jika bukan lab
-    $alur = \App\Models\AlurVerifikasi::where('jenis_pemohon', $jenisPemohon)
-        ->orderBy('urutan')
-        ->get()
-        ->when(!$isLab, fn($collection) =>
-            $collection->filter(fn($step) =>
-                strtolower(trim($step->role_verifikator)) !== 'kalab'
-            )->values()
-        );
+        $alur = \App\Models\AlurVerifikasi::whereRaw('LOWER(TRIM(jenis_pemohon)) = ?', [$jenisPemohon])
+            ->when(!$isLab, fn ($q) => $q->whereRaw('LOWER(TRIM(role_verifikator)) != ?', ['kalab']))
+            ->orderBy('urutan')
+            ->get()
+            ->values();
 
-    $riwayat = $peminjaman->verifikasi ?? collect();
+        $riwayat = $peminjaman->verifikasi ?? collect();
 
-    return view('layouts.mahasiswa.peminjaman.detail_peminjaman',
-        compact('peminjaman', 'alur', 'riwayat'));
-}
+        return view('layouts.mahasiswa.peminjaman.detail_peminjaman', compact('peminjaman', 'alur', 'riwayat'));
+    }
 
     public function batalkanPeminjaman($id)
     {
@@ -162,13 +171,15 @@ class PeminjamanController extends Controller
 
         $peminjaman->delete();
 
-        return redirect()->route('mahasiswa.list-peminjaman')->with('success', 'Pengajuan berhasil dibatalkan');
+        return redirect()->route('mahasiswa.list-peminjaman')
+            ->with('success', 'Pengajuan berhasil dibatalkan');
     }
 
     public function riwayatPeminjaman(Request $request)
     {
         $query = Peminjaman::with(['ruangan.gedung'])
-            ->where('pemohon_id', Auth::user()->nomor_induk);
+            ->where('pemohon_id', Auth::user()->nomor_induk)
+            ->whereIn('status', ['disetujui', 'ditolak']);
 
         if ($request->filled('search')) {
             $query->where('kegiatan', 'like', '%' . $request->search . '%');
@@ -181,5 +192,94 @@ class PeminjamanController extends Controller
         $peminjaman = $query->latest()->paginate(5)->withQueryString();
 
         return view('layouts.mahasiswa.riwayat.riwayat_peminjaman', compact('peminjaman'));
+    }
+
+    public function exportRiwayatPeminjaman(Request $request)
+    {
+        $user = Auth::user();
+
+        $query = Peminjaman::query()
+            ->with([
+                'ruangan.gedung.kampus',
+                'pemohon',
+                'verifikasi' => fn ($q) => $q->orderBy('urutan'),
+            ])
+            ->where('pemohon_id', '=', $user->nomor_induk);
+
+        $this->applyRiwayatFilters($query, $request);
+
+        $peminjaman = $query->latest()->get();
+
+        $fileName = 'riwayat-peminjaman-mahasiswa-' . now()->format('Ymd_His') . '.csv';
+
+        return $this->downloadRiwayatCsv($peminjaman, $fileName, $user->nomor_induk);
+    }
+
+    public function ruanganTersedia(Request $request)
+    {
+        $request->validate([
+            'kampus_id'        => 'required|exists:kampus,id',
+            'gedung_slug'      => 'required|exists:gedung,slug',
+            'lantai'           => 'required|integer|min:1',
+            'tanggal_mulai'    => 'required|date',
+            'tanggal_selesai'  => 'required|date|after_or_equal:tanggal_mulai',
+            'waktu_mulai'      => 'required|date_format:H:i',
+            'waktu_selesai'    => 'required|date_format:H:i|after:waktu_mulai',
+        ]);
+
+        $tanggalMulai   = $request->tanggal_mulai;
+        $tanggalSelesai = $request->tanggal_selesai;
+        $waktuMulai     = $request->waktu_mulai;
+        $waktuSelesai   = $request->waktu_selesai;
+
+        $ruanganBentrokPeminjaman = Peminjaman::whereIn('status', ['pending', 'disetujui'])
+            ->where(function ($q) use ($tanggalMulai, $tanggalSelesai) {
+                $q->whereDate('tanggal_mulai', '<=', $tanggalSelesai)
+                    ->whereDate('tanggal_selesai', '>=', $tanggalMulai);
+            })
+            ->where(function ($q) use ($waktuMulai, $waktuSelesai) {
+                $q->whereTime('waktu_mulai', '<', $waktuSelesai)
+                    ->whereTime('waktu_selesai', '>', $waktuMulai);
+            })
+            ->pluck('ruangan_id')
+            ->toArray();
+
+        $ruanganBentrokJadwal = Jadwal::where(function ($q) use ($tanggalMulai, $tanggalSelesai) {
+                $q->whereDate('tanggal_mulai', '<=', $tanggalSelesai)
+                    ->whereDate('tanggal_selesai', '>=', $tanggalMulai);
+            })
+            ->where(function ($q) use ($waktuMulai, $waktuSelesai) {
+                $q->whereTime('waktu_mulai', '<', $waktuSelesai)
+                    ->whereTime('waktu_selesai', '>', $waktuMulai);
+            })
+            ->pluck('ruangan_id')
+            ->toArray();
+
+        $ruanganBentrok = array_unique(array_merge(
+            $ruanganBentrokPeminjaman,
+            $ruanganBentrokJadwal
+        ));
+
+        $ruangan = Ruangan::with(['gedung.kampus'])
+            ->whereHas('gedung', function ($q) use ($request) {
+                $q->where('slug', $request->gedung_slug)
+                    ->where('kampus_id', $request->kampus_id);
+            })
+            ->where('lantai', $request->lantai)
+            ->whereNotIn('id', $ruanganBentrok)
+            ->orderBy('nama_ruang')
+            ->get()
+            ->map(function ($r) {
+                return [
+                    'id'          => $r->id,
+                    'nama_ruang'  => $r->nama_ruang,
+                    'lantai'      => $r->lantai,
+                    'gedung'      => $r->gedung->nama ?? '-',
+                    'gedung_slug' => $r->gedung->slug ?? '-',
+                    'kampus_id'   => $r->gedung->kampus_id ?? null,
+                ];
+            });
+
+        return response()->json($ruangan);
     }
 }

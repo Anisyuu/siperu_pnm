@@ -9,7 +9,7 @@ use App\Models\Role;
 
 class AlurVerifikasiController extends Controller
 {
-    public function index() 
+    public function index()
     {
         $alurVerifikasi = AlurVerifikasi::orderBy('urutan')
             ->get()
@@ -25,21 +25,25 @@ class AlurVerifikasiController extends Controller
     {
         $request->validate([
             'jenis_pemohon' => 'required|string|max:25',
-            'role_verifikator' => 'required|array',
+            'role_verifikator' => 'required|array|min:1',
+            'mode' => 'nullable|string|in:create,edit',
         ]);
 
-        // 🔥 Hapus alur lama (biar 1 jenis = 1 alur)
         AlurVerifikasi::where('jenis_pemohon', $request->jenis_pemohon)->delete();
 
         foreach ($request->role_verifikator as $index => $role) {
             AlurVerifikasi::create([
                 'jenis_pemohon' => $request->jenis_pemohon,
-                'urutan' => $index + 1, // auto urutan
+                'urutan' => $index + 1,
                 'role_verifikator' => $role,
             ]);
         }
 
-        return back()->with('success', 'Alur berhasil disimpan');
+        $message = $request->mode === 'edit'
+            ? 'Alur verifikasi berhasil diedit'
+            : 'Alur verifikasi berhasil ditambahkan';
+
+        return back()->with('success', $message);
     }
 
     public function show($jenis)

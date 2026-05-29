@@ -73,7 +73,7 @@
                             )"
                             class="w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 hover:text-amber-600 hover:bg-amber-50 transition-all"
                             title="Edit">
-                        <i class="fa-solid fa-pen-to-square text-sm"></i>
+                        <i class="fa-regular fa-pen-to-square text-sm"></i>
                     </button>
 
                     <form action="{{ route('kasubag.gedung.destroy', $item->slug) }}" method="POST"
@@ -84,7 +84,7 @@
                                 onclick="event.stopPropagation()"
                                 class="w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 transition-all"
                                 title="Hapus">
-                            <i class="fa-solid fa-trash text-sm"></i>
+                            <i class="fa-regular fa-trash-can text-sm"></i>
                         </button>
                     </form>
 

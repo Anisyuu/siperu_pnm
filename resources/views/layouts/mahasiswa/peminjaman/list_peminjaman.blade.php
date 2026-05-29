@@ -9,19 +9,22 @@
                 <h1 class="text-2xl font-bold tracking-tight text-slate-900">List Pengajuan Peminjaman</h1>
                 <p class="mt-0.5 text-sm text-slate-500">Manajemen seluruh pengajuan peminjaman ruangan</p>
             </div>
+
             <div class="flex items-center gap-2">
                 <div class="bg-white border border-slate-200 rounded-xl px-3 py-2 flex items-center gap-2 shadow-sm">
                     <div class="w-7 h-7 bg-blue-50 rounded-lg flex items-center justify-center flex-shrink-0">
                         <i class="fa-solid fa-users text-blue-500 text-xs"></i>
                     </div>
+
                     <div>
-                        <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Total Pengajuan</p>
-                        <p class="text-xl font-extrabold text-slate-800">{{ $peminjaman->total() }}</p>
+                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Total Pengajuan</p>
+                        <p class="text-base font-extrabold text-slate-800">{{ $peminjaman->total() }}</p>
                     </div>
                 </div>
+
                 <a href="{{ route('mahasiswa.ajukan-peminjaman') }}"
                 class="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-primary text-white text-sm font-semibold rounded-2xl shadow-sm hover:brightness-110 active:scale-95 transition">
-                    <i class="fa-solid fa-plus text-sm"></i>
+                    <i class="fa-solid fa-plus text-xs"></i>
                     Ajukan Peminjaman
                 </a>
             </div>
@@ -58,11 +61,6 @@
                     Reset
                 </a>
                 @endif
-                <button type="button"
-                    class="inline-flex items-center gap-2 px-5 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 hover:bg-slate-50 transition">
-                    <i class="fa-solid fa-file-export text-slate-400"></i>
-                    Export
-                </button>
             </div>
         </form>
 
@@ -234,22 +232,32 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <script>
-    function confirmDeletePeminjaman(id, kegiatan) {
-        Swal.fire({
-            title: 'Batalkan Pengajuan?',
-            html: `Pengajuan untuk <strong>${kegiatan}</strong> akan dibatalkan.`,
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#ef4444',
-            cancelButtonColor: '#94a3b8',
-            confirmButtonText: 'Ya, Batalkan',
-            cancelButtonText: 'Batal',
-        }).then((result) => {
-            if (result.isConfirmed) {
-                document.getElementById(`delete-peminjaman-${id}`).submit();
-            }
-        });
-    }
+        function confirmDeletePeminjaman(id, kegiatan) {
+            Swal.fire({
+                title: 'Batalkan Pengajuan?',
+                html: `Pengajuan untuk <strong>${kegiatan}</strong> akan dibatalkan.`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#ef4444',
+                cancelButtonColor: '#94a3b8',
+                confirmButtonText: 'Ya, Batalkan',
+                cancelButtonText: 'Batal',
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    Swal.fire({
+                        title: 'Memproses...',
+                        text: 'Mohon tunggu, pengajuan sedang dibatalkan.',
+                        allowOutsideClick: false,
+                        allowEscapeKey: false,
+                        didOpen: () => {
+                            Swal.showLoading();
+                        }
+                    });
+
+                    document.getElementById(`delete-peminjaman-${id}`).submit();
+                }
+            });
+        }
     </script>
 
 </x-master>

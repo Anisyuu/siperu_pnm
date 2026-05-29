@@ -183,7 +183,7 @@
                                         )"
                                         title="Edit"
                                         class="w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 hover:text-amber-600 hover:bg-amber-50 transition-all">
-                                    <i class="fa-solid fa-pen-to-square text-sm"></i>
+                                    <i class="fa-regular fa-pen-to-square text-sm"></i>
                                 </button>
                                 {{-- Delete: buka modal konfirmasi --}}
                                 <form method="POST" action="{{ route('kasubag.ruangan.destroy', $item->id) }}" onsubmit="return confirmDelete(event, '{{ addslashes($item->nama_ruang) }}')">
@@ -192,7 +192,7 @@
                                     <button type="submit"
                                             title="Hapus"
                                             class="w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 transition-all">
-                                        <i class="fa-solid fa-trash text-sm"></i>
+                                        <i class="fa-regular fa-trash-can text-sm"></i>
                                     </button>
                                 </form>
                             </div>

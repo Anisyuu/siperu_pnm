@@ -6,9 +6,12 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Peminjaman;
 use Illuminate\Support\Facades\Auth;
+use App\Traits\ExportRiwayatCsv;
 
 class PeminjamanController extends Controller
 {
+    use ExportRiwayatCsv;
+
     public function verifikasiPeminjaman(Request $request)
     {
         $user = Auth::user();
@@ -56,7 +59,12 @@ class PeminjamanController extends Controller
 
         $peminjaman = $query->oldest()->paginate(5);
 
-    return view('layouts.pimpinan.peminjaman.verifikasi_peminjaman', compact('peminjaman'));
+        $firstPendingId = optional($peminjaman->getCollection()->first())->id;
+
+        return view('layouts.pimpinan.peminjaman.verifikasi_peminjaman', compact(
+            'peminjaman',
+            'firstPendingId'
+        ));
     }
 
     public function riwayatVerifikasi( Request $request)
@@ -82,5 +90,27 @@ class PeminjamanController extends Controller
         return view('layouts.pimpinan.peminjaman.riwayat_verifikasi', compact('peminjaman'));
     }
 
+    public function exportRiwayatVerifikasi(Request $request)
+    {
+        $userId = Auth::user()->nomor_induk;
+
+        $query = Peminjaman::query()
+            ->with([
+                'ruangan.gedung.kampus',
+                'pemohon',
+                'verifikasi' => fn ($q) => $q->orderBy('urutan'),
+            ])
+            ->whereHas('verifikasi', function ($q) use ($userId) {
+                $q->where('id_verifikator', '=', $userId);
+            });
+
+        $this->applyRiwayatFilters($query, $request);
+
+        $peminjaman = $query->latest()->get();
+
+        $fileName = 'riwayat-verifikasi-pimpinan-' . now()->format('Ymd_His') . '.csv';
+
+        return $this->downloadRiwayatCsv($peminjaman, $fileName, $userId);
+    }
 
 }

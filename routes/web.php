@@ -24,7 +24,8 @@ use App\Http\Controllers\Kasubag\{
 use App\Http\Controllers\Sarpras\DashboardController as SarprasDashboardController;
 use App\Http\Controllers\Sarpras\JadwalController as SarprasJadwalController;
 use App\Http\Controllers\Sarpras\PeminjamanController as SarprasPeminjamanController;
-use App\Http\Controllers\Sarpras\RiwayatController as SarprasRiwayatController;
+//use App\Http\Controllers\Sarpras\RiwayatController as SarprasRiwayatController;
+
 
 // Controller kalab
 use App\Http\Controllers\Kalab\DashboardController as KalabDashboardController;
@@ -108,8 +109,23 @@ Route::middleware(['auth'])->group(function () {
         Route::put('/update-user/{nomor_induk}', [KasubagUserController::class, 'updateUser'])
             ->name('update-user');
 
-        Route::get('/jadwal-ruangan', [KasubagJadwalController::class, 'jadwalRuangan'])
-            ->name('jadwal-ruangan');
+        Route::get('/kelola-jadwal', [KasubagJadwalController::class, 'kelolaJadwal'])
+            ->name('kelola-jadwal');
+
+        Route::get('/tambah-jadwal', [KasubagJadwalController::class, 'tambahJadwal'])
+            ->name('tambah-jadwal');
+
+        Route::post('/simpan-jadwal', [KasubagJadwalController::class, 'simpanJadwal'])
+            ->name('simpan-jadwal');
+
+        Route::get('/edit-jadwal/{id}', [KasubagJadwalController::class, 'editJadwal'])
+            ->name('edit-jadwal');
+
+        Route::put('/update-jadwal/{id}', [KasubagJadwalController::class, 'updateJadwal'])
+            ->name('update-jadwal');
+
+        Route::delete('/hapus-jadwal/{id}', [KasubagJadwalController::class, 'hapusJadwal'])
+            ->name('hapus-jadwal');
 
         Route::get('/verifikasi-peminjaman', [KasubagPeminjamanController::class, 'verifikasiPeminjaman'])
             ->name('verifikasi-peminjaman');
@@ -120,6 +136,12 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/riwayat-peminjaman', [App\Http\Controllers\Kasubag\PeminjamanController::class, 'riwayatPeminjaman'])
             ->name('riwayat-peminjaman');
 
+        Route::get('/riwayat-verifikasi/export', [KasubagPeminjamanController::class, 'exportRiwayatVerifikasi'])
+            ->name('riwayat-verifikasi.export');
+
+        Route::get('/riwayat-peminjaman/export', [KasubagPeminjamanController::class, 'exportRiwayatPeminjaman'])
+            ->name('riwayat-peminjaman.export');
+
         Route::prefix('kampus')->name('kampus.')->group(function () {
             Route::get('/',                        [KampusController::class, 'index'])->name('index');
             Route::post('/',                       [KampusController::class, 'store'])->name('store');
@@ -128,7 +150,7 @@ Route::middleware(['auth'])->group(function () {
         });
 
         Route::prefix('gedung')->name('gedung.')->group(function () {
-            Route::get('/{slug}', [GedungController::class, 'index'])
+            Route::get('/{slug}',                  [GedungController::class, 'index'])
                 ->name('index');
             Route::post('/',                       [GedungController::class, 'store'])->name('store');
             Route::put('/{gedung}',                [GedungController::class, 'update'])->name('update');
@@ -145,15 +167,15 @@ Route::middleware(['auth'])->group(function () {
         Route::prefix('jenis-ruang')->name('jenis-ruang.')->group(function () {
             Route::get('/',                        [JenisRuangController::class, 'index'])->name('index');
             Route::post('/',                       [JenisRuangController::class, 'store'])->name('store');
-            Route::put('/{jenisRuang}',            [JenisRuangController::class, 'update'])->name('update');
-            Route::delete('/{jenisRuang}',         [JenisRuangController::class, 'destroy'])->name('destroy');
+            Route::put('/{slug}',            [JenisRuangController::class, 'update'])->name('update');
+            Route::delete('/{slug}',         [JenisRuangController::class, 'destroy'])->name('destroy');
         });
 
         Route::prefix('alur-verifikasi')->name('alur-verifikasi.')->group(function () {
             Route::get('/',                        [AlurVerifikasiController::class, 'index'])->name('index');
             Route::post('/',                       [AlurVerifikasiController::class, 'store'])->name('store');
-            Route::delete('/{id}',                [AlurVerifikasiController::class, 'destroy'])->name('destroy');
-            Route::get('/{jenis}',                [AlurVerifikasiController::class, 'show'])->name('show');
+            Route::get('/{jenis}', [AlurVerifikasiController::class, 'show'])->name('show');
+            Route::delete('/{jenis}', [AlurVerifikasiController::class, 'destroy'])->name('destroy');
         });
 
            // Daftar peminjaman yang perlu diverifikasi
@@ -179,29 +201,17 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/dashboard', [SarprasDashboardController::class, 'dashboard'])
             ->name('dashboard');
 
+        Route::get('/jadwal-ruangan', [SarprasJadwalController::class, 'jadwalRuangan'])
+            ->name('jadwal-ruangan');
+
         Route::get('/verifikasi-peminjaman', [SarprasPeminjamanController::class, 'verifikasiPeminjaman'])
             ->name('verifikasi-peminjaman');
 
         Route::get('/riwayat-verifikasi', [SarprasPeminjamanController::class, 'riwayatVerifikasi'])
             ->name('riwayat-verifikasi');
 
-        Route::get('kelola-jadwal', [SarprasJadwalController::class, 'kelolaJadwal'])
-            ->name('kelola-jadwal');
-
-        Route::get('/tambah-jadwal', [SarprasJadwalController::class, 'tambahJadwal'])
-            ->name('tambah-jadwal');
-
-        Route::post('/simpan-jadwal', [SarprasJadwalController::class, 'simpanJadwal'])
-            ->name('simpan-jadwal');
-
-        Route::get('/edit-jadwal/{id}', [SarprasJadwalController::class, 'editJadwal'])
-            ->name('edit-jadwal');
-
-        Route::put('/update-jadwal/{id}', [SarprasJadwalController::class, 'updateJadwal'])
-            ->name('update-jadwal');
-
-        Route::delete('/hapus-jadwal/{id}', [SarprasJadwalController::class, 'hapusJadwal'])
-            ->name('hapus-jadwal');
+        Route::get('/riwayat-verifikasi/export', [SarprasPeminjamanController::class, 'exportRiwayatVerifikasi'])
+            ->name('riwayat-verifikasi.export');
 
                 // Daftar peminjaman yang perlu diverifikasi
         Route::get('/verifikasi', [App\Http\Controllers\Sarpras\VerifikasiController::class, 'index'])
@@ -237,6 +247,9 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/verifikasi', [App\Http\Controllers\Kalab\VerifikasiController::class, 'index'])
             ->name('verifikasi.index');
 
+        Route::get('/riwayat-verifikasi/export', [KalabPeminjamanController::class, 'exportRiwayatVerifikasi'])
+            ->name('riwayat-verifikasi.export');
+
         // Approve satu langkah
         Route::patch('/verifikasi/{peminjaman}/approve', [App\Http\Controllers\Kalab\VerifikasiController::class, 'approve'])
             ->name('peminjaman.approve');
@@ -265,6 +278,8 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/riwayat-verifikasi', [PimpinanPeminjamanController::class, 'riwayatVerifikasi'])
             ->name('riwayat-verifikasi');
 
+        Route::get('/riwayat-verifikasi/export', [PimpinanPeminjamanController::class, 'exportRiwayatVerifikasi'])
+            ->name('riwayat-verifikasi.export');
 
         // Daftar peminjaman yang perlu diverifikasi
         Route::get('/verifikasi', [App\Http\Controllers\Pimpinan\VerifikasiController::class, 'index'])
@@ -298,6 +313,9 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/ajukan-peminjaman', [DosenPeminjamanController::class, 'ajukanPeminjaman'])
             ->name('ajukan-peminjaman');
 
+        Route::get('/ruangan-tersedia', [DosenPeminjamanController::class, 'ruanganTersedia'])
+            ->name('ruangan-tersedia');
+
         Route::post('/simpan-peminjaman', [DosenPeminjamanController::class, 'store'])
             ->name('simpan-peminjaman');
 
@@ -309,6 +327,9 @@ Route::middleware(['auth'])->group(function () {
 
         Route::get('/riwayat-peminjaman', [DosenPeminjamanController::class, 'riwayatPeminjaman'])
             ->name('riwayat-peminjaman');
+
+        Route::get('/riwayat-peminjaman/export', [DosenPeminjamanController::class, 'exportRiwayatPeminjaman'])
+        ->name('riwayat-peminjaman.export');
 
         Route::view('/informasi-peminjaman', 'layouts.dosen.informasi_peminjaman')
             ->name('informasi-peminjaman');
@@ -332,6 +353,9 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/ajukan-peminjaman', [OrmawaPeminjamanController::class, 'ajukanPeminjaman'])
             ->name('ajukan-peminjaman');
 
+        Route::get('/ruangan-tersedia', [App\Http\Controllers\Ormawa\PeminjamanController::class, 'ruanganTersedia'])
+            ->name('ruangan-tersedia');
+
         Route::post('/simpan-peminjaman', [OrmawaPeminjamanController::class, 'store'])
             ->name('simpan-peminjaman');
 
@@ -343,6 +367,9 @@ Route::middleware(['auth'])->group(function () {
 
         Route::get('/riwayat-peminjaman', [OrmawaPeminjamanController::class, 'riwayatPeminjaman'])
             ->name('riwayat-peminjaman');
+
+        Route::get('/riwayat-peminjaman/export', [OrmawaPeminjamanController::class, 'exportRiwayatPeminjaman'])
+            ->name('riwayat-peminjaman.export');
 
         Route::view('/informasi-peminjaman', 'layouts.ormawa.informasi_peminjaman')
             ->name('informasi-peminjaman');
@@ -366,6 +393,9 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/ajukan-peminjaman', [MahasiswaPeminjamanController::class, 'ajukanPeminjaman'])
             ->name('ajukan-peminjaman');
 
+        Route::get('/ruangan-tersedia', [MahasiswaPeminjamanController::class, 'ruanganTersedia'])
+            ->name('ruangan-tersedia');
+
         Route::post('/simpan-peminjaman', [MahasiswaPeminjamanController::class, 'store'])
             ->name('simpan-peminjaman');
 
@@ -377,6 +407,9 @@ Route::middleware(['auth'])->group(function () {
 
         Route::get('/riwayat-peminjaman', [MahasiswaPeminjamanController::class, 'riwayatPeminjaman'])
             ->name('riwayat-peminjaman');
+
+        Route::get('/riwayat-peminjaman/export', [MahasiswaPeminjamanController::class, 'exportRiwayatPeminjaman'])
+            ->name('riwayat-peminjaman.export');
 
         Route::view('/informasi-peminjaman', 'layouts.mahasiswa.informasi_peminjaman')
             ->name('informasi-peminjaman');

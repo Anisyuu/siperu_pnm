@@ -114,7 +114,7 @@
                 </div>
                 {{-- Footer note --}}
                     <p class="text-center text-xs text-text-secondary mt-4">
-                        © {{ date('Y') }} SIPERU — Sistem Informasi Peminjaman Ruangan
+                        © {{ date('Y') }} — Sistem Informasi Peminjaman Ruangan
                     </p>
 
             </div>

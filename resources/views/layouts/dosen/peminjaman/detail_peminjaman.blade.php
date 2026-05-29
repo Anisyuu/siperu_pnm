@@ -6,7 +6,7 @@
     <div class="mb-7 flex items-center justify-between">
         <div>
             <h1 class="text-2xl font-bold tracking-tight text-slate-900">Detail Pengajuan</h1>
-            <p class="mt-0.5 text-sm text-slate-500">Informasi lengkap pengajuan peminjaman</p>
+            <p class="mt-0.5 text-sm text-slate-500">Informasi lengkap mengenai pengajuan peminjaman ruangan</p>
         </div>
 
         @php
@@ -134,12 +134,13 @@
                     </div>
 
                     {{-- LOOP ALUR --}}
-                    @foreach($alur as $step)
+                    @foreach($alur as $index => $step)
                         @php
-                            $verif     = $riwayat->firstWhere('urutan', $step->urutan);
-                            $status    = $verif->status_verifikasi ?? null;
-                            $isDone    = $status === 'disetujui';
-                            $isReject  = $status === 'ditolak';
+                            $urutanBaru = $index + 1; // urutan setelah reindex
+                            $verif      = $riwayat->firstWhere('urutan', $urutanBaru);
+                            $status     = $verif->status_verifikasi ?? null;
+                            $isDone     = $status === 'disetujui';
+                            $isReject   = $status === 'ditolak';
                         @endphp
 
                         <div class="relative z-10 flex flex-col items-center text-center flex-1">

@@ -15,20 +15,32 @@ use RealRashid\SweetAlert\Facades\Alert;
 class VerifikasiController extends Controller
 {
 
+
     private function cekGiliran(Peminjaman $peminjaman): array
     {
-        $user     = Auth::user();
-        $roleUser = strtolower(trim($user->roles->pluck('nama')->first() ?? $user->role)); // sesuaikan dengan struktur role Anda
+        $user = Auth::user();
 
-        Log::debug('[role]', [
-            'role_user'     => $roleUser,
+        $roleUser = strtolower(trim(
+            $user->roles->pluck('nama')->first() ?? $user->role
+        ));
+
+        $peminjaman->loadMissing([
+            'pemohon.roles',
+            'ruangan.jenisRuangan', // ← fix: jenisRuangan (bukan jenisRuang)
         ]);
 
         if (!$peminjaman->pemohon) {
             return ['boleh' => false, 'pesan' => 'Data pemohon tidak ditemukan.'];
         }
 
-        // 1. Tentukan jenis_pemohon
+        if (!$peminjaman->ruangan) {
+            return ['boleh' => false, 'pesan' => 'Data ruangan tidak ditemukan.'];
+        }
+
+        if (!$peminjaman->ruangan->jenisRuangan) { // ← fix
+            return ['boleh' => false, 'pesan' => 'Data jenis ruang tidak ditemukan.'];
+        }
+
         $jenisPemohon = optional($peminjaman->pemohon)
             ->roles
             ->pluck('nama')
@@ -36,90 +48,85 @@ class VerifikasiController extends Controller
             ->first();
 
         if (!$jenisPemohon) {
-            return [
-                'boleh' => false,
-                'pesan' => 'Jenis pemohon tidak dapat ditentukan. '
-                         . 'Pastikan kolom role/jenis_pemohon ada di tabel user '
-                         . 'dan data alur_verifikasi sudah diisi.',
-            ];
+            return ['boleh' => false, 'pesan' => 'Jenis pemohon tidak dapat ditentukan.'];
         }
 
+        // Cek apakah ruangan adalah lab
+        $jenisRuangSlug = strtolower(trim($peminjaman->ruangan->jenisRuangan->slug ?? '')); // ← fix
+        $jenisRuangNama = strtolower(trim($peminjaman->ruangan->jenisRuangan->nama ?? '')); // ← fix
+        $isLab = str_contains($jenisRuangSlug, 'lab') || str_contains($jenisRuangNama, 'lab');
+
         Log::debug('[cekGiliran]', [
-            'peminjaman_id' => $peminjaman->id,
-            'jenis_pemohon' => $jenisPemohon,
-            'role_user'     => $roleUser,
+            'peminjaman_id'    => $peminjaman->id,
+            'jenis_pemohon'    => $jenisPemohon,
+            'jenis_ruang_slug' => $jenisRuangSlug,
+            'is_lab'           => $isLab,
+            'role_user'        => $roleUser,
         ]);
 
-        // 2. Ambil alur verifikasi
+        // Ambil alur: jika bukan lab → skip step dengan role_verifikator = kalab
         $alur = AlurVerifikasi::whereRaw('LOWER(TRIM(jenis_pemohon)) = ?', [$jenisPemohon])
+            ->when(!$isLab, fn($q) => $q->whereRaw('LOWER(TRIM(role_verifikator)) != ?', ['kalab']))
             ->orderBy('urutan')
-            ->get();
+            ->get()
+            ->values();
 
         if ($alur->isEmpty()) {
             return [
                 'boleh' => false,
-                'pesan' => "Tidak ada alur verifikasi untuk jenis pemohon '{$jenisPemohon}'. "
-                         . 'Buat alur di menu Alur Verifikasi terlebih dahulu.',
+                'pesan' => "Tidak ada alur verifikasi untuk jenis pemohon '{$jenisPemohon}'.",
             ];
         }
 
-        // 3. Ambil semua record verifikasi yang sudah ada
         $tercatat = Verifikasi::where('id_peminjaman', $peminjaman->id)
             ->get()
             ->keyBy('urutan');
 
-        // 4. Jika ada yang ditolak → stop
         if ($tercatat->contains('status_verifikasi', 'ditolak')) {
             return ['boleh' => false, 'pesan' => 'Peminjaman sudah ditolak sebelumnya.'];
         }
 
-        // 5. Cari step yang sedang giliran
-        //    → urutan pertama di alur yang belum 'disetujui'
+        // Cari step giliran berdasarkan urutan yang di-reindex (bukan urutan di DB)
         $giliranAlur = null;
+        $urutanAktif = null;
 
-        foreach ($alur as $step) {
-            $record = $tercatat->get($step->urutan);
+        foreach ($alur as $index => $step) {
+            $urutanBaru = $index + 1;
+            $record = $tercatat->get($urutanBaru);
 
-            if (!$record || $record->status_verifikasi == 'pending') {
+            if (!$record || $record->status_verifikasi === 'pending') {
                 $giliranAlur = $step;
+                $urutanAktif = $urutanBaru;
                 break;
             }
-            // 'disetujui' → lanjut ke urutan berikutnya
         }
 
-        // 6. Semua sudah selesai
         if (!$giliranAlur) {
             return ['boleh' => false, 'pesan' => 'Semua langkah verifikasi sudah selesai.'];
         }
 
-        // 7. Cocokkan role user dengan role giliran
         $roleStep = strtolower(trim($giliranAlur->role_verifikator));
 
         if ($roleUser !== $roleStep) {
             return [
                 'boleh' => false,
-                'pesan' => "Belum giliran Anda. "
-                         . "Giliran saat ini: '{$roleStep}' (urutan {$giliranAlur->urutan}).",
+                'pesan' => "Belum giliran Anda. Giliran saat ini: '{$roleStep}' (urutan {$urutanAktif}).",
             ];
         }
 
-        // 8. Jika sudah ada record pending di step ini,
-        //    pastikan verifikator-nya adalah user yang sekarang login
-        $recordGiliran = $tercatat->get($giliranAlur->urutan);
+        $recordGiliran = $tercatat->get($urutanAktif);
 
-        if ($recordGiliran
+        if (
+            $recordGiliran
             && !empty($recordGiliran->id_verifikator)
             && $recordGiliran->id_verifikator !== $user->nomor_induk
         ) {
-            return [
-                'boleh' => false,
-                'pesan' => 'Langkah ini sudah diambil oleh verifikator lain.',
-            ];
+            return ['boleh' => false, 'pesan' => 'Langkah ini sudah diambil oleh verifikator lain.'];
         }
 
         return [
             'boleh'            => true,
-            'urutan'           => $giliranAlur->urutan,
+            'urutan'           => $urutanAktif,
             'role_verifikator' => $giliranAlur->role_verifikator,
             'total_urutan'     => $alur->count(),
             'record_giliran'   => $recordGiliran,

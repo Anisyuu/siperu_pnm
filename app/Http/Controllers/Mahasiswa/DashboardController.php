@@ -5,63 +5,259 @@ namespace App\Http\Controllers\Mahasiswa;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Jadwal;
+use App\Models\Peminjaman;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Auth;
 
 class DashboardController extends Controller
 {
     public function dashboard(Request $request)
     {
-        // minggu sekarang
-        $anchor = now();
+        $userId = Auth::user()->nomor_induk;
 
-        $weekStart = $anchor->copy()->startOfWeek(Carbon::MONDAY)->startOfDay();
-        $weekEnd   = $weekStart->copy()->addDays(6)->endOfDay();
+        $anchor = $request->filled('tanggal')
+            ? Carbon::parse($request->tanggal)
+            : now();
+
+        $weekStart = $anchor->copy()->startOfWeek(Carbon::MONDAY);
+        $weekEnd   = $weekStart->copy()->addDays(6);
+
+        /*
+        |--------------------------------------------------------------------------
+        | STAT CARD PEMINJAM
+        |--------------------------------------------------------------------------
+        | Tidak diubah.
+        | Hanya menghitung peminjaman milik user yang sedang login.
+        |--------------------------------------------------------------------------
+        */
+
+        $basePeminjamanUser = Peminjaman::query()
+            ->where('pemohon_id', $userId);
+
+        $total     = (clone $basePeminjamanUser)->count();
+        $menunggu  = (clone $basePeminjamanUser)->where('status', 'pending')->count();
+        $disetujui = (clone $basePeminjamanUser)->where('status', 'disetujui')->count();
+        $ditolak   = (clone $basePeminjamanUser)->where('status', 'ditolak')->count();
+
+        /*
+        |--------------------------------------------------------------------------
+        | KALENDER JADWAL DAN PEMINJAMAN
+        |--------------------------------------------------------------------------
+        | Yang dibenahi hanya kalender.
+        | Kalender menampilkan semua jadwal dan semua peminjaman yang sudah disetujui.
+        |--------------------------------------------------------------------------
+        */
 
         $jadwal = Jadwal::with('ruangan')
-            ->whereBetween('tanggal', [
-                $weekStart->toDateString(),
-                $weekEnd->toDateString()
-            ])
-            ->orderBy('tanggal')
+            ->whereDate('tanggal_mulai', '<=', $weekEnd->toDateString())
+            ->whereDate('tanggal_selesai', '>=', $weekStart->toDateString())
+            ->orderBy('tanggal_mulai')
             ->orderBy('waktu_mulai')
             ->get();
+
+        $peminjaman = Peminjaman::with(['ruangan', 'pemohon'])
+            ->where('status', 'disetujui')
+            ->whereDate('tanggal_mulai', '<=', $weekEnd->toDateString())
+            ->whereDate('tanggal_selesai', '>=', $weekStart->toDateString())
+            ->orderBy('tanggal_mulai')
+            ->orderBy('waktu_mulai')
+            ->get();
+
+        $events = collect()
+            ->merge($this->mapJadwal($jadwal, $weekStart, $weekEnd))
+            ->merge($this->mapPeminjaman($peminjaman, $weekStart, $weekEnd))
+            ->sortBy([
+                ['tanggal', 'asc'],
+                ['waktu_mulai', 'asc'],
+            ])
+            ->values();
+
+        $eventsByDate = $events
+            ->groupBy(fn ($event) => Carbon::parse($event['tanggal'])->toDateString())
+            ->map(function ($dayEvents) {
+                $dayEvents = $dayEvents
+                    ->sortBy([
+                        ['waktu_mulai', 'asc'],
+                        ['waktu_selesai', 'asc'],
+                    ])
+                    ->values();
+
+                $columns = [];
+                $result = collect();
+
+                foreach ($dayEvents as $event) {
+                    $eventStart = Carbon::parse($event['waktu_mulai']);
+                    $eventEnd   = Carbon::parse($event['waktu_selesai']);
+
+                    $placedColumn = null;
+
+                    foreach ($columns as $columnIndex => $lastEventEnd) {
+                        if ($eventStart->gte($lastEventEnd)) {
+                            $placedColumn = $columnIndex;
+                            break;
+                        }
+                    }
+
+                    if ($placedColumn === null) {
+                        $placedColumn = count($columns);
+                    }
+
+                    $columns[$placedColumn] = $eventEnd;
+
+                    $event['overlap_index'] = $placedColumn;
+
+                    $result->push($event);
+                }
+
+                $overlapTotal = max(1, count($columns));
+
+                return $result->map(function ($event) use ($overlapTotal) {
+                    $event['overlap_total'] = $overlapTotal;
+                    return $event;
+                });
+            });
 
         $days = collect(range(0, 6))
             ->map(fn ($i) => $weekStart->copy()->addDays($i));
 
-        $eventsByDate = $jadwal->groupBy(
-            fn ($row) => Carbon::parse($row->tanggal)->toDateString()
-        );
+        return view('layouts.mahasiswa.dashboard', [
+            'events'       => $events,
+            'eventsByDate' => $eventsByDate,
+            'days'         => $days,
+            'weekStart'    => $weekStart,
+            'weekEnd'      => $weekEnd,
+            'monthLabel'   => $weekStart->locale('id')->translatedFormat('F Y'),
 
-        $startHour = 0;
-        $endHour = 23;
-        $slotHeight = 80;
-        $totalHours = ($endHour - $startHour) + 1;
+            'total'        => $total,
+            'menunggu'     => $menunggu,
+            'disetujui'    => $disetujui,
+            'ditolak'      => $ditolak,
+        ]);
+    }
 
-        $palette = [
-            ['bg'=>'bg-primary/10','border'=>'border-primary','title'=>'text-primary','time'=>'text-primary/80'],
-            ['bg'=>'bg-purple-100','border'=>'border-purple-500','title'=>'text-purple-700','time'=>'text-purple-600'],
-            ['bg'=>'bg-orange-100','border'=>'border-orange-500','title'=>'text-orange-700','time'=>'text-orange-600'],
-            ['bg'=>'bg-emerald-100','border'=>'border-emerald-500','title'=>'text-emerald-700','time'=>'text-emerald-600'],
+    private function mapJadwal($data, Carbon $weekStart, Carbon $weekEnd)
+    {
+        return $data->flatMap(function ($item) use ($weekStart, $weekEnd) {
+            $tanggalMulai   = Carbon::parse($item->tanggal_mulai)->startOfDay();
+            $tanggalSelesai = Carbon::parse($item->tanggal_selesai)->startOfDay();
+
+            $start = $tanggalMulai->greaterThan($weekStart)
+                ? $tanggalMulai
+                : $weekStart->copy();
+
+            $end = $tanggalSelesai->lessThan($weekEnd)
+                ? $tanggalSelesai
+                : $weekEnd->copy();
+
+            $lokasi = $this->lokasiRuangan($item->ruangan);
+
+            $events = collect();
+
+            for ($date = $start->copy(); $date->lte($end); $date->addDay()) {
+                $events->push([
+                    'tanggal'           => $date->toDateString(),
+                    'waktu_mulai'       => $item->waktu_mulai,
+                    'waktu_selesai'     => $item->waktu_selesai,
+
+                    'title'             => $item->kegiatan,
+                    'penanggung_jawab'  => $item->penanggung_jawab ?? '-',
+                    'catatan'           => $item->catatan ?? '-',
+                    'type'              => 'jadwal',
+
+                    'kampus'            => $lokasi['kampus'],
+                    'gedung'            => $lokasi['gedung'],
+                    'lantai'            => $lokasi['lantai'],
+                    'ruangan'           => $lokasi['ruangan'],
+                ]);
+            }
+
+            return $events;
+        });
+    }
+
+    private function mapPeminjaman($data, Carbon $weekStart, Carbon $weekEnd)
+    {
+        return $data->flatMap(function ($item) use ($weekStart, $weekEnd) {
+            $tanggalMulai   = Carbon::parse($item->tanggal_mulai)->startOfDay();
+            $tanggalSelesai = Carbon::parse($item->tanggal_selesai)->startOfDay();
+
+            $start = $tanggalMulai->greaterThan($weekStart)
+                ? $tanggalMulai
+                : $weekStart->copy();
+
+            $end = $tanggalSelesai->lessThan($weekEnd)
+                ? $tanggalSelesai
+                : $weekEnd->copy();
+
+            $lokasi = $this->lokasiRuangan($item->ruangan);
+
+            $penanggungJawab = data_get($item, 'pemohon.nama_lengkap')
+                ?? data_get($item, 'pemohon.nomor_induk')
+                ?? '-';
+
+            $events = collect();
+
+            for ($date = $start->copy(); $date->lte($end); $date->addDay()) {
+                $events->push([
+                    'tanggal'           => $date->toDateString(),
+                    'waktu_mulai'       => $item->waktu_mulai,
+                    'waktu_selesai'     => $item->waktu_selesai,
+
+                    'title'             => $item->kegiatan ?? 'Peminjaman Ruangan',
+                    'penanggung_jawab'  => $penanggungJawab,
+                    'catatan'           => $item->catatan ?? '-',
+                    'type'              => 'peminjaman',
+
+                    'kampus'            => $lokasi['kampus'],
+                    'gedung'            => $lokasi['gedung'],
+                    'lantai'            => $lokasi['lantai'],
+                    'ruangan'           => $lokasi['ruangan'],
+                ]);
+            }
+
+            return $events;
+        });
+    }
+
+    private function lokasiRuangan($ruangan): array
+    {
+        $kampus = data_get($ruangan, 'kampus.nama_kampus')
+            ?? data_get($ruangan, 'kampus.nama')
+            ?? data_get($ruangan, 'gedung.kampus.nama_kampus')
+            ?? data_get($ruangan, 'gedung.kampus.nama')
+            ?? data_get($ruangan, 'nama_kampus');
+
+        $gedung = data_get($ruangan, 'gedung.nama_gedung')
+            ?? data_get($ruangan, 'gedung.nama')
+            ?? data_get($ruangan, 'nama_gedung');
+
+        $lantai = data_get($ruangan, 'lantai.nama_lantai')
+            ?? data_get($ruangan, 'lantai.nama')
+            ?? data_get($ruangan, 'nama_lantai')
+            ?? data_get($ruangan, 'lantai');
+
+        $namaRuangan = data_get($ruangan, 'nama_ruang')
+            ?? data_get($ruangan, 'nama')
+            ?? data_get($ruangan, 'kode_ruang');
+
+        return [
+            'kampus'  => $this->nilaiLokasi($kampus),
+            'gedung'  => $this->nilaiLokasi($gedung),
+            'lantai'  => $this->nilaiLokasi($lantai),
+            'ruangan' => $this->nilaiLokasi($namaRuangan),
         ];
+    }
 
-        // 🔥 TAMBAHAN PENTING
-        $monthLabel = $weekStart->translatedFormat('F Y');
+    private function nilaiLokasi($value): string
+    {
+        if ($value === null || $value === '') {
+            return '-';
+        }
 
-        return view('layouts.ormawa.dashboard', compact(
-            'days',
-            'eventsByDate',
-            'startHour',
-            'endHour',
-            'slotHeight',
-            'totalHours',
-            'palette',
+        if (is_object($value) || is_array($value)) {
+            return '-';
+        }
 
-            // WAJIB TAMBAH INI
-            'weekStart',
-            'weekEnd',
-            'jadwal',
-            'monthLabel'
-        ));
+        return (string) $value;
     }
 }

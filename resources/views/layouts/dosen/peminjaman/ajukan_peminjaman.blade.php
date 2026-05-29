@@ -9,7 +9,7 @@
         <p class="mt-0.5 text-sm text-slate-500">Isi form pengajuan dengan lengkap dan benar.</p>
     </div>
 
-    <form action="{{ route('dosen.simpan-peminjaman') }}" method="POST"
+    <form action="{{ route('mahasiswa.simpan-peminjaman') }}" method="POST"
           enctype="multipart/form-data" id="formPeminjaman">
         @csrf
 
@@ -24,6 +24,7 @@
                         <span class="w-5 h-5 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center text-[10px] font-extrabold">1</span>
                         Lokasi Ruangan
                     </p>
+
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
 
                         <div>
@@ -55,7 +56,7 @@
                             <select id="lantai"
                                 class="w-full px-3 py-2.5 text-sm text-slate-700 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-300 focus:border-blue-400 transition">
                                 <option value="">-- Pilih Lantai --</option>
-                                 @foreach($ruangan->unique(fn($r) => $r->gedung->slug . '_' . $r->lantai)->sortBy('lantai') as $r)
+                                @foreach($ruangan->unique(fn($r) => $r->gedung->slug . '_' . $r->lantai)->sortBy('lantai') as $r)
                                     <option value="{{ $r->lantai }}"
                                         data-kampus="{{ $r->gedung->kampus->id }}"
                                         data-gedung="{{ $r->gedung->slug }}">
@@ -67,21 +68,15 @@
 
                         <div>
                             <label class="block text-xs font-semibold text-slate-500 mb-1.5">Ruangan</label>
-                            <select name="ruangan_id" id="ruangan_id" onchange="updateSummary()"
+                            <select name="ruangan_id" id="ruangan_id" onchange="updateSummary()" required
                                 class="w-full px-3 py-2.5 text-sm text-slate-700 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-300 focus:border-blue-400 transition">
-                                <option value="">-- Pilih Ruangan --</option>
-                                @foreach($ruangan as $r)
-                                    <option value="{{ $r->id }}"
-                                        data-kampus="{{ $r->gedung->kampus->id }}"
-                                        data-gedung="{{ $r->gedung->slug }}"
-                                        data-lantai="{{ $r->lantai }}"
-                                        data-nama="{{ $r->nama_ruang }}"
-                                        data-gedung-nama="{{ $r->gedung->nama }}"
-                                        {{ old('ruangan_id') == $r->id ? 'selected' : '' }}>
-                                        {{ $r->nama_ruang }}
-                                    </option>
-                                @endforeach
+                                <option value="">-- Pilih waktu dan lokasi dulu --</option>
                             </select>
+
+                            <p id="infoRuanganKosong" class="hidden text-xs text-red-500 mt-1">
+                                Tidak ada ruangan tersedia pada tanggal dan jam tersebut.
+                            </p>
+
                             @error('ruangan_id')
                                 <p class="text-xs text-red-500 mt-1">{{ $message }}</p>
                             @enderror
@@ -96,6 +91,7 @@
                         <span class="w-5 h-5 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center text-[10px] font-extrabold">2</span>
                         Waktu Peminjaman
                     </p>
+
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
 
                         <div>
@@ -159,7 +155,7 @@
                         <div>
                             <label class="block text-xs font-semibold text-slate-500 mb-1.5">Nama / Deskripsi Kegiatan</label>
                             <textarea name="kegiatan" rows="4"
-                                placeholder="Contoh: Rapat koordinasi BEM semester genap 2026..."
+                                placeholder="Contoh: Rapat koordinasi semester genap 2026..."
                                 class="w-full px-3 py-2.5 text-sm text-slate-700 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-300 focus:border-blue-400 transition resize-none">{{ old('kegiatan') }}</textarea>
                             @error('kegiatan')
                                 <p class="text-xs text-red-500 mt-1">{{ $message }}</p>
@@ -235,7 +231,7 @@
                             <i class="fa-solid fa-paper-plane text-xs"></i>
                             Kirim Pengajuan
                         </button>
-                        <a href="{{ route('dosen.list-peminjaman') }}"
+                        <a href="{{ route('mahasiswa.list-peminjaman') }}"
                             class="w-full flex items-center justify-center gap-2 py-2.5 border border-slate-200 text-slate-600 font-semibold text-sm rounded-xl hover:bg-slate-50 transition-colors">
                             Batal
                         </a>
@@ -252,7 +248,6 @@
 
 @push('js')
 <script>
-// ── Cascade filter lokasi ────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
     const sel     = id => document.getElementById(id);
     const kampus  = sel('kampus_id');
@@ -260,38 +255,177 @@ document.addEventListener('DOMContentLoaded', () => {
     const lantai  = sel('lantai');
     const ruangan = sel('ruangan_id');
 
-    function filterOpts(select, test) {
-        Array.from(select.options).forEach(o => {
-            o.hidden = o.value !== '' && !test(o);
-        });
-        if (select.selectedOptions[0]?.hidden) select.value = '';
+    const tanggalMulai   = document.querySelector('[name=tanggal_mulai]');
+    const tanggalSelesai = document.querySelector('[name=tanggal_selesai]');
+    const waktuMulai     = document.querySelector('[name=waktu_mulai]');
+    const waktuSelesai   = document.querySelector('[name=waktu_selesai]');
+
+    const infoRuanganKosong = document.getElementById('infoRuanganKosong');
+
+    const semuaGedung = Array.from(gedung.options);
+    const semuaLantai = Array.from(lantai.options);
+
+    function resetRuangan(text = '-- Pilih waktu dan lokasi dulu --') {
+        ruangan.innerHTML = `<option value="">${text}</option>`;
+
+        if (infoRuanganKosong) {
+            infoRuanganKosong.classList.add('hidden');
+        }
+
         updateSummary();
     }
 
+    function filterGedung() {
+        const kampusId = kampus.value;
+
+        gedung.innerHTML = '';
+
+        semuaGedung.forEach(option => {
+            if (option.value === '' || option.dataset.kampus === kampusId) {
+                gedung.appendChild(option.cloneNode(true));
+            }
+        });
+
+        gedung.value = '';
+    }
+
+    function filterLantai() {
+        const kampusId = kampus.value;
+        const gedungSlug = gedung.value;
+
+        lantai.innerHTML = '';
+
+        let used = new Set();
+
+        semuaLantai.forEach(option => {
+            if (option.value === '') {
+                lantai.appendChild(option.cloneNode(true));
+                return;
+            }
+
+            const cocokKampus = option.dataset.kampus === kampusId;
+            const cocokGedung = option.dataset.gedung === gedungSlug;
+
+            if (cocokKampus && cocokGedung && !used.has(option.value)) {
+                used.add(option.value);
+                lantai.appendChild(option.cloneNode(true));
+            }
+        });
+
+        lantai.value = '';
+    }
+
+    function semuaInputLengkap() {
+        return kampus.value &&
+            gedung.value &&
+            lantai.value &&
+            tanggalMulai.value &&
+            tanggalSelesai.value &&
+            waktuMulai.value &&
+            waktuSelesai.value;
+    }
+
+    async function loadRuanganTersedia() {
+        resetRuangan('-- Memuat ruangan tersedia... --');
+
+        if (!semuaInputLengkap()) {
+            resetRuangan('-- Pilih waktu dan lokasi dulu --');
+            return;
+        }
+
+        if (tanggalSelesai.value < tanggalMulai.value) {
+            resetRuangan('-- Tanggal selesai tidak valid --');
+            return;
+        }
+
+        if (waktuSelesai.value <= waktuMulai.value) {
+            resetRuangan('-- Waktu selesai tidak valid --');
+            return;
+        }
+
+        const params = new URLSearchParams({
+            kampus_id: kampus.value,
+            gedung_slug: gedung.value,
+            lantai: lantai.value,
+            tanggal_mulai: tanggalMulai.value,
+            tanggal_selesai: tanggalSelesai.value,
+            waktu_mulai: waktuMulai.value,
+            waktu_selesai: waktuSelesai.value,
+        });
+
+        try {
+            const response = await fetch(`{{ route('mahasiswa.ruangan-tersedia') }}?${params.toString()}`, {
+                headers: {
+                    'Accept': 'application/json'
+                }
+            });
+
+            if (!response.ok) {
+                resetRuangan('-- Gagal memuat ruangan --');
+                return;
+            }
+
+            const data = await response.json();
+
+            ruangan.innerHTML = `<option value="">-- Pilih Ruangan --</option>`;
+
+            if (data.length === 0) {
+                resetRuangan('-- Tidak ada ruangan tersedia --');
+
+                if (infoRuanganKosong) {
+                    infoRuanganKosong.classList.remove('hidden');
+                }
+
+                return;
+            }
+
+            if (infoRuanganKosong) {
+                infoRuanganKosong.classList.add('hidden');
+            }
+
+            data.forEach(r => {
+                const option = document.createElement('option');
+
+                option.value = r.id;
+                option.textContent = r.nama_ruang;
+
+                option.dataset.label = r.nama_ruang;
+                option.dataset.gedungNama = r.gedung;
+                option.dataset.lantai = r.lantai;
+                option.dataset.kampus = r.kampus_id;
+                option.dataset.gedung = r.gedung_slug;
+
+                ruangan.appendChild(option);
+            });
+
+            updateSummary();
+
+        } catch (error) {
+            resetRuangan('-- Terjadi kesalahan --');
+        }
+    }
+
     kampus.addEventListener('change', () => {
-        const k = kampus.value;
-        filterOpts(gedung,  o => o.dataset.kampus === k);
-        filterOpts(lantai,  o => o.dataset.kampus === k);
-        filterOpts(ruangan, o => o.dataset.kampus === k);
+        filterGedung();
+        filterLantai();
+        resetRuangan('-- Pilih waktu dan lokasi dulu --');
     });
 
     gedung.addEventListener('change', () => {
-        const k = kampus.value, g = gedung.value;
-        filterOpts(lantai,  o => o.dataset.kampus === k && o.dataset.gedung === g);
-        filterOpts(ruangan, o => o.dataset.kampus === k && o.dataset.gedung === g);
+        filterLantai();
+        resetRuangan('-- Pilih waktu dan lokasi dulu --');
     });
 
-    lantai.addEventListener('change', () => {
-        const k = kampus.value, g = gedung.value, l = lantai.value;
-        filterOpts(ruangan, o =>
-            o.dataset.kampus === k &&
-            o.dataset.gedung === g &&
-            o.dataset.lantai === l
-        );
-    });
+    lantai.addEventListener('change', loadRuanganTersedia);
+
+    tanggalMulai.addEventListener('change', loadRuanganTersedia);
+    tanggalSelesai.addEventListener('change', loadRuanganTersedia);
+    waktuMulai.addEventListener('change', loadRuanganTersedia);
+    waktuSelesai.addEventListener('change', loadRuanganTersedia);
+
+    resetRuangan();
 });
 
-// ── Ringkasan dinamis ────────────────────────────────────────────
 function updateSummary() {
     const get      = id => document.getElementById(id);
     const selOpt   = get('ruangan_id').selectedOptions[0];
@@ -308,6 +442,7 @@ function updateSummary() {
         const fmt = d => new Date(d + 'T00:00:00').toLocaleDateString('id-ID', {
             day: 'numeric', month: 'short', year: 'numeric'
         });
+
         get('sumTanggal').textContent = (tSelesai && tMulai !== tSelesai)
             ? `${fmt(tMulai)} – ${fmt(tSelesai)}`
             : fmt(tMulai);
@@ -317,11 +452,14 @@ function updateSummary() {
 
     if (wMulai && wSelesai) {
         get('sumWaktu').textContent = `${wMulai} – ${wSelesai}`;
+
         const [hM, mM] = wMulai.split(':').map(Number);
         const [hS, mS] = wSelesai.split(':').map(Number);
         const menit = (hS * 60 + mS) - (hM * 60 + mM);
+
         if (menit > 0) {
-            const jam = Math.floor(menit / 60), sisa = menit % 60;
+            const jam = Math.floor(menit / 60);
+            const sisa = menit % 60;
             get('sumDurasi').textContent = sisa ? `${jam}j ${sisa}m` : `${jam} jam`;
         } else {
             get('sumDurasi').textContent = '—';
@@ -332,9 +470,9 @@ function updateSummary() {
     }
 }
 
-// ── File upload label ────────────────────────────────────────────
 function showFileName(input) {
     const label = document.getElementById('fileLabel');
+
     label.innerHTML = input.files[0]
         ? `<span class="font-semibold text-slate-700">${input.files[0].name}</span>`
         : `Seret file ke sini atau <span class="text-blue-500">klik untuk memilih</span>`;

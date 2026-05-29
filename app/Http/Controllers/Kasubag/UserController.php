@@ -30,7 +30,7 @@ class UserController extends Controller
     {
         $user = User::with('roles')->where('nomor_induk', $nomor_induk)->first();
         if (!$user) {
-            return redirect()->back()->with('error', 'User tidak ditemukan');
+            return redirect()->back()->with('error', 'Pengguna tidak ditemukan');
         }
         return view('layouts.kasubag.user.detail_user', compact('user'));
     }
@@ -67,7 +67,7 @@ class UserController extends Controller
 
         return redirect()
             ->route('kasubag.list-user')
-            ->with('success', 'User berhasil ditambahkan!');
+            ->with('success', 'Pengguna berhasil ditambahkan!');
     }
 
     public function editUser($nomor_induk)
@@ -75,7 +75,7 @@ class UserController extends Controller
         // Implementasi edit user
         $user = User::where('nomor_induk', $nomor_induk)->first();
         if (!$user) {
-            return redirect()->back()->with('error', 'User tidak ditemukan');
+            return redirect()->back()->with('error', 'Pengguna tidak ditemukan');
         }
 
         $roles = Role::all();
@@ -87,7 +87,7 @@ class UserController extends Controller
         // Implementasi update user
         $user = User::where('nomor_induk', $nomor_induk)->first();
         if (!$user) {
-            return redirect()->back()->with('error', 'User tidak ditemukan');
+            return redirect()->back()->with('error', 'Pengguna tidak ditemukan');
         }
 
         // Validasi
@@ -112,6 +112,6 @@ class UserController extends Controller
 
         return redirect()
             ->route('kasubag.list-user')
-            ->with('success', 'User berhasil diperbarui!');
+            ->with('success', 'Pengguna berhasil diperbarui!');
     }
 }

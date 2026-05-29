@@ -62,22 +62,30 @@ class RuanganController extends Controller
 
     public function store(Request $request)
     {
+         // CEK DATA REQUEST MASUK
+    // dd([
+    //     'semua_request' => $request->all(),
+
+    //     'id_jenis_ruang' => $request->id_jenis_ruang,
+    //     'id_user'        => $request->id_user,
+    //     'gedung_slug'    => $request->gedung_slug,
+    //     'lantai'         => $request->lantai,
+    //     'nama_ruang'     => $request->nama_ruang,
+    // ]);
         $request->validate([
             'id_jenis_ruang' => 'required|exists:jenis_ruang,id',
-            'id_user'        => 'required|exists:user,nomor_induk',
+            'id_user'        => 'nullable|exists:user,nomor_induk',
             'gedung_slug'    => 'required|exists:gedung,slug',
             'lantai'         => 'required|integer|min:1',
-            'nama_ruang'     => 'required|string|max:25|unique:ruangan,nama_ruang',
-        ], [
-            'nama_ruang.unique' => 'Nama ruang sudah digunakan.',
+            'nama_ruang'     => 'required|string|max:25',
         ]);
 
-        if( Ruangan::where('nama_ruang', $request->nama_ruang)->exists() ) {
-            Alert::error('Gagal', 'Nama ruang sudah ada. Silakan gunakan nama lain.');
-            return back()->withErrors([
-                'nama_ruang' => 'Nama ruang sudah ada. Silakan gunakan nama lain.',
-            ])->withInput();
-        }
+        // if( Ruangan::where('nama_ruang', $request->nama_ruang)->exists() ) {
+        //     Alert::error('Gagal', 'Nama ruang sudah ada. Silakan gunakan nama lain.');
+        //     return back()->withErrors([
+        //         'nama_ruang' => 'Nama ruang sudah ada. Silakan gunakan nama lain.',
+        //     ])->withInput();
+        // }
 
         // Ambil gedung berdasarkan slug
         $gedung = Gedung::where('slug', $request->gedung_slug)->firstOrFail();
@@ -92,6 +100,13 @@ class RuanganController extends Controller
         }
 
         $slug = Str::slug($request->nama_ruang);
+
+        // Jika slug sudah ada, tambahkan suffix nama gedung
+        if (Ruangan::where('slug', $slug)->exists()) {
+            $slug = $slug . '_' . Str::slug($gedung->nama);
+        }
+
+           // 5. Cek data sebelum create
 
         Ruangan::create([
             'id_jenis_ruang' => $request->id_jenis_ruang,

@@ -20,12 +20,12 @@
 
                 @hasRole('kasubag')
                     <a href="{{ route('kasubag.dashboard') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg group {{ request()->routeIs('kasubag.dashboard') ? $activeClass : $inactiveClass }}">
-                        <i class="fa-solid fa-border-all w-5 {{ request()->routeIs('kasubag.dashboard') ? $iconActive : $iconInactive }}"></i>
+                        <i class="fa-regular fa-house w-5 {{ request()->routeIs('kasubag.dashboard') ? $iconActive : $iconInactive }}"></i>
                         <span class="text-sm font-semibold">Dashboard</span>
                     </a>
 
-                    <a href="{{ route('kasubag.jadwal-ruangan') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg group {{ request()->routeIs('kasubag.jadwal-ruangan') ? $activeClass : $inactiveClass }}">
-                        <i class="fa-regular fa-calendar w-5 {{ request()->routeIs('kasubag.jadwal-ruangan') ? $iconActive : $iconInactive }}"></i>
+                    <a href="{{ route('kasubag.kelola-jadwal') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg group {{ request()->routeIs('kasubag.kelola-jadwal') ? $activeClass : $inactiveClass }}">
+                        <i class="fa-regular fa-calendar w-5 {{ request()->routeIs('kasubag.kelola-jadwal') ? $iconActive : $iconInactive }}"></i>
                         <span class="text-sm font-semibold">Jadwal</span>
                     </a>
 
@@ -76,12 +76,14 @@
                 @endhasRole
 
                 @hasRole('sarpras')
-                    <a href="{{ route('sarpras.dashboard') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg group {{ request()->routeIs('sarpras.dashboard') ? $activeClass : $inactiveClass }}">
-                        <i class="fa-solid fa-border-all w-5 {{ request()->routeIs('sarpras.dashboard') ? $iconActive : $iconInactive }}"></i>
+                    <a href="{{ route('sarpras.dashboard') }}"
+                    class="flex items-center gap-3 px-3 py-2.5 rounded-lg group {{ request()->routeIs('sarpras.dashboard') ? $activeClass : $inactiveClass }}">
+                        <i class="fa-regular fa-house w-5 {{ request()->routeIs('sarpras.dashboard') ? $iconActive : $iconInactive }}"></i>
                         <span class="text-sm font-semibold">Dashboard</span>
                     </a>
-                    <a href="{{ route('sarpras.kelola-jadwal') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg group {{ request()->routeIs('sarpras.kelola-jadwal') ? $activeClass : $inactiveClass }}">
-                        <i class="fa-regular fa-calendar w-5 {{ request()->routeIs('sarpras.kelola-jadwal') ? $iconActive : $iconInactive }}"></i>
+
+                    <a href="{{ route('sarpras.jadwal-ruangan') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg group {{ request()->routeIs('sarpras.jadwal-ruangan') ? $activeClass : $inactiveClass }}">
+                        <i class="fa-regular fa-calendar w-5 {{ request()->routeIs('sarpras.jadwal-ruangan') ? $iconActive : $iconInactive }}"></i>
                         <span class="text-sm font-semibold">Jadwal</span>
                     </a>
                     <div class="flex flex-col">
@@ -102,7 +104,7 @@
 
                  @hasRole('kalab')
                     <a href="{{ route('kalab.dashboard') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg group {{ request()->routeIs('kalab.dashboard') ? $activeClass : $inactiveClass }}">
-                        <i class="fa-solid fa-border-all w-5 {{ request()->routeIs('kalab.dashboard') ? $iconActive : $iconInactive }}"></i>
+                        <i class="fa-regular fa-house w-5 {{ request()->routeIs('kalab.dashboard') ? $iconActive : $iconInactive }}"></i>
                         <span class="text-sm font-semibold">Dashboard</span>
                     </a>
                     <a href="{{ route('kalab.jadwal-ruangan') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg group {{ request()->routeIs('kalab.jadwal-ruangan') ? $activeClass : $inactiveClass }}">
@@ -127,7 +129,7 @@
 
                 @hasRole('pimpinan')
                     <a href="{{ route('pimpinan.dashboard') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg group {{ request()->routeIs('pimpinan.dashboard') ? $activeClass : $inactiveClass }}">
-                        <i class="fa-solid fa-border-all w-5 {{ request()->routeIs('pimpinan.dashboard') ? $iconActive : $iconInactive }}"></i>
+                        <i class="fa-regular fa-house w-5 {{ request()->routeIs('pimpinan.dashboard') ? $iconActive : $iconInactive }}"></i>
                         <span class="text-sm font-semibold">Dashboard</span>
                     </a>
                     <a href="{{ route('pimpinan.jadwal-ruangan') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg group {{ request()->routeIs('pimpinan.jadwal-ruangan') ? $activeClass : $inactiveClass }}">
@@ -154,7 +156,7 @@
                     @hasRole($role)
                         <a href="{{ route($role.'.dashboard') }}"
                         class="flex items-center gap-3 px-3 py-2.5 rounded-lg group {{ request()->routeIs($role.'.dashboard') ? $activeClass : $inactiveClass }}">
-                            <i class="fa-solid fa-border-all w-5 {{ request()->routeIs($role.'.dashboard') ? $iconActive : $iconInactive }}"></i>
+                            <i class="fa-regular fa-house w-5 {{ request()->routeIs($role.'.dashboard') ? $iconActive : $iconInactive }}"></i>
                             <span class="text-sm font-semibold">Dashboard</span>
                         </a>
 
@@ -166,7 +168,7 @@
 
                         <a href="{{ route($role.'.list-peminjaman') }}"
                         class="flex items-center gap-3 px-3 py-2.5 rounded-lg group {{ request()->routeIs($role.'.list-peminjaman') ? $activeClass : $inactiveClass }}">
-                            <i class="fa-regular fa-building w-5 {{ request()->routeIs($role.'.list-peminjaman') ? $iconActive : $iconInactive }}"></i>
+                            <i class="fa-solid fa-list-check w-5 {{ request()->routeIs($role.'.list-peminjaman') ? $iconActive : $iconInactive }}"></i>
                             <span class="text-sm font-semibold">Peminjaman</span>
                         </a>
 

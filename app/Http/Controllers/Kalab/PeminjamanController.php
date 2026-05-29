@@ -8,9 +8,12 @@ use App\Models\Peminjaman;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use App\Traits\ExportRiwayatCsv;
 
 class PeminjamanController extends Controller
 {
+    use ExportRiwayatCsv;
+
     public function verifikasiPeminjaman(Request $request)
     {
         $user      = Auth::user();
@@ -132,5 +135,28 @@ class PeminjamanController extends Controller
         $peminjaman = $query->latest()->paginate(5);
 
         return view('layouts.kalab.peminjaman.riwayat_verifikasi', compact('peminjaman'));
+    }
+
+    public function exportRiwayatVerifikasi(Request $request)
+    {
+        $userId = Auth::user()->nomor_induk;
+
+        $query = Peminjaman::query()
+            ->with([
+                'ruangan.gedung.kampus',
+                'pemohon',
+                'verifikasi' => fn ($q) => $q->orderBy('urutan'),
+            ])
+            ->whereHas('verifikasi', function ($q) use ($userId) {
+                $q->where('id_verifikator', '=', $userId);
+            });
+
+        $this->applyRiwayatFilters($query, $request);
+
+        $peminjaman = $query->latest()->get();
+
+        $fileName = 'riwayat-verifikasi-kalab-' . now()->format('Ymd_His') . '.csv';
+
+        return $this->downloadRiwayatCsv($peminjaman, $fileName, $userId);
     }
 }

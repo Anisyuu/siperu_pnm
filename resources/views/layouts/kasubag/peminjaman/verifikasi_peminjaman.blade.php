@@ -9,50 +9,6 @@
             <h1 class="text-2xl font-bold tracking-tight text-slate-900">Verifikasi Peminjaman</h1>
             <p class="mt-0.5 text-sm text-slate-500">Kelola dan verifikasi seluruh pengajuan peminjaman ruangan</p>
         </div>
-        <button class="inline-flex items-center gap-2 px-5 py-2.5 bg-white border border-slate-200 rounded-2xl text-sm font-semibold text-slate-700 hover:bg-slate-50 transition shadow-sm">
-            <i class="fa-solid fa-file-export text-slate-400"></i>
-            Ekspor Data
-        </button>
-    </div>
-
-    {{-- STAT CARDS --}}
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <div class="bg-white border border-slate-200 rounded-2xl px-5 py-4 flex items-center gap-3">
-            <div class="w-9 h-9 bg-slate-100 rounded-xl flex items-center justify-center flex-shrink-0">
-                <i class="fa-solid fa-inbox text-slate-500 text-sm"></i>
-            </div>
-            <div>
-                <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Total</p>
-                <p class="text-xl font-extrabold text-slate-800">{{ $peminjaman->total() }}</p>
-            </div>
-        </div>
-        <div class="bg-white border border-slate-200 rounded-2xl px-5 py-4 flex items-center gap-3">
-            <div class="w-9 h-9 bg-amber-50 rounded-xl flex items-center justify-center flex-shrink-0">
-                <i class="fa-solid fa-clock text-amber-500 text-sm"></i>
-            </div>
-            <div>
-                <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Pending</p>
-                <p class="text-xl font-extrabold text-slate-800">{{ $peminjaman->getCollection()->where('status','pending')->count() }}</p>
-            </div>
-        </div>
-        <div class="bg-white border border-slate-200 rounded-2xl px-5 py-4 flex items-center gap-3">
-            <div class="w-9 h-9 bg-green-50 rounded-xl flex items-center justify-center flex-shrink-0">
-                <i class="fa-solid fa-circle-check text-green-500 text-sm"></i>
-            </div>
-            <div>
-                <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Disetujui</p>
-                <p class="text-xl font-extrabold text-slate-800">{{ $peminjaman->getCollection()->where('status','disetujui')->count() }}</p>
-            </div>
-        </div>
-        <div class="bg-white border border-slate-200 rounded-2xl px-5 py-4 flex items-center gap-3">
-            <div class="w-9 h-9 bg-red-50 rounded-xl flex items-center justify-center flex-shrink-0">
-                <i class="fa-solid fa-circle-xmark text-red-400 text-sm"></i>
-            </div>
-            <div>
-                <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Ditolak</p>
-                <p class="text-xl font-extrabold text-slate-800">{{ $peminjaman->getCollection()->where('status','ditolak')->count() }}</p>
-            </div>
-        </div>
     </div>
 
     {{-- FILTER --}}
@@ -192,25 +148,33 @@
                         <button onclick="openModal(this)"
                             data-id="{{ $p->id }}"
                             data-no="{{ $p->no_peminjaman }}"
+                            data-diajukan="{{ \Carbon\Carbon::parse($p->created_at)->locale('id')->translatedFormat('d M Y H:i') }}"
+
                             data-nama="{{ $pemohon->nama_lengkap ?? '-' }}"
                             data-nim="{{ $pemohon->nomor_induk ?? '-' }}"
                             data-email="{{ $pemohon->email ?? '-' }}"
                             data-jenis-pemohon="{{ $p->pemohon->roles->pluck('nama')->join(', ') }}"
+
                             data-ruangan="{{ $p->ruangan->nama_ruang }}"
                             data-gedung="{{ $p->ruangan->gedung->nama }}"
                             data-lantai="{{ $p->ruangan->lantai }}"
                             data-kampus="{{ $p->ruangan->gedung->kampus->nama_kampus ?? '' }}"
+
                             data-tanggal-mulai="{{ \Carbon\Carbon::parse($p->tanggal_mulai)->locale('id')->translatedFormat('d M Y') }}"
                             data-tanggal-selesai="{{ \Carbon\Carbon::parse($p->tanggal_selesai)->locale('id')->translatedFormat('d M Y') }}"
                             data-tanggal-sama="{{ $p->tanggal_mulai === $p->tanggal_selesai ? '1' : '0' }}"
+
                             data-waktu-mulai="{{ \Carbon\Carbon::parse($p->waktu_mulai)->format('H:i') }}"
                             data-waktu-selesai="{{ \Carbon\Carbon::parse($p->waktu_selesai)->format('H:i') }}"
+
                             data-kegiatan="{{ $p->kegiatan }}"
                             data-dokumen="{{ $p->dokumen_bukti ? asset('storage/'.$p->dokumen_bukti) : '' }}"
                             data-status="{{ $p->status }}"
                             data-catatan="{{ $p->catatan ?? '' }}"
+
                             data-approve-url="{{ route('kasubag.peminjaman.approve', $p->id) }}"
                             data-reject-url="{{ route('kasubag.peminjaman.reject', $p->id) }}"
+
                             data-semua-langkah="{{ $p->verifikasi->map(fn($v) => [
                                 'urutan'            => $v->urutan,
                                 'role_verifikator'  => $v->role_verifikator,
@@ -220,6 +184,7 @@
                                     : null,
                                 'catatan'           => $v->catatan,
                             ])->toJson() }}"
+
                             class="inline-flex items-center justify-center w-9 h-9 bg-blue-50 text-blue-500 hover:bg-blue-100 rounded-xl transition-colors opacity-60 group-hover:opacity-100">
                             <i class="fa-regular fa-eye text-sm"></i>
                         </button>
@@ -286,10 +251,23 @@
         {{-- Modal Body --}}
         <div class="overflow-y-auto max-h-[65vh]">
 
-            {{-- No Peminjaman --}}
-            <div class="px-6 py-4 bg-slate-50 border-b border-slate-100 flex items-center justify-between">
-                <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">No. Peminjaman</span>
-                <span id="modal_no" class="font-mono text-sm font-bold text-slate-700 bg-white border border-slate-200 px-3 py-1 rounded-lg"></span>
+            {{-- RINGKASAN PENGAJUAN --}}
+            <div class="px-6 py-4 bg-slate-50 border-b border-slate-100 grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">
+                        No. Peminjaman
+                    </p>
+                    <span id="modal_no"
+                        class="inline-flex font-mono text-sm font-bold text-slate-700 bg-white border border-slate-200 px-3 py-1 rounded-lg">
+                    </span>
+                </div>
+
+                <div>
+                    <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">
+                        Diajukan
+                    </p>
+                    <p id="modal_diajukan" class="text-sm font-semibold text-slate-700"></p>
+                </div>
             </div>
 
             <div class="px-6 py-5 space-y-6">
@@ -446,8 +424,10 @@
         const d = btn.dataset;
 
         // No & Avatar
-        document.getElementById('modal_no').textContent      = d.no;
-        document.getElementById('modal_avatar').textContent  = (d.nama || '?')[0].toUpperCase();
+        document.getElementById('modal_no').textContent = d.no;
+        document.getElementById('modal_diajukan').textContent = d.diajukan || '—';
+
+        document.getElementById('modal_avatar').textContent = (d.nama || '?')[0].toUpperCase();
         document.getElementById('modal_nama').textContent    = d.nama;
         document.getElementById('modal_nim').textContent     = d.nim;
         document.getElementById('modal_email').textContent   = d.email;

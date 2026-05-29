@@ -80,12 +80,12 @@
 
                                         <button onclick="editAlur('{{ $jenis }}')"
                                             class="inline-flex items-center justify-center w-9 h-9 bg-orange-50 text-orange-500 hover:bg-orange-100 rounded-xl transition-colors">
-                                            <i class="fa-solid fa-pen text-sm"></i>
+                                            <i class="fa-regular fa-pen-to-square text-sm"></i>
                                         </button>
 
                                         <button onclick="confirmDelete('{{ $jenis }}')"
                                             class="inline-flex items-center justify-center w-9 h-9 bg-red-50 text-red-500 hover:bg-red-100 rounded-xl transition-colors">
-                                            <i class="fa-solid fa-trash text-sm"></i>
+                                            <i class="fa-regular fa-trash-can text-sm"></i>
                                         </button>
 
                                         <form id="delete-form-{{ Str::slug($jenis) }}"
@@ -144,8 +144,10 @@
             </div>
 
             <form id="formAlur" method="POST" action="{{ route('kasubag.alur-verifikasi.store') }}">
-                @csrf
+            @csrf
 
+            <input type="hidden" name="jenis_pemohon" id="jenisPemohonHidden" disabled>
+            <input type="hidden" name="mode" id="formMode" value="create">
                 <div class="px-6 py-5 space-y-4">
 
                     <div>
@@ -205,6 +207,18 @@
 
 @push('js')
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+@if(session('success'))
+<script>
+    Swal.fire({
+        icon: 'success',
+        title: 'Berhasil',
+        text: @json(session('success')),
+        confirmButtonColor: '#3b82f6'
+    });
+</script>
+@endif
+
 <script>
     const roles = @json($role);
 
@@ -237,9 +251,17 @@
     function resetModal() {
         document.getElementById('formAlur').reset();
         document.getElementById('stepContainer').innerHTML = '';
-        document.getElementById('modalTitle').textContent    = 'Tambah Alur Verifikasi';
+
+        document.getElementById('modalTitle').textContent = 'Tambah Alur Verifikasi';
         document.getElementById('modalSubtitle').textContent = 'Pilih jenis pemohon dan tentukan urutan verifikator.';
+
         document.getElementById('jenisPemohon').removeAttribute('disabled');
+
+        document.getElementById('jenisPemohonHidden').value = '';
+        document.getElementById('jenisPemohonHidden').setAttribute('disabled', true);
+
+        document.getElementById('formMode').value = 'create';
+
         updateEmptyHint();
     }
 
@@ -291,19 +313,38 @@
     }
 
     function editAlur(jenis) {
-        fetch(`/kasubag/alur-verifikasi/${jenis}`)
-            .then(res => res.json())
+        fetch(`/kasubag/alur-verifikasi/${encodeURIComponent(jenis)}`)
+            .then(res => {
+                if (!res.ok) {
+                    throw new Error('Gagal mengambil data alur');
+                }
+
+                return res.json();
+            })
             .then(data => {
                 document.getElementById('jenisPemohon').value = jenis;
                 document.getElementById('jenisPemohon').setAttribute('disabled', true);
-                document.getElementById('modalTitle').textContent    = 'Edit Alur Verifikasi';
+
+                document.getElementById('jenisPemohonHidden').value = jenis;
+                document.getElementById('jenisPemohonHidden').removeAttribute('disabled');
+
+                document.getElementById('formMode').value = 'edit';
+
+                document.getElementById('modalTitle').textContent = 'Edit Alur Verifikasi';
                 document.getElementById('modalSubtitle').textContent = `Mengedit alur untuk jenis: ${jenis}`;
-                document.getElementById('stepContainer').innerHTML   = '';
+                document.getElementById('stepContainer').innerHTML = '';
+
                 data.forEach(item => addStep(item.role_verifikator));
+
                 openModal();
             })
             .catch(() => {
-                Swal.fire({ icon: 'error', title: 'Gagal', text: 'Tidak dapat memuat data alur.', confirmButtonColor: '#3b82f6' });
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Gagal',
+                    text: 'Tidak dapat memuat data alur.',
+                    confirmButtonColor: '#3b82f6'
+                });
             });
     }
 

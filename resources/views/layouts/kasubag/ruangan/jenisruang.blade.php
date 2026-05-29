@@ -91,7 +91,7 @@
                                         <button type="button"
                                             onclick="editJenisRuang('{{ $item->slug }}','{{ $item->nama }}')"
                                             class="inline-flex items-center justify-center w-9 h-9 bg-orange-50 text-orange-500 hover:bg-orange-100 rounded-xl transition-colors opacity-60 group-hover:opacity-100">
-                                            <i class="fa-solid fa-pen text-sm"></i>
+                                            <i class="fa-regular fa-pen-to-square text-sm"></i>
                                         </button>
 
                                         <form method="POST"
@@ -101,7 +101,7 @@
                                             @method('DELETE')
                                             <button type="submit"
                                                 class="inline-flex items-center justify-center w-9 h-9 bg-red-50 text-red-500 hover:bg-red-100 rounded-xl transition-colors opacity-60 group-hover:opacity-100">
-                                                <i class="fa-solid fa-trash text-sm"></i>
+                                                <i class="fa-regular fa-trash-can text-sm"></i>
                                             </button>
                                         </form>
 

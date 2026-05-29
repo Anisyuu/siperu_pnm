@@ -57,11 +57,11 @@
                     Reset
                 </a>
                 @endif
-                <button type="button"
-                    class="inline-flex items-center gap-2 px-5 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 hover:bg-slate-50 transition">
-                    <i class="fa-solid fa-file-export text-slate-400"></i>
-                    Export
-                </button>
+                <a href="{{ route('ormawa.riwayat-peminjaman.export', request()->query()) }}"
+                class="inline-flex items-center gap-2 px-5 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 hover:bg-slate-50 transition">
+                    <i class="fa-solid fa-file-csv text-blue-500"></i>
+                    Unduh CSV
+                </a>
             </div>
         </form>
 

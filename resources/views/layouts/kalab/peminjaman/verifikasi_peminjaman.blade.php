@@ -9,50 +9,6 @@
             <h1 class="text-2xl font-bold tracking-tight text-slate-900">Verifikasi Peminjaman</h1>
             <p class="mt-0.5 text-sm text-slate-500">Kelola dan verifikasi seluruh pengajuan peminjaman ruangan</p>
         </div>
-        <button class="inline-flex items-center gap-2 px-5 py-2.5 bg-white border border-slate-200 rounded-2xl text-sm font-semibold text-slate-700 hover:bg-slate-50 transition shadow-sm">
-            <i class="fa-solid fa-file-export text-slate-400"></i>
-            Ekspor Data
-        </button>
-    </div>
-
-    {{-- STAT CARDS --}}
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <div class="bg-white border border-slate-200 rounded-2xl px-5 py-4 flex items-center gap-3">
-            <div class="w-9 h-9 bg-slate-100 rounded-xl flex items-center justify-center flex-shrink-0">
-                <i class="fa-solid fa-inbox text-slate-500 text-sm"></i>
-            </div>
-            <div>
-                <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Total</p>
-                <p class="text-xl font-extrabold text-slate-800">{{ $peminjaman->total() }}</p>
-            </div>
-        </div>
-        <div class="bg-white border border-slate-200 rounded-2xl px-5 py-4 flex items-center gap-3">
-            <div class="w-9 h-9 bg-amber-50 rounded-xl flex items-center justify-center flex-shrink-0">
-                <i class="fa-solid fa-clock text-amber-500 text-sm"></i>
-            </div>
-            <div>
-                <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Pending</p>
-                <p class="text-xl font-extrabold text-slate-800">{{ $peminjaman->getCollection()->where('status','pending')->count() }}</p>
-            </div>
-        </div>
-        <div class="bg-white border border-slate-200 rounded-2xl px-5 py-4 flex items-center gap-3">
-            <div class="w-9 h-9 bg-green-50 rounded-xl flex items-center justify-center flex-shrink-0">
-                <i class="fa-solid fa-circle-check text-green-500 text-sm"></i>
-            </div>
-            <div>
-                <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Disetujui</p>
-                <p class="text-xl font-extrabold text-slate-800">{{ $peminjaman->getCollection()->where('status','disetujui')->count() }}</p>
-            </div>
-        </div>
-        <div class="bg-white border border-slate-200 rounded-2xl px-5 py-4 flex items-center gap-3">
-            <div class="w-9 h-9 bg-red-50 rounded-xl flex items-center justify-center flex-shrink-0">
-                <i class="fa-solid fa-circle-xmark text-red-400 text-sm"></i>
-            </div>
-            <div>
-                <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Ditolak</p>
-                <p class="text-xl font-extrabold text-slate-800">{{ $peminjaman->getCollection()->where('status','ditolak')->count() }}</p>
-            </div>
-        </div>
     </div>
 
     {{-- FILTER --}}

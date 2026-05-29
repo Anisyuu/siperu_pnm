@@ -14,21 +14,23 @@ return new class extends Migration
         Schema::create('jadwal', function (Blueprint $table) {
             $table->id();
             // FK ke ruangan
-            $table->foreignId('ruangan_id')->constrained('ruangan')->onDelete('cascade');
-            $table->date('tanggal');
-            //opsional (utk tampilan/laporan)
-            $table->string('hari', 10)->nullable();
+            $table->foreignId('ruangan_id')
+                ->constrained('ruangan')
+                ->onDelete('cascade');
+
+            $table->date('tanggal_mulai');
+            $table->date('tanggal_selesai');
+
             $table->time('waktu_mulai');
             $table->time('waktu_selesai');
 
-            $table->string('mata_kuliah', 100);
-            $table->string('dosen_pengampu', 100);
+            $table->string('kegiatan', 150);
+            $table->string('penanggung_jawab', 100)->nullable();
 
             $table->text('catatan')->nullable();
             $table->timestamps();
 
-            // percepat cek bentrok berdasarkan ruangan+tanggal
-            $table->index(['ruangan_id', 'tanggal']);
+            $table->index(['ruangan_id', 'tanggal_mulai', 'tanggal_selesai']);
         });
     }
 

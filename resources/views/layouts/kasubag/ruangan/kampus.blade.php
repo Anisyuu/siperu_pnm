@@ -82,7 +82,7 @@
                             '{{ $item->nama_kampus }}',
                             '{{ $item->foto ? asset('storage/' . $item->foto) : '' }}'
                         )" class="w-8 h-8 flex items-center justify-center bg-orange-200/40 border border-orange-300 text-orange-500 rounded-lg hover:bg-orange-300/50 hover:border-orange-400 transition-all">
-                            <i class="fa-solid fa-pen-to-square text-xs"></i>
+                            <i class="fa-regular fa-pen-to-square text-xs"></i>
                         </button>
 
                         <form onsubmit="confirmDeleteKampus({{ $item->id }}, '{{ $item->nama_kampus }}')"
@@ -92,7 +92,7 @@
                             @method('DELETE')
                             <button type="submit"
                                  class="w-8 h-8 flex items-center justify-center rounded-lg bg-red-200/40 border border-red-300 text-red-500 hover:bg-red-300/50 hover:border-red-400 transition-all">
-                                <i class="fa-solid fa-trash text-xs"></i>
+                                <text-xs class="fa-regular fa-trash-can text-xs"></i>
                             </button>
                         </form>
 

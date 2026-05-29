@@ -5,16 +5,20 @@
 
     {{-- HEADER --}}
     <div class="mb-7">
-        <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight">Tambah Jadwal</h1>
-        <p class="text-sm text-slate-500 mt-1">Tambahkan jadwal berdasarkan lokasi dan detail perkuliahan.</p>
+        <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight">
+            Tambah Jadwal Penggunaan Ruangan
+        </h1>
+        <p class="text-sm text-slate-500 mt-1">
+            Tambahkan jadwal penggunaan ruangan berdasarkan lokasi, waktu, dan detail kegiatan.
+        </p>
     </div>
 
-    <form action="{{ route('sarpras.simpan-jadwal') }}" method="POST" id="formJadwal">
+    <form action="{{ route('kasubag.simpan-jadwal') }}" method="POST" id="formJadwal">
         @csrf
 
         <div class="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-5 items-start">
 
-            {{-- ===== KOLOM KIRI ===== --}}
+            {{-- KOLOM KIRI --}}
             <div class="space-y-4">
 
                 {{-- SECTION 1: LOKASI --}}
@@ -23,6 +27,7 @@
                         <span class="w-5 h-5 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center text-[10px] font-extrabold">1</span>
                         Lokasi Ruangan
                     </p>
+
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
 
                         <div>
@@ -31,7 +36,9 @@
                                 class="w-full px-3 py-2.5 text-sm text-slate-700 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-300 focus:border-blue-400 transition">
                                 <option value="">-- Pilih Kampus --</option>
                                 @foreach($kampus as $k)
-                                    <option value="{{ $k->id }}">{{ $k->nama_kampus }}</option>
+                                    <option value="{{ $k->id }}">
+                                        {{ $k->nama_kampus }}
+                                    </option>
                                 @endforeach
                             </select>
                         </div>
@@ -78,12 +85,15 @@
                                         data-gedung="{{ $r->gedung->slug ?? '' }}"
                                         data-lantai="{{ $r->lantai }}"
                                         data-label="{{ $r->nama_ruang }}"
-                                        data-gedung-nama="{{ $r->gedung->nama }}"
+                                        data-gedung-nama="{{ $r->gedung->nama ?? '-' }}"
                                     >
                                         {{ $r->nama_ruang }}
                                     </option>
                                 @endforeach
                             </select>
+                            @error('ruangan_id')
+                                <p class="text-xs text-red-500 mt-1">{{ $message }}</p>
+                            @enderror
                         </div>
 
                     </div>
@@ -95,58 +105,97 @@
                         <span class="w-5 h-5 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center text-[10px] font-extrabold">2</span>
                         Waktu Jadwal
                     </p>
+
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
 
                         <div>
-                            <label class="block text-xs font-semibold text-slate-500 mb-1.5">Tanggal</label>
-                            <input type="date" name="tanggal" required
+                            <label class="block text-xs font-semibold text-slate-500 mb-1.5">Tanggal Mulai</label>
+                            <input type="date" name="tanggal_mulai" required
+                                value="{{ old('tanggal_mulai') }}"
                                 class="w-full px-3 py-2.5 text-sm text-slate-700 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-300 focus:border-blue-400 transition">
+                            @error('tanggal_mulai')
+                                <p class="text-xs text-red-500 mt-1">{{ $message }}</p>
+                            @enderror
                         </div>
 
-                        <div></div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-500 mb-1.5">Tanggal Selesai</label>
+                            <input type="date" name="tanggal_selesai" required
+                                value="{{ old('tanggal_selesai') }}"
+                                class="w-full px-3 py-2.5 text-sm text-slate-700 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-300 focus:border-blue-400 transition">
+                            @error('tanggal_selesai')
+                                <p class="text-xs text-red-500 mt-1">{{ $message }}</p>
+                            @enderror
+                        </div>
 
                         <div>
                             <label class="block text-xs font-semibold text-slate-500 mb-1.5">Waktu Mulai</label>
                             <input type="time" name="waktu_mulai" required
+                                value="{{ old('waktu_mulai') }}"
                                 class="w-full px-3 py-2.5 text-sm text-slate-700 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-300 focus:border-blue-400 transition">
+                            @error('waktu_mulai')
+                                <p class="text-xs text-red-500 mt-1">{{ $message }}</p>
+                            @enderror
                         </div>
 
                         <div>
                             <label class="block text-xs font-semibold text-slate-500 mb-1.5">Waktu Selesai</label>
                             <input type="time" name="waktu_selesai" required
+                                value="{{ old('waktu_selesai') }}"
                                 class="w-full px-3 py-2.5 text-sm text-slate-700 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-300 focus:border-blue-400 transition">
+                            @error('waktu_selesai')
+                                <p class="text-xs text-red-500 mt-1">{{ $message }}</p>
+                            @enderror
                         </div>
 
                     </div>
                 </div>
 
-                {{-- SECTION 3: DETAIL PERKULIAHAN --}}
+                {{-- SECTION 3: DETAIL KEGIATAN --}}
                 <div class="bg-white border border-slate-200 rounded-2xl p-5">
                     <p class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
                         <span class="w-5 h-5 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center text-[10px] font-extrabold">3</span>
-                        Detail Perkuliahan
+                        Detail Kegiatan
                     </p>
+
                     <div class="space-y-4">
 
                         <div>
-                            <label class="block text-xs font-semibold text-slate-500 mb-1.5">Mata Kuliah</label>
-                            <input type="text" name="mata_kuliah" required
-                                placeholder="Contoh: Pemrograman Web"
+                            <label class="block text-xs font-semibold text-slate-500 mb-1.5">
+                                Nama Kegiatan
+                            </label>
+                            <input type="text" name="kegiatan" required maxlength="150"
+                                value="{{ old('kegiatan') }}"
+                                placeholder="Contoh: Rapat koordinasi, seminar, pelatihan..."
                                 class="w-full px-3 py-2.5 text-sm text-slate-700 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-300 focus:border-blue-400 transition">
+                            @error('kegiatan')
+                                <p class="text-xs text-red-500 mt-1">{{ $message }}</p>
+                            @enderror
                         </div>
 
                         <div>
-                            <label class="block text-xs font-semibold text-slate-500 mb-1.5">Dosen Pengampu</label>
-                            <input type="text" name="dosen_pengampu" required
-                                placeholder="Contoh: Bapak/Ibu ..."
+                            <label class="block text-xs font-semibold text-slate-500 mb-1.5">
+                                Penanggung Jawab
+                            </label>
+                            <input type="text" name="penanggung_jawab" maxlength="100"
+                                value="{{ old('penanggung_jawab') }}"
+                                placeholder="Contoh: Kasubag Akademik / Nama peminjam"
                                 class="w-full px-3 py-2.5 text-sm text-slate-700 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-300 focus:border-blue-400 transition">
+                            @error('penanggung_jawab')
+                                <p class="text-xs text-red-500 mt-1">{{ $message }}</p>
+                            @enderror
                         </div>
 
                         <div>
-                            <label class="block text-xs font-semibold text-slate-500 mb-1.5">Catatan</label>
+                            <label class="block text-xs font-semibold text-slate-500 mb-1.5">
+                                Catatan
+                            </label>
                             <textarea name="catatan" rows="4"
-                                placeholder="Contoh: Praktikum, butuh proyektor, dll"
-                                class="w-full px-3 py-2.5 text-sm text-slate-700 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-300 focus:border-blue-400 transition resize-none"></textarea>
+                                placeholder="Contoh: Butuh proyektor, sound system, kursi tambahan, dll"
+                                class="w-full px-3 py-2.5 text-sm text-slate-700 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-300 focus:border-blue-400 transition resize-none">{{ old('catatan') }}</textarea>
+                            @error('catatan')
+                                <p class="text-xs text-red-500 mt-1">{{ $message }}</p>
+                            @enderror
                         </div>
 
                     </div>
@@ -154,7 +203,7 @@
 
             </div>
 
-            {{-- ===== KOLOM KANAN: RINGKASAN ===== --}}
+            {{-- KOLOM KANAN: RINGKASAN --}}
             <div class="lg:sticky lg:top-6">
                 <div class="bg-white border border-slate-200 rounded-2xl overflow-hidden">
 
@@ -185,13 +234,22 @@
                         </div>
                     </div>
 
+                    <div class="px-5 pb-3">
+                        <div class="flex items-start gap-2 bg-blue-50 border border-blue-100 rounded-xl px-3 py-2.5">
+                            <i class="fa-solid fa-circle-info text-blue-400 text-xs mt-0.5 flex-shrink-0"></i>
+                            <span class="text-xs text-blue-700">
+                                Jadwal ini digunakan untuk mencatat penggunaan ruangan dan mencegah bentrok peminjaman.
+                            </span>
+                        </div>
+                    </div>
+
                     <div class="px-5 pb-5 space-y-2">
                         <button type="submit"
                             class="w-full flex items-center justify-center gap-2 py-2.5 bg-primary text-white font-semibold text-sm rounded-xl hover:brightness-110 active:scale-95 transition-all">
                             <i class="fa-solid fa-floppy-disk text-xs"></i>
                             Simpan Jadwal
                         </button>
-                        <a href="{{ route('sarpras.kelola-jadwal') }}"
+                        <a href="{{ route('kasubag.kelola-jadwal') }}"
                             class="w-full flex items-center justify-center gap-2 py-2.5 border border-slate-200 text-slate-600 font-semibold text-sm rounded-xl hover:bg-slate-50 transition-colors">
                             Batal
                         </a>
@@ -219,86 +277,164 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function filterGedung() {
         gedung.innerHTML = '';
+
         allGedung.forEach(opt => {
             if (opt.value === '' || !kampus.value || opt.dataset.kampus == kampus.value) {
                 gedung.appendChild(opt.cloneNode(true));
             }
         });
+
+        gedung.value = '';
     }
 
     function filterLantai() {
         lantai.innerHTML = '';
         let used = new Set();
+
         allLantai.forEach(opt => {
-            if (opt.value === '') { lantai.appendChild(opt.cloneNode(true)); return; }
+            if (opt.value === '') {
+                lantai.appendChild(opt.cloneNode(true));
+                return;
+            }
+
             let match = (!kampus.value || opt.dataset.kampus == kampus.value) &&
                         (!gedung.value || opt.dataset.gedung == gedung.value);
+
             if (match && !used.has(opt.value)) {
                 used.add(opt.value);
                 lantai.appendChild(opt.cloneNode(true));
             }
         });
+
+        lantai.value = '';
     }
 
     function filterRuangan() {
         ruangan.innerHTML = '';
+
         allRuangan.forEach(opt => {
-            if (opt.value === '') { ruangan.appendChild(opt.cloneNode(true)); return; }
+            if (opt.value === '') {
+                ruangan.appendChild(opt.cloneNode(true));
+                return;
+            }
+
             let match = (!kampus.value || opt.dataset.kampus == kampus.value) &&
-                        (!gedung.value  || opt.dataset.gedung  == gedung.value) &&
-                        (!lantai.value  || opt.dataset.lantai  == lantai.value);
-            if (match) ruangan.appendChild(opt.cloneNode(true));
+                        (!gedung.value || opt.dataset.gedung == gedung.value) &&
+                        (!lantai.value || opt.dataset.lantai == lantai.value);
+
+            if (match) {
+                ruangan.appendChild(opt.cloneNode(true));
+            }
         });
+
+        ruangan.value = '';
         updateSummary();
     }
 
-    kampus.addEventListener('change', () => { filterGedung(); filterLantai(); filterRuangan(); });
-    gedung.addEventListener('change', () => { filterLantai(); filterRuangan(); });
+    kampus.addEventListener('change', () => {
+        filterGedung();
+        filterLantai();
+        filterRuangan();
+    });
+
+    gedung.addEventListener('change', () => {
+        filterLantai();
+        filterRuangan();
+    });
+
     lantai.addEventListener('change', filterRuangan);
     ruangan.addEventListener('change', updateSummary);
 
-    document.querySelector('[name=tanggal]').addEventListener('change', updateSummary);
+    document.querySelector('[name=tanggal_mulai]').addEventListener('change', updateSummary);
+    document.querySelector('[name=tanggal_selesai]').addEventListener('change', updateSummary);
     document.querySelector('[name=waktu_mulai]').addEventListener('change', updateSummary);
     document.querySelector('[name=waktu_selesai]').addEventListener('change', updateSummary);
 
-    filterGedung(); filterLantai(); filterRuangan();
+    filterGedung();
+    filterLantai();
+    filterRuangan();
+
+    const formJadwal = document.getElementById('formJadwal');
+
+    if (formJadwal) {
+        formJadwal.addEventListener('submit', function (e) {
+            e.preventDefault();
+
+            Swal.fire({
+                title: 'Simpan Jadwal?',
+                text: 'Pastikan jadwal penggunaan ruangan sudah benar.',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#2563eb',
+                cancelButtonColor: '#64748b',
+                confirmButtonText: 'Ya, Simpan',
+                cancelButtonText: 'Batal'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    formJadwal.submit();
+                }
+            });
+        });
+    }
 });
 
 function updateSummary() {
-    const get    = id => document.getElementById(id);
+    const get = id => document.getElementById(id);
     const selOpt = get('ruangan_id').selectedOptions[0];
-    const tanggal   = document.querySelector('[name=tanggal]').value;
-    const wMulai    = document.querySelector('[name=waktu_mulai]').value;
-    const wSelesai  = document.querySelector('[name=waktu_selesai]').value;
+
+    const tMulai   = document.querySelector('[name=tanggal_mulai]').value;
+    const tSelesai = document.querySelector('[name=tanggal_selesai]').value;
+    const wMulai   = document.querySelector('[name=waktu_mulai]').value;
+    const wSelesai = document.querySelector('[name=waktu_selesai]').value;
 
     get('sumRuangan').textContent = selOpt?.value ? selOpt.dataset.label : '—';
     get('sumGedung').textContent  = selOpt?.value ? selOpt.dataset.gedungNama : '—';
 
-    if (tanggal) {
+    if (tMulai) {
         const fmt = d => new Date(d + 'T00:00:00').toLocaleDateString('id-ID', {
-            day: 'numeric', month: 'short', year: 'numeric'
+            day: 'numeric',
+            month: 'short',
+            year: 'numeric'
         });
-        get('sumTanggal').textContent = fmt(tanggal);
+
+        get('sumTanggal').textContent = (tSelesai && tMulai !== tSelesai)
+            ? `${fmt(tMulai)} – ${fmt(tSelesai)}`
+            : fmt(tMulai);
     } else {
         get('sumTanggal').textContent = '—';
     }
 
     if (wMulai && wSelesai) {
         get('sumWaktu').textContent = `${wMulai} – ${wSelesai}`;
+
         const [hM, mM] = wMulai.split(':').map(Number);
         const [hS, mS] = wSelesai.split(':').map(Number);
         const menit = (hS * 60 + mS) - (hM * 60 + mM);
+
         if (menit > 0) {
-            const jam = Math.floor(menit / 60), sisa = menit % 60;
+            const jam = Math.floor(menit / 60);
+            const sisa = menit % 60;
+
             get('sumDurasi').textContent = sisa ? `${jam}j ${sisa}m` : `${jam} jam`;
         } else {
             get('sumDurasi').textContent = '—';
         }
     } else {
-        get('sumWaktu').textContent  = '—';
+        get('sumWaktu').textContent = '—';
         get('sumDurasi').textContent = '—';
     }
 }
 </script>
+
+@if ($errors->any())
+    <script>
+        Swal.fire({
+            icon: 'error',
+            title: 'Gagal Menyimpan',
+            html: `{!! implode('<br>', $errors->all()) !!}`,
+            confirmButtonColor: '#2563eb'
+        });
+    </script>
+@endif
 
 </x-master>

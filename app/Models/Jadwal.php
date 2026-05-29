@@ -3,7 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use illuminate\Support\Carbon;
+use Illuminate\Support\Carbon;
 
 class Jadwal extends Model
 {
@@ -11,12 +11,12 @@ class Jadwal extends Model
 
     protected $fillable = [
         'ruangan_id',
-        'tanggal',
-        'hari',
+        'tanggal_mulai',
+        'tanggal_selesai',
         'waktu_mulai',
         'waktu_selesai',
-        'mata_kuliah',
-        'dosen_pengampu',
+        'kegiatan',
+        'penanggung_jawab',
         'catatan',
     ];
 
