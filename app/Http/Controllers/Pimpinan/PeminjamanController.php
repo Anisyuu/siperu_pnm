@@ -18,10 +18,12 @@ class PeminjamanController extends Controller
         $userRoles = $user->roles->pluck('nama');
 
         $query = Peminjaman::with([
-                'ruangan.gedung.kampus',
-                'pemohon.roles',
-                'verifikasiAktif'
-            ])
+            'ruangan.gedung.kampus',
+            'pemohon.roles',
+            'verifikasi' => fn ($q) => $q->orderBy('urutan'),
+            'verifikasi.verifikator',
+            'verifikasiAktif',
+        ])
             ->where('status', 'pending')
 
             // ❗ hanya ambil yang step verifikasinya cocok dengan user login
@@ -70,10 +72,15 @@ class PeminjamanController extends Controller
     public function riwayatVerifikasi( Request $request)
     {
         $userId = Auth::user()->nomor_induk;
-        $query = Peminjaman::with(['ruangan.gedung.kampus', 'pemohon', 'verifikasi' => fn($q) => $q->orderBy('urutan')])
-            ->whereHas('verifikasi', function ($q) use ($userId) {
-                $q->where('id_verifikator', $userId);
-            });
+        $query = Peminjaman::with([
+            'ruangan.gedung.kampus',
+            'pemohon.roles',
+            'verifikasi' => fn ($q) => $q->orderBy('urutan'),
+            'verifikasi.verifikator',
+        ])
+        ->whereHas('verifikasi', function ($q) use ($userId) {
+            $q->where('id_verifikator', $userId);
+        });
 
             // SEARCH
         if ($request->filled('search')) {
@@ -97,7 +104,7 @@ class PeminjamanController extends Controller
         $query = Peminjaman::query()
             ->with([
                 'ruangan.gedung.kampus',
-                'pemohon',
+                'pemohon.roles',
                 'verifikasi' => fn ($q) => $q->orderBy('urutan'),
             ])
             ->whereHas('verifikasi', function ($q) use ($userId) {

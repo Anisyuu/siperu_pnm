@@ -2,7 +2,7 @@
 @php
     $selectedKampusId = old('kampus_id', $jadwal->ruangan->gedung->kampus->id ?? '');
     $selectedGedungSlug = old('gedung_slug', $jadwal->ruangan->gedung->slug ?? '');
-    $selectedJenisRuangId = old('jenis_ruang_id', $jadwal->ruangan->id_jenis_ruang ?? '');
+    $selectedLantai = old('lantai', $jadwal->ruangan->lantai ?? '');
     $selectedRuanganId = old('ruangan_id', $jadwal->ruangan_id);
 @endphp
 
@@ -23,7 +23,7 @@
         @csrf
         @method('PUT')
 
-        <div class="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-5 items-start">
+        <div class="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-5 items-start">
 
             {{-- KOLOM KIRI --}}
             <div class="space-y-4">
@@ -65,13 +65,16 @@
                         </div>
 
                         <div>
-                            <label class="block text-xs font-semibold text-slate-500 mb-1.5">Jenis Ruang</label>
-                            <select id="jenis_ruang_id"
+                            <label class="block text-xs font-semibold text-slate-500 mb-1.5">Lantai</label>
+                            <select id="lantai"
                                 class="w-full px-3 py-2.5 text-sm text-slate-700 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-300 focus:border-blue-400 transition">
-                                <option value="">-- Pilih Jenis Ruang --</option>
-                                @foreach($jenisRuang as $jr)
-                                    <option value="{{ $jr->id }}" {{ $selectedJenisRuangId == $jr->id ? 'selected' : '' }}>
-                                        {{ $jr->nama }}
+                                <option value="">-- Pilih Lantai --</option>
+                                @foreach($ruangan->unique(fn($r) => ($r->gedung->slug ?? '-') . '_' . $r->lantai)->sortBy('lantai') as $r)
+                                    <option value="{{ $r->lantai }}"
+                                        data-kampus="{{ $r->gedung->kampus->id ?? '' }}"
+                                        data-gedung="{{ $r->gedung->slug ?? '' }}"
+                                        {{ $selectedLantai == $r->lantai ? 'selected' : '' }}>
+                                        Lantai {{ $r->lantai }}
                                     </option>
                                 @endforeach
                             </select>
@@ -87,7 +90,7 @@
                                         value="{{ $r->id }}"
                                         data-kampus="{{ $r->gedung->kampus->id ?? '' }}"
                                         data-gedung="{{ $r->gedung->slug ?? '' }}"
-                                        data-jenis="{{ $r->id_jenis_ruang }}"
+                                        data-lantai="{{ $r->lantai }}"
                                         data-label="{{ $r->nama_ruang }}"
                                         data-gedung-nama="{{ $r->gedung->nama ?? '-' }}"
                                         {{ $selectedRuanganId == $r->id ? 'selected' : '' }}

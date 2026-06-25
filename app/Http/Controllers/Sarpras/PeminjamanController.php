@@ -31,11 +31,11 @@ class PeminjamanController extends Controller
             ->pluck('jenis_pemohon')
             ->toArray();
 
-        $query = Peminjaman::query()
-            ->with([
+       $query = Peminjaman::with([
                 'ruangan.gedung.kampus',
                 'pemohon.roles',
-                'verifikasi',
+                'verifikasi' => fn ($q) => $q->orderBy('urutan'),
+                'verifikasi.verifikator',
                 'verifikasiAktif',
             ])
             ->where('status', '=', 'pending')
@@ -90,11 +90,11 @@ class PeminjamanController extends Controller
     {
         $userId = Auth::user()->nomor_induk;
 
-        $query = Peminjaman::query()
-            ->with([
+        $query = Peminjaman::with([
                 'ruangan.gedung.kampus',
-                'pemohon',
+                'pemohon.roles',
                 'verifikasi' => fn ($q) => $q->orderBy('urutan'),
+                'verifikasi.verifikator',
             ])
             ->whereHas('verifikasi', function ($q) use ($userId) {
                 $q->where('id_verifikator', '=', $userId);
@@ -114,7 +114,7 @@ class PeminjamanController extends Controller
         $query = Peminjaman::query()
             ->with([
                 'ruangan.gedung.kampus',
-                'pemohon',
+                'pemohon.roles',
                 'verifikasi' => fn ($q) => $q->orderBy('urutan'),
             ])
             ->whereHas('verifikasi', function ($q) use ($userId) {

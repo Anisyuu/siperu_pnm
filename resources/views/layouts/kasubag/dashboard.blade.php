@@ -9,6 +9,7 @@
                 <h2 class="text-2xl font-bold tracking-tight text-slate-900">
                     Selamat Datang, {{ auth()->user()->nama_lengkap }}!
                 </h2>
+
                 <div class="flex items-center gap-2 text-sm text-slate-500 mt-1">
                     <i class="fa-regular fa-calendar-days"></i>
                     <span id="realtime-date"></span>
@@ -19,43 +20,63 @@
         {{-- STAT CARDS --}}
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
 
+            {{-- CARD 1: TOTAL --}}
             <div class="bg-white border border-slate-200 rounded-2xl px-5 py-4 flex items-center gap-3 shadow-sm">
                 <div class="w-9 h-9 bg-slate-100 rounded-xl flex items-center justify-center flex-shrink-0">
                     <i class="fa-solid fa-layer-group text-slate-500 text-sm"></i>
                 </div>
                 <div>
-                    <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Total Permohonan</p>
-                    <p class="text-xl font-extrabold text-slate-800">{{ $total }}</p>
+                    <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                        Total Peminjaman
+                    </p>
+                    <p class="text-xl font-extrabold text-slate-800">
+                        {{ $total }}
+                    </p>
                 </div>
             </div>
 
+            {{-- CARD 2: PERLU DISETUJUI --}}
             <div class="bg-white border border-slate-200 rounded-2xl px-5 py-4 flex items-center gap-3 shadow-sm">
                 <div class="w-9 h-9 bg-amber-50 rounded-xl flex items-center justify-center flex-shrink-0">
                     <i class="fa-solid fa-hourglass-half text-amber-500 text-sm"></i>
                 </div>
                 <div>
-                    <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Perlu Diverifikasi</p>
-                    <p class="text-xl font-extrabold text-slate-800">{{ $menunggu }}</p>
+                    <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                        Perlu Disetujui
+                    </p>
+                    <p class="text-xl font-extrabold text-slate-800">
+                        {{ $menunggu }}
+                    </p>
                 </div>
             </div>
 
+            {{-- CARD 3: DISETUJUI --}}
             <div class="bg-white border border-slate-200 rounded-2xl px-5 py-4 flex items-center gap-3 shadow-sm">
                 <div class="w-9 h-9 bg-green-50 rounded-xl flex items-center justify-center flex-shrink-0">
                     <i class="fa-solid fa-circle-check text-green-500 text-sm"></i>
                 </div>
                 <div>
-                    <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Telah Disetujui</p>
-                    <p class="text-xl font-extrabold text-slate-800">{{ $disetujui }}</p>
+                    <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                        Telah Disetujui
+                    </p>
+                    <p class="text-xl font-extrabold text-slate-800">
+                        {{ $disetujui }}
+                    </p>
                 </div>
             </div>
 
+            {{-- CARD 4: DITOLAK --}}
             <div class="bg-white border border-slate-200 rounded-2xl px-5 py-4 flex items-center gap-3 shadow-sm">
                 <div class="w-9 h-9 bg-red-50 rounded-xl flex items-center justify-center flex-shrink-0">
                     <i class="fa-solid fa-circle-xmark text-red-400 text-sm"></i>
                 </div>
                 <div>
-                    <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Telah Ditolak</p>
-                    <p class="text-xl font-extrabold text-slate-800">{{ $ditolak }}</p>
+                    <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                        Telah Ditolak
+                    </p>
+                    <p class="text-xl font-extrabold text-slate-800">
+                        {{ $ditolak }}
+                    </p>
                 </div>
             </div>
 
@@ -94,21 +115,34 @@
             {{-- Toolbar --}}
             <div class="flex flex-col gap-3 border-b border-slate-200 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                    <h3 class="text-sm font-bold text-slate-800">Jadwal Penggunaan Ruangan</h3>
-                    <p class="mt-0.5 text-xs text-slate-400">Warna berbeda menandai ruangan yang sedang terpakai.</p>
+                    <h3 class="text-sm font-bold text-slate-800">
+                        Jadwal Penggunaan Ruangan
+                    </h3>
+                    <p class="mt-0.5 text-xs text-slate-400">
+                        Warna berbeda menandai ruangan yang sedang terpakai.
+                    </p>
                 </div>
+
                 <div class="flex items-center gap-1 rounded-xl border border-slate-200 px-2 py-1.5">
                     <a href="{{ url()->current().'?'.http_build_query(array_merge(request()->except('tanggal'), ['tanggal' => $prevWeek])) }}"
                        class="flex size-7 items-center justify-center rounded-lg text-slate-500 transition hover:bg-slate-100">
-                        <svg class="size-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
+                        <svg class="size-4" xmlns="http://www.w3.org/2000/svg" fill="none"
+                             viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                  d="M15.75 19.5 8.25 12l7.5-7.5" />
                         </svg>
                     </a>
-                    <span class="min-w-[120px] text-center text-sm font-semibold text-slate-800">{{ $monthLabel }}</span>
+
+                    <span class="min-w-[120px] text-center text-sm font-semibold text-slate-800">
+                        {{ $monthLabel }}
+                    </span>
+
                     <a href="{{ url()->current().'?'.http_build_query(array_merge(request()->except('tanggal'), ['tanggal' => $nextWeek])) }}"
                        class="flex size-7 items-center justify-center rounded-lg text-slate-500 transition hover:bg-slate-100">
-                        <svg class="size-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
+                        <svg class="size-4" xmlns="http://www.w3.org/2000/svg" fill="none"
+                             viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                  d="m8.25 4.5 7.5 7.5-7.5 7.5" />
                         </svg>
                     </a>
                 </div>
@@ -117,17 +151,20 @@
             {{-- Header Hari --}}
             <div class="flex border-b border-slate-200 bg-slate-50">
                 <div class="w-14 shrink-0 border-r border-slate-200"></div>
+
                 <div class="grid flex-1 grid-cols-7">
                     @foreach($days as $day)
                         @php
                             $isToday   = $day->isSameDay(now());
                             $isWeekend = in_array($day->dayOfWeekIso, [6, 7]);
                         @endphp
+
                         <div class="border-r border-slate-200 px-1 py-2.5 text-center last:border-r-0 {{ $isToday ? 'bg-blue-50' : '' }}">
                             <p class="mb-1 text-[11px] font-semibold uppercase tracking-wider
                                 {{ $isWeekend ? 'text-rose-400' : ($isToday ? 'text-primary' : 'text-slate-400') }}">
                                 {{ $day->locale('id')->translatedFormat('D') }}
                             </p>
+
                             @if($isToday)
                                 <div class="mx-auto flex size-8 items-center justify-center rounded-full bg-primary text-sm font-bold text-white">
                                     {{ $day->format('d') }}
@@ -149,7 +186,11 @@
                     {{-- Kolom Jam --}}
                     <div class="sticky left-0 z-10 w-14 shrink-0 border-r border-slate-200 bg-white">
                         @for($t = $startHour * 60; $t <= $endHour * 60; $t += 30)
-                            @php $h = floor($t / 60); $m = $t % 60; @endphp
+                            @php
+                                $h = floor($t / 60);
+                                $m = $t % 60;
+                            @endphp
+
                             <div class="relative flex h-[30px] items-start justify-end border-b border-slate-100 pr-2">
                                 @if($m === 0)
                                     <span class="absolute -top-2 right-2 bg-white px-0.5 text-[10px] text-slate-400 tabular-nums">
@@ -203,19 +244,23 @@
                                         $widthPercent = 100 / $overlapTotal;
                                         $leftPercent  = $widthPercent * $overlapIndex;
 
-                                        $evData = json_encode([
-                                            'type'        => $ev['type'],
-                                            'ruangan'     => $ev['ruangan'] ?? '-',
-                                            'title'       => $ev['title'] ?? '-',
-                                            'subtitle'    => $ev['subtitle'] ?? '-',
-                                            'tanggal'     => \Carbon\Carbon::parse($ev['tanggal'])->locale('id')->translatedFormat('l, d F Y'),
-                                            'mulai'       => $start->format('H:i'),
-                                            'selesai'     => $end->format('H:i'),
-                                            'bg'          => $roomColor['bg'],
-                                            'border'      => $roomColor['border'],
-                                            'title_color' => $roomColor['title'],
-                                            'meta_color'  => $roomColor['meta'],
-                                        ]);
+                                        $evData = [
+                                            'type'              => $ev['type'] ?? '-',
+                                            'kampus'            => $ev['kampus'] ?? '-',
+                                            'gedung'            => $ev['gedung'] ?? '-',
+                                            'lantai'            => $ev['lantai'] ?? '-',
+                                            'ruangan'           => $ev['ruangan'] ?? '-',
+                                            'title'             => $ev['title'] ?? '-',
+                                            'penanggung_jawab'  => $ev['penanggung_jawab'] ?? '-',
+                                            'catatan'           => $ev['catatan'] ?? '-',
+                                            'tanggal'           => \Carbon\Carbon::parse($ev['tanggal'])->locale('id')->translatedFormat('l, d F Y'),
+                                            'mulai'             => $start->format('H:i'),
+                                            'selesai'           => $end->format('H:i'),
+                                            'bg'                => $roomColor['bg'],
+                                            'border'            => $roomColor['border'],
+                                            'title_color'       => $roomColor['title'],
+                                            'meta_color'        => $roomColor['meta'],
+                                        ];
                                     @endphp
 
                                     {{-- EVENT DIV --}}
@@ -228,7 +273,7 @@
                                              background: {{ $roomColor['bg'] }};
                                              border-left: 3px solid {{ $roomColor['border'] }};
                                          "
-                                         onclick='openDetailModal({{ $evData }})'>
+                                         onclick='openDetailModal(@json($evData))'>
 
                                         <p class="text-[11px] font-semibold leading-tight truncate"
                                            style="color:{{ $roomColor['title'] }}">
@@ -240,6 +285,7 @@
                                                style="color:{{ $roomColor['meta'] }}">
                                                 {{ $start->format('H:i') }}–{{ $end->format('H:i') }}
                                             </p>
+
                                             <p class="mt-0.5 text-[10px] leading-tight text-slate-600 truncate">
                                                 {{ $ev['title'] ?? '-' }}
                                             </p>
@@ -262,8 +308,13 @@
                         <path stroke-linecap="round" stroke-linejoin="round"
                               d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 9v7.5" />
                     </svg>
-                    <p class="text-sm font-medium text-slate-500">Tidak ada penggunaan ruangan minggu ini</p>
-                    <p class="text-xs text-slate-400">Coba pilih minggu lain</p>
+
+                    <p class="text-sm font-medium text-slate-500">
+                        Tidak ada penggunaan ruangan minggu ini
+                    </p>
+                    <p class="text-xs text-slate-400">
+                        Coba pilih minggu lain
+                    </p>
                 </div>
             @endif
 
@@ -272,28 +323,32 @@
     </div>
 </div>
 
-{{-- MODAL DETAIL EVENT — di luar kalender, satu instance saja --}}
+{{-- MODAL DETAIL EVENT --}}
 <div id="event-detail-modal"
      class="hidden fixed inset-0 z-50 items-center justify-center bg-black/40 backdrop-blur-sm p-4"
      onclick="closeDetailModalFromBackdrop(event)">
 
-    <div class="bg-white rounded-2xl shadow-xl w-full max-w-sm overflow-hidden">
+    <div class="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden">
 
         <div id="modal-header" class="px-5 py-4 flex items-start justify-between gap-3">
             <div class="flex items-center gap-3">
                 <div id="modal-icon" class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0">
                     <i id="modal-icon-i" class="text-base"></i>
                 </div>
+
                 <div>
                     <p id="modal-type-label" class="text-[10px] font-bold uppercase tracking-wider"></p>
-                    <p id="modal-ruangan" class="text-base font-extrabold text-slate-800 leading-tight"></p>
+                    <p id="modal-title-header" class="text-base font-extrabold text-slate-800 leading-tight"></p>
                 </div>
             </div>
-            <button onclick="closeDetailModal()"
+
+            <button type="button"
+                    onclick="closeDetailModal()"
                     class="mt-0.5 flex-shrink-0 text-slate-400 hover:text-slate-600 transition">
                 <svg class="size-5" xmlns="http://www.w3.org/2000/svg" fill="none"
                      viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                          d="M6 18 18 6M6 6l12 12" />
                 </svg>
             </button>
         </div>
@@ -301,6 +356,46 @@
         <div id="modal-divider" class="h-px mx-5"></div>
 
         <div class="px-5 py-4 flex flex-col gap-3">
+
+            <div class="flex items-start gap-3">
+                <div class="w-7 h-7 rounded-lg bg-slate-100 flex items-center justify-center flex-shrink-0">
+                    <i class="fa-solid fa-location-dot text-slate-400 text-xs"></i>
+                </div>
+                <div>
+                    <p class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Kampus</p>
+                    <p id="modal-kampus" class="text-sm font-semibold text-slate-700"></p>
+                </div>
+            </div>
+
+            <div class="flex items-start gap-3">
+                <div class="w-7 h-7 rounded-lg bg-slate-100 flex items-center justify-center flex-shrink-0">
+                    <i class="fa-solid fa-building text-slate-400 text-xs"></i>
+                </div>
+                <div>
+                    <p class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Gedung</p>
+                    <p id="modal-gedung" class="text-sm font-semibold text-slate-700"></p>
+                </div>
+            </div>
+
+            <div class="flex items-start gap-3">
+                <div class="w-7 h-7 rounded-lg bg-slate-100 flex items-center justify-center flex-shrink-0">
+                    <i class="fa-solid fa-layer-group text-slate-400 text-xs"></i>
+                </div>
+                <div>
+                    <p class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Lantai</p>
+                    <p id="modal-lantai" class="text-sm font-semibold text-slate-700"></p>
+                </div>
+            </div>
+
+            <div class="flex items-start gap-3">
+                <div class="w-7 h-7 rounded-lg bg-slate-100 flex items-center justify-center flex-shrink-0">
+                    <i class="fa-solid fa-door-open text-slate-400 text-xs"></i>
+                </div>
+                <div>
+                    <p class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Ruangan</p>
+                    <p id="modal-ruangan" class="text-sm font-semibold text-slate-700"></p>
+                </div>
+            </div>
 
             <div class="flex items-start gap-3">
                 <div class="w-7 h-7 rounded-lg bg-slate-100 flex items-center justify-center flex-shrink-0">
@@ -332,13 +427,23 @@
                 </div>
             </div>
 
-            <div id="modal-subtitle-row" class="flex items-start gap-3">
+            <div class="flex items-start gap-3">
                 <div class="w-7 h-7 rounded-lg bg-slate-100 flex items-center justify-center flex-shrink-0">
                     <i class="fa-solid fa-user text-slate-400 text-xs"></i>
                 </div>
                 <div>
-                    <p id="modal-subtitle-label" class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider"></p>
-                    <p id="modal-subtitle" class="text-sm font-semibold text-slate-700"></p>
+                    <p class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Penanggung Jawab</p>
+                    <p id="modal-penanggung-jawab" class="text-sm font-semibold text-slate-700"></p>
+                </div>
+            </div>
+
+            <div id="modal-catatan-row" class="flex items-start gap-3">
+                <div class="w-7 h-7 rounded-lg bg-slate-100 flex items-center justify-center flex-shrink-0">
+                    <i class="fa-solid fa-note-sticky text-slate-400 text-xs"></i>
+                </div>
+                <div>
+                    <p class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Catatan</p>
+                    <p id="modal-catatan" class="text-sm font-semibold text-slate-700"></p>
                 </div>
             </div>
 
@@ -347,52 +452,111 @@
 </div>
 
 @push('js')
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+@if(session('success'))
+    <script>
+        Swal.fire({
+            icon: 'success',
+            title: 'Berhasil',
+            text: "{{ session('success') }}",
+            timer: 1800,
+            showConfirmButton: false
+        });
+    </script>
+@endif
+
 <script>
     document.addEventListener("DOMContentLoaded", function () {
         function updateDate() {
-            const now   = new Date();
-            const hari  = ["Minggu","Senin","Selasa","Rabu","Kamis","Jum'at","Sabtu"];
-            const bulan = ["Januari","Februari","Maret","April","Mei","Juni","Juli",
-                           "Agustus","September","Oktober","November","Desember"];
-            const el = document.getElementById("realtime-date");
-            if (el) el.textContent =
-                `${hari[now.getDay()]}, ${now.getDate()} ${bulan[now.getMonth()]} ${now.getFullYear()}`;
+            const now = new Date();
+
+            const hari = [
+                "Minggu",
+                "Senin",
+                "Selasa",
+                "Rabu",
+                "Kamis",
+                "Jum'at",
+                "Sabtu"
+            ];
+
+            const bulan = [
+                "Januari",
+                "Februari",
+                "Maret",
+                "April",
+                "Mei",
+                "Juni",
+                "Juli",
+                "Agustus",
+                "September",
+                "Oktober",
+                "November",
+                "Desember"
+            ];
+
+            const realtimeDate = document.getElementById("realtime-date");
+
+            if (realtimeDate) {
+                realtimeDate.textContent =
+                    `${hari[now.getDay()]}, ${now.getDate()} ${bulan[now.getMonth()]} ${now.getFullYear()}`;
+            }
         }
+
         updateDate();
         setInterval(updateDate, 60000);
     });
 
     function openDetailModal(ev) {
-        const modal    = document.getElementById('event-detail-modal');
+        const modal = document.getElementById('event-detail-modal');
         const isJadwal = ev.type === 'jadwal';
 
-        document.getElementById('modal-header').style.background   = ev.bg;
-        document.getElementById('modal-divider').style.background  = ev.border;
-        document.getElementById('modal-icon').style.background     = ev.border + '33';
+        document.getElementById('modal-header').style.background = ev.bg;
+        document.getElementById('modal-divider').style.background = ev.border;
+        document.getElementById('modal-icon').style.background = ev.border + '33';
 
         const iconI = document.getElementById('modal-icon-i');
-        iconI.className = isJadwal ? 'fa-solid fa-calendar-check text-base' : 'fa-solid fa-key text-base';
+
+        iconI.className = isJadwal
+            ? 'fa-solid fa-calendar-check text-base'
+            : 'fa-solid fa-key text-base';
+
         iconI.style.color = ev.title_color;
 
         const typeLabel = document.getElementById('modal-type-label');
-        typeLabel.textContent = isJadwal ? 'Jadwal Ruangan' : 'Peminjaman Ruangan';
+
+        typeLabel.textContent = isJadwal
+            ? 'Jadwal Ruangan'
+            : 'Peminjaman Ruangan';
+
         typeLabel.style.color = ev.meta_color;
 
-        document.getElementById('modal-ruangan').textContent = ev.ruangan;
-        document.getElementById('modal-tanggal').textContent = ev.tanggal;
-        document.getElementById('modal-waktu').textContent   = ev.mulai + ' – ' + ev.selesai + ' WIB';
-        document.getElementById('modal-title').textContent   = ev.title;
+        document.getElementById('modal-title-header').textContent = isJadwal
+            ? 'Jadwal Penggunaan Ruangan'
+            : 'Peminjaman Ruangan';
 
-        const subtitleRow   = document.getElementById('modal-subtitle-row');
-        const subtitleLabel = document.getElementById('modal-subtitle-label');
-        const subtitleEl    = document.getElementById('modal-subtitle');
+        document.getElementById('modal-kampus').textContent = ev.kampus || '-';
+        document.getElementById('modal-gedung').textContent = ev.gedung || '-';
+        document.getElementById('modal-lantai').textContent = ev.lantai || '-';
+        document.getElementById('modal-ruangan').textContent = ev.ruangan || '-';
+        document.getElementById('modal-tanggal').textContent = ev.tanggal || '-';
+        document.getElementById('modal-waktu').textContent = `${ev.mulai} – ${ev.selesai} WIB`;
+        document.getElementById('modal-title').textContent = ev.title || '-';
 
-        if (ev.subtitle && ev.subtitle !== '-' && ev.subtitle !== '') {
-            subtitleRow.classList.remove('hidden');
-            subtitleLabel.textContent = isJadwal ? 'Penanggung Jawab' : 'Kegiatan';
-            subtitleEl.textContent    = ev.subtitle;
+        document.getElementById('modal-penanggung-jawab').textContent =
+            ev.penanggung_jawab && ev.penanggung_jawab !== ''
+                ? ev.penanggung_jawab
+                : '-';
+
+        const catatanRow = document.getElementById('modal-catatan-row');
+        const catatanEl = document.getElementById('modal-catatan');
+
+        if (ev.catatan && ev.catatan !== '-') {
+            catatanRow.classList.remove('hidden');
+            catatanEl.textContent = ev.catatan;
         } else {
-            subtitleRow.classList.add('hidden');
+            catatanRow.classList.add('hidden');
         }
 
         modal.classList.remove('hidden');
@@ -401,16 +565,21 @@
 
     function closeDetailModal() {
         const modal = document.getElementById('event-detail-modal');
+
         modal.classList.add('hidden');
         modal.classList.remove('flex');
     }
 
     function closeDetailModalFromBackdrop(event) {
-        if (event.target.id === 'event-detail-modal') closeDetailModal();
+        if (event.target.id === 'event-detail-modal') {
+            closeDetailModal();
+        }
     }
 
-    document.addEventListener('keydown', function (e) {
-        if (e.key === 'Escape') closeDetailModal();
+    document.addEventListener('keydown', function (event) {
+        if (event.key === 'Escape') {
+            closeDetailModal();
+        }
     });
 </script>
 @endpush

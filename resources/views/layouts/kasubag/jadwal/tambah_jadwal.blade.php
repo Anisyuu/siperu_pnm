@@ -5,10 +5,10 @@
 
     {{-- HEADER --}}
     <div class="mb-7">
-        <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight">
+        <h1 class="text-2xl font-bold tracking-tight text-slate-900">
             Tambah Jadwal Penggunaan Ruangan
         </h1>
-        <p class="text-sm text-slate-500 mt-1">
+        <p class="mt-0.5 text-sm text-slate-500">
             Tambahkan jadwal penggunaan ruangan berdasarkan lokasi, waktu, dan detail kegiatan.
         </p>
     </div>
@@ -16,9 +16,9 @@
     <form action="{{ route('kasubag.simpan-jadwal') }}" method="POST" id="formJadwal">
         @csrf
 
-        <div class="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-5 items-start">
+        <div class="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-5 items-start">
 
-            {{-- KOLOM KIRI --}}
+            {{-- ===== KOLOM KIRI ===== --}}
             <div class="space-y-4">
 
                 {{-- SECTION 1: LOKASI --}}
@@ -61,12 +61,10 @@
                             <select id="lantai"
                                 class="w-full px-3 py-2.5 text-sm text-slate-700 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-300 focus:border-blue-400 transition">
                                 <option value="">-- Pilih Lantai --</option>
-                                @foreach($ruangan as $r)
-                                    <option
-                                        value="{{ $r->lantai }}"
+                                @foreach($ruangan->unique(fn($r) => ($r->gedung->slug ?? '-') . '_' . $r->lantai)->sortBy('lantai') as $r)
+                                    <option value="{{ $r->lantai }}"
                                         data-kampus="{{ $r->gedung->kampus->id ?? '' }}"
-                                        data-gedung="{{ $r->gedung->slug ?? '' }}"
-                                    >
+                                        data-gedung="{{ $r->gedung->slug ?? '' }}">
                                         Lantai {{ $r->lantai }}
                                     </option>
                                 @endforeach
@@ -77,20 +75,12 @@
                             <label class="block text-xs font-semibold text-slate-500 mb-1.5">Ruangan</label>
                             <select name="ruangan_id" id="ruangan_id" required
                                 class="w-full px-3 py-2.5 text-sm text-slate-700 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-300 focus:border-blue-400 transition">
-                                <option value="">-- Pilih Ruangan --</option>
-                                @foreach ($ruangan as $r)
-                                    <option
-                                        value="{{ $r->id }}"
-                                        data-kampus="{{ $r->gedung->kampus->id ?? '' }}"
-                                        data-gedung="{{ $r->gedung->slug ?? '' }}"
-                                        data-lantai="{{ $r->lantai }}"
-                                        data-label="{{ $r->nama_ruang }}"
-                                        data-gedung-nama="{{ $r->gedung->nama ?? '-' }}"
-                                    >
-                                        {{ $r->nama_ruang }}
-                                    </option>
-                                @endforeach
+                                <option value="">-- Pilih waktu dan lokasi dulu --</option>
                             </select>
+
+                            <p id="infoRuanganKosong" class="hidden text-xs text-red-500 mt-1">
+                                Tidak ada ruangan tersedia pada tanggal dan jam tersebut.
+                            </p>
                             @error('ruangan_id')
                                 <p class="text-xs text-red-500 mt-1">{{ $message }}</p>
                             @enderror
@@ -203,7 +193,7 @@
 
             </div>
 
-            {{-- KOLOM KANAN: RINGKASAN --}}
+            {{-- ===== KOLOM KANAN: RINGKASAN ===== --}}
             <div class="lg:sticky lg:top-6">
                 <div class="bg-white border border-slate-200 rounded-2xl overflow-hidden">
 
@@ -264,23 +254,42 @@
 </div>
 </div>
 
+@push('js')
 <script>
-document.addEventListener('DOMContentLoaded', function () {
+document.addEventListener('DOMContentLoaded', () => {
     const kampus  = document.getElementById('kampus_id');
     const gedung  = document.getElementById('gedung_slug');
     const lantai  = document.getElementById('lantai');
     const ruangan = document.getElementById('ruangan_id');
 
-    const allGedung  = [...gedung.options];
-    const allLantai  = [...lantai.options];
-    const allRuangan = [...ruangan.options];
+    const tanggalMulai   = document.querySelector('[name=tanggal_mulai]');
+    const tanggalSelesai = document.querySelector('[name=tanggal_selesai]');
+    const waktuMulai     = document.querySelector('[name=waktu_mulai]');
+    const waktuSelesai   = document.querySelector('[name=waktu_selesai]');
+
+    const infoRuanganKosong = document.getElementById('infoRuanganKosong');
+
+    const semuaGedung = Array.from(gedung.options);
+    const semuaLantai = Array.from(lantai.options);
+
+    function resetRuangan(text = '-- Pilih waktu dan lokasi dulu --') {
+        ruangan.innerHTML = `<option value="">${text}</option>`;
+
+        if (infoRuanganKosong) {
+            infoRuanganKosong.classList.add('hidden');
+        }
+
+        updateSummary();
+    }
 
     function filterGedung() {
+        const kampusId = kampus.value;
+
         gedung.innerHTML = '';
 
-        allGedung.forEach(opt => {
-            if (opt.value === '' || !kampus.value || opt.dataset.kampus == kampus.value) {
-                gedung.appendChild(opt.cloneNode(true));
+        semuaGedung.forEach(option => {
+            if (option.value === '' || option.dataset.kampus == kampusId) {
+                gedung.appendChild(option.cloneNode(true));
             }
         });
 
@@ -288,89 +297,172 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function filterLantai() {
+        const kampusId = kampus.value;
+        const gedungSlug = gedung.value;
+
         lantai.innerHTML = '';
+
         let used = new Set();
 
-        allLantai.forEach(opt => {
-            if (opt.value === '') {
-                lantai.appendChild(opt.cloneNode(true));
+        semuaLantai.forEach(option => {
+            if (option.value === '') {
+                lantai.appendChild(option.cloneNode(true));
                 return;
             }
 
-            let match = (!kampus.value || opt.dataset.kampus == kampus.value) &&
-                        (!gedung.value || opt.dataset.gedung == gedung.value);
+            const cocokKampus = option.dataset.kampus == kampusId;
+            const cocokGedung = option.dataset.gedung == gedungSlug;
 
-            if (match && !used.has(opt.value)) {
-                used.add(opt.value);
-                lantai.appendChild(opt.cloneNode(true));
+            if (cocokKampus && cocokGedung && !used.has(option.value)) {
+                used.add(option.value);
+                lantai.appendChild(option.cloneNode(true));
             }
         });
 
         lantai.value = '';
     }
 
-    function filterRuangan() {
-        ruangan.innerHTML = '';
+    function semuaInputLengkap() {
+        return kampus.value &&
+            gedung.value &&
+            lantai.value &&
+            tanggalMulai.value &&
+            tanggalSelesai.value &&
+            waktuMulai.value &&
+            waktuSelesai.value;
+    }
 
-        allRuangan.forEach(opt => {
-            if (opt.value === '') {
-                ruangan.appendChild(opt.cloneNode(true));
+    async function loadRuanganTersedia() {
+        resetRuangan('-- Memuat ruangan tersedia... --');
+
+        if (!semuaInputLengkap()) {
+            resetRuangan('-- Pilih waktu dan lokasi dulu --');
+            return;
+        }
+
+        if (tanggalSelesai.value < tanggalMulai.value) {
+            resetRuangan('-- Tanggal selesai tidak valid --');
+            return;
+        }
+
+        if (waktuSelesai.value <= waktuMulai.value) {
+            resetRuangan('-- Waktu selesai tidak valid --');
+            return;
+        }
+
+        const params = new URLSearchParams({
+            kampus_id: kampus.value,
+            gedung_slug: gedung.value,
+            lantai: lantai.value,
+            tanggal_mulai: tanggalMulai.value,
+            tanggal_selesai: tanggalSelesai.value,
+            waktu_mulai: waktuMulai.value,
+            waktu_selesai: waktuSelesai.value,
+        });
+
+        try {
+            const response = await fetch(`{{ route('kasubag.jadwal.ruangan-tersedia') }}?${params.toString()}`, {
+                headers: {
+                    'Accept': 'application/json'
+                }
+            });
+
+            if (!response.ok) {
+                resetRuangan('-- Gagal memuat ruangan --');
                 return;
             }
 
-            let match = (!kampus.value || opt.dataset.kampus == kampus.value) &&
-                        (!gedung.value || opt.dataset.gedung == gedung.value) &&
-                        (!lantai.value || opt.dataset.lantai == lantai.value);
+            const data = await response.json();
 
-            if (match) {
-                ruangan.appendChild(opt.cloneNode(true));
+            ruangan.innerHTML = `<option value="">-- Pilih Ruangan --</option>`;
+
+            if (data.length === 0) {
+                resetRuangan('-- Tidak ada ruangan tersedia --');
+
+                if (infoRuanganKosong) {
+                    infoRuanganKosong.classList.remove('hidden');
+                }
+
+                return;
             }
-        });
 
-        ruangan.value = '';
-        updateSummary();
+            if (infoRuanganKosong) {
+                infoRuanganKosong.classList.add('hidden');
+            }
+
+            data.forEach(r => {
+                const option = document.createElement('option');
+
+                option.value = r.id;
+                option.textContent = r.nama_ruang;
+
+                option.dataset.label = r.nama_ruang;
+                option.dataset.gedungNama = r.gedung;
+                option.dataset.lantai = r.lantai;
+                option.dataset.kampus = r.kampus_id;
+                option.dataset.gedung = r.gedung_slug;
+
+                ruangan.appendChild(option);
+            });
+
+            updateSummary();
+
+        } catch (error) {
+            resetRuangan('-- Terjadi kesalahan --');
+        }
     }
 
     kampus.addEventListener('change', () => {
         filterGedung();
         filterLantai();
-        filterRuangan();
+        resetRuangan('-- Pilih waktu dan lokasi dulu --');
     });
 
     gedung.addEventListener('change', () => {
         filterLantai();
-        filterRuangan();
+        resetRuangan('-- Pilih waktu dan lokasi dulu --');
     });
 
-    lantai.addEventListener('change', filterRuangan);
+    lantai.addEventListener('change', loadRuanganTersedia);
+
+    tanggalMulai.addEventListener('change', loadRuanganTersedia);
+    tanggalSelesai.addEventListener('change', loadRuanganTersedia);
+    waktuMulai.addEventListener('change', loadRuanganTersedia);
+    waktuSelesai.addEventListener('change', loadRuanganTersedia);
+
     ruangan.addEventListener('change', updateSummary);
 
-    document.querySelector('[name=tanggal_mulai]').addEventListener('change', updateSummary);
-    document.querySelector('[name=tanggal_selesai]').addEventListener('change', updateSummary);
-    document.querySelector('[name=waktu_mulai]').addEventListener('change', updateSummary);
-    document.querySelector('[name=waktu_selesai]').addEventListener('change', updateSummary);
-
-    filterGedung();
-    filterLantai();
-    filterRuangan();
+    resetRuangan();
 
     const formJadwal = document.getElementById('formJadwal');
 
     if (formJadwal) {
         formJadwal.addEventListener('submit', function (e) {
+            if (formJadwal.dataset.confirmed === 'true') {
+                return;
+            }
+
             e.preventDefault();
 
+            if (typeof Swal === 'undefined') {
+                formJadwal.dataset.confirmed = 'true';
+                formJadwal.submit();
+                return;
+            }
+
             Swal.fire({
-                title: 'Simpan Jadwal?',
-                text: 'Pastikan jadwal penggunaan ruangan sudah benar.',
+                title: 'Simpan jadwal?',
+                text: 'Pastikan data jadwal penggunaan ruangan sudah benar.',
                 icon: 'question',
                 showCancelButton: true,
+                confirmButtonText: 'Ya, simpan',
+                cancelButtonText: 'Batal',
+                reverseButtons: true,
                 confirmButtonColor: '#2563eb',
-                cancelButtonColor: '#64748b',
-                confirmButtonText: 'Ya, Simpan',
-                cancelButtonText: 'Batal'
+                cancelButtonColor: '#64748b'
             }).then((result) => {
                 if (result.isConfirmed) {
+                    formJadwal.dataset.confirmed = 'true';
                     formJadwal.submit();
                 }
             });
@@ -388,7 +480,10 @@ function updateSummary() {
     const wSelesai = document.querySelector('[name=waktu_selesai]').value;
 
     get('sumRuangan').textContent = selOpt?.value ? selOpt.dataset.label : '—';
-    get('sumGedung').textContent  = selOpt?.value ? selOpt.dataset.gedungNama : '—';
+
+    get('sumGedung').textContent = selOpt?.value
+        ? `${selOpt.dataset.gedungNama} Lt.${selOpt.dataset.lantai}`
+        : '—';
 
     if (tMulai) {
         const fmt = d => new Date(d + 'T00:00:00').toLocaleDateString('id-ID', {
@@ -425,6 +520,7 @@ function updateSummary() {
     }
 }
 </script>
+@endpush
 
 @if ($errors->any())
     <script>

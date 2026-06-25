@@ -9,16 +9,58 @@ use App\Models\Kampus;
 use App\Models\Gedung;
 use App\Models\Ruangan;
 use App\Models\Jadwal;
+use App\Models\AlurVerifikasi;
+use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use RealRashid\SweetAlert\Facades\Alert;
 use App\Traits\ExportRiwayatCsv;
+use App\Notifications\PengajuanPeminjamanNotification;
 
 class PeminjamanController extends Controller
 {
     use ExportRiwayatCsv;
+
+    private function ambilAlurVerifikasi(Peminjaman $peminjaman)
+    {
+        $peminjaman->loadMissing([
+            'pemohon.roles',
+            'ruangan.jenisRuangan',
+        ]);
+
+        $jenisPemohon = $peminjaman->pemohon
+            ->roles
+            ->pluck('nama')
+            ->map(fn ($role) => strtolower(trim($role)))
+            ->first();
+
+        $jenisRuangSlug = strtolower(trim($peminjaman->ruangan->jenisRuangan->slug ?? ''));
+        $jenisRuangNama = strtolower(trim($peminjaman->ruangan->jenisRuangan->nama ?? ''));
+
+        $isLab = str_contains($jenisRuangSlug, 'lab') || str_contains($jenisRuangNama, 'lab');
+
+        return AlurVerifikasi::whereRaw('LOWER(TRIM(jenis_pemohon)) = ?', [$jenisPemohon])
+            ->when(!$isLab, fn ($q) => $q->whereRaw('LOWER(TRIM(role_verifikator)) != ?', ['kalab']))
+            ->orderBy('urutan')
+            ->get()
+            ->values();
+    }
+
+    private function kirimNotifikasiKeRole(string $role, Peminjaman $peminjaman): void
+    {
+        $role = strtolower(trim($role));
+
+        $users = User::whereHas('roles', function ($q) use ($role) {
+            $q->whereRaw('LOWER(TRIM(nama)) = ?', [$role]);
+        })->get();
+
+        foreach ($users as $user) {
+            $user->notify(new PengajuanPeminjamanNotification($peminjaman));
+        }
+    }
 
     public function listPeminjaman(Request $request)
     {
@@ -66,7 +108,6 @@ class PeminjamanController extends Controller
             'waktu_selesai.after'            => 'Waktu selesai harus setelah waktu mulai.',
         ]);
 
-        // Cek bentrok dengan peminjaman lain yang masih pending atau sudah disetujui
         $ruanganBentrokPeminjaman = Peminjaman::where('ruangan_id', $request->ruangan_id)
             ->whereIn('status', ['pending', 'disetujui'])
             ->where(function ($q) use ($request) {
@@ -79,7 +120,6 @@ class PeminjamanController extends Controller
             })
             ->exists();
 
-        // Cek bentrok dengan jadwal tetap
         $ruanganBentrokJadwal = Jadwal::where('ruangan_id', $request->ruangan_id)
             ->where(function ($q) use ($request) {
                 $q->whereDate('tanggal_mulai', '<=', $request->tanggal_selesai)
@@ -106,37 +146,70 @@ class PeminjamanController extends Controller
                 ->store('dokumen_peminjaman', 'public');
         }
 
-        DB::transaction(function () use ($request, $dokumen) {
-            do {
-                $no = strtoupper(Str::random(6));
-            } while (Peminjaman::where('no_peminjaman', $no)->exists());
+        try {
+            $peminjaman = DB::transaction(function () use ($request, $dokumen) {
+                do {
+                    $no = strtoupper(Str::random(6));
+                } while (Peminjaman::where('no_peminjaman', $no)->exists());
 
-            Peminjaman::create([
-                'no_peminjaman'   => $no,
-                'pemohon_id'      => Auth::user()->nomor_induk,
-                'ruangan_id'      => $request->ruangan_id,
-                'tanggal_mulai'   => $request->tanggal_mulai,
-                'tanggal_selesai' => $request->tanggal_selesai,
-                'waktu_mulai'     => $request->waktu_mulai,
-                'waktu_selesai'   => $request->waktu_selesai,
-                'kegiatan'        => $request->kegiatan,
-                'dokumen_bukti'   => $dokumen,
-                'status'          => 'pending',
+                return Peminjaman::create([
+                    'no_peminjaman'   => $no,
+                    'pemohon_id'      => Auth::user()->nomor_induk,
+                    'ruangan_id'      => $request->ruangan_id,
+                    'tanggal_mulai'   => $request->tanggal_mulai,
+                    'tanggal_selesai' => $request->tanggal_selesai,
+                    'waktu_mulai'     => $request->waktu_mulai,
+                    'waktu_selesai'   => $request->waktu_selesai,
+                    'kegiatan'        => $request->kegiatan,
+                    'dokumen_bukti'   => $dokumen,
+                    'status'          => 'pending',
+                ]);
+            });
+
+            $peminjaman->load([
+                'pemohon.roles',
+                'ruangan.jenisRuangan',
             ]);
-        });
 
-        return redirect()->route('mahasiswa.list-peminjaman')
-            ->with('success', 'Pengajuan berhasil dikirim.');
+            $alur = $this->ambilAlurVerifikasi($peminjaman);
+
+            if ($alur->isEmpty()) {
+                return back()
+                    ->withInput()
+                    ->with('error', 'Alur verifikasi untuk pemohon ini belum diatur.');
+            }
+
+            $alurPertama = $alur->first();
+
+            $this->kirimNotifikasiKeRole(
+                $alurPertama->role_verifikator,
+                $peminjaman
+            );
+
+            return redirect()->route('mahasiswa.list-peminjaman')
+                ->with('success', 'Pengajuan berhasil dikirim.');
+
+        } catch (\Exception $e) {
+            Log::error('[store peminjaman mahasiswa] error', [
+                'message' => $e->getMessage(),
+                'file'    => $e->getFile(),
+                'line'    => $e->getLine(),
+            ]);
+
+            return back()
+                ->withInput()
+                ->with('error', 'Terjadi kesalahan saat mengajukan peminjaman: ' . $e->getMessage());
+        }
     }
 
     public function detailPeminjaman($id)
     {
         $peminjaman = Peminjaman::with([
-            'ruangan.gedung',
-            'ruangan.jenisRuangan',
-            'verifikasi',
-            'pemohon.roles',
-        ])
+                'ruangan.gedung',
+                'ruangan.jenisRuangan',
+                'verifikasi.verifikator',
+                'pemohon.roles',
+            ])
             ->where('pemohon_id', Auth::user()->nomor_induk)
             ->findOrFail($id);
 
@@ -149,14 +222,18 @@ class PeminjamanController extends Controller
         $isLab = str_contains($jenisRuangSlug, 'lab') || str_contains($jenisRuangNama, 'lab');
 
         $alur = \App\Models\AlurVerifikasi::whereRaw('LOWER(TRIM(jenis_pemohon)) = ?', [$jenisPemohon])
-            ->when(!$isLab, fn ($q) => $q->whereRaw('LOWER(TRIM(role_verifikator)) != ?', ['kalab']))
+            ->when(!$isLab, fn($q) => $q->whereRaw('LOWER(TRIM(role_verifikator)) != ?', ['kalab']))
             ->orderBy('urutan')
             ->get()
             ->values();
 
         $riwayat = $peminjaman->verifikasi ?? collect();
 
-        return view('layouts.mahasiswa.peminjaman.detail_peminjaman', compact('peminjaman', 'alur', 'riwayat'));
+        return view('layouts.mahasiswa.peminjaman.detail_peminjaman', compact(
+            'peminjaman',
+            'alur',
+            'riwayat'
+        ));
     }
 
     public function batalkanPeminjaman($id)

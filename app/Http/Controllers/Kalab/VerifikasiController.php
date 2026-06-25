@@ -5,16 +5,19 @@ namespace App\Http\Controllers\Kalab;
 use App\Http\Controllers\Controller;
 use App\Models\Peminjaman;
 use App\Models\Verifikasi;
+use App\Models\User;
 use App\Models\AlurVerifikasi;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use RealRashid\SweetAlert\Facades\Alert;
+use App\Notifications\PengajuanPeminjamanNotification;
+use App\Notifications\VerifikasiPeminjamanNotification;
 
 class VerifikasiController extends Controller
 {
-        private function cekGiliran(Peminjaman $peminjaman): array
+    private function cekGiliran(Peminjaman $peminjaman): array
     {
         $user = Auth::user();
 
@@ -24,7 +27,7 @@ class VerifikasiController extends Controller
 
         $peminjaman->loadMissing([
             'pemohon.roles',
-            'ruangan.jenisRuangan', // ← fix: jenisRuangan (bukan jenisRuang)
+            'ruangan.jenisRuangan',
         ]);
 
         if (!$peminjaman->pemohon) {
@@ -35,23 +38,22 @@ class VerifikasiController extends Controller
             return ['boleh' => false, 'pesan' => 'Data ruangan tidak ditemukan.'];
         }
 
-        if (!$peminjaman->ruangan->jenisRuangan) { // ← fix
+        if (!$peminjaman->ruangan->jenisRuangan) {
             return ['boleh' => false, 'pesan' => 'Data jenis ruang tidak ditemukan.'];
         }
 
         $jenisPemohon = optional($peminjaman->pemohon)
             ->roles
             ->pluck('nama')
-            ->map(fn($r) => strtolower(trim($r)))
+            ->map(fn ($r) => strtolower(trim($r)))
             ->first();
 
         if (!$jenisPemohon) {
             return ['boleh' => false, 'pesan' => 'Jenis pemohon tidak dapat ditentukan.'];
         }
 
-        // Cek apakah ruangan adalah lab
-        $jenisRuangSlug = strtolower(trim($peminjaman->ruangan->jenisRuangan->slug ?? '')); // ← fix
-        $jenisRuangNama = strtolower(trim($peminjaman->ruangan->jenisRuangan->nama ?? '')); // ← fix
+        $jenisRuangSlug = strtolower(trim($peminjaman->ruangan->jenisRuangan->slug ?? ''));
+        $jenisRuangNama = strtolower(trim($peminjaman->ruangan->jenisRuangan->nama ?? ''));
         $isLab = str_contains($jenisRuangSlug, 'lab') || str_contains($jenisRuangNama, 'lab');
 
         Log::debug('[cekGiliran]', [
@@ -62,9 +64,8 @@ class VerifikasiController extends Controller
             'role_user'        => $roleUser,
         ]);
 
-        // Ambil alur: jika bukan lab → skip step dengan role_verifikator = kalab
         $alur = AlurVerifikasi::whereRaw('LOWER(TRIM(jenis_pemohon)) = ?', [$jenisPemohon])
-            ->when(!$isLab, fn($q) => $q->whereRaw('LOWER(TRIM(role_verifikator)) != ?', ['kalab']))
+            ->when(!$isLab, fn ($q) => $q->whereRaw('LOWER(TRIM(role_verifikator)) != ?', ['kalab']))
             ->orderBy('urutan')
             ->get()
             ->values();
@@ -84,7 +85,6 @@ class VerifikasiController extends Controller
             return ['boleh' => false, 'pesan' => 'Peminjaman sudah ditolak sebelumnya.'];
         }
 
-        // Cari step giliran berdasarkan urutan yang di-reindex (bukan urutan di DB)
         $giliranAlur = null;
         $urutanAktif = null;
 
@@ -131,17 +131,64 @@ class VerifikasiController extends Controller
         ];
     }
 
-    // ──────────────────────────────────────────────────────────────
-    // APPROVE
-    // ──────────────────────────────────────────────────────────────
+    private function ambilAlurVerifikasi(Peminjaman $peminjaman)
+    {
+        $peminjaman->loadMissing([
+            'pemohon.roles',
+            'ruangan.jenisRuangan',
+        ]);
+
+        $jenisPemohon = optional($peminjaman->pemohon)
+            ->roles
+            ->pluck('nama')
+            ->map(fn ($role) => strtolower(trim($role)))
+            ->first();
+
+        if (!$jenisPemohon) {
+            return collect();
+        }
+
+        $jenisRuangSlug = strtolower(trim($peminjaman->ruangan->jenisRuangan->slug ?? ''));
+        $jenisRuangNama = strtolower(trim($peminjaman->ruangan->jenisRuangan->nama ?? ''));
+
+        $isLab = str_contains($jenisRuangSlug, 'lab') || str_contains($jenisRuangNama, 'lab');
+
+        return AlurVerifikasi::whereRaw('LOWER(TRIM(jenis_pemohon)) = ?', [$jenisPemohon])
+            ->when(!$isLab, function ($q) {
+                $q->whereRaw('LOWER(TRIM(role_verifikator)) != ?', ['kalab']);
+            })
+            ->orderBy('urutan')
+            ->get()
+            ->values();
+    }
+
+    private function kirimNotifikasiKeRole(string $role, Peminjaman $peminjaman): void
+    {
+        $role = strtolower(trim($role));
+
+        $users = User::whereHas('roles', function ($q) use ($role) {
+            $q->whereRaw('LOWER(TRIM(nama)) = ?', [$role]);
+        })->get();
+
+        Log::info('[notifikasi] kirim ke role', [
+            'role'          => $role,
+            'jumlah_user'   => $users->count(),
+            'peminjaman_id' => $peminjaman->id,
+        ]);
+
+        foreach ($users as $user) {
+            $user->notify(new PengajuanPeminjamanNotification($peminjaman));
+        }
+    }
+
     public function approve(Request $request, Peminjaman $peminjaman)
     {
         Log::info('=== APPROVE START ===', [
             'peminjaman_id' => $peminjaman->id,
             'status'        => $peminjaman->status,
             'user'          => Auth::user()->nomor_induk,
-            'user_role'     => Auth::user()->role,
-            'pemohon_attrs' => $peminjaman->pemohon?->getAttributes(), // debug kolom
+            'user_role'     => Auth::user()->roles->pluck('nama')->first() ?? Auth::user()->role,
+            'pemohon_attrs' => $peminjaman->pemohon?->getAttributes(),
         ]);
 
         if ($peminjaman->status !== 'pending') {
@@ -149,17 +196,24 @@ class VerifikasiController extends Controller
         }
 
         $cek = $this->cekGiliran($peminjaman);
+
         Log::info('[approve] cekGiliran result', $cek);
 
         if (!$cek['boleh']) {
             return back()->with('error', $cek['pesan']);
         }
 
+        $isFinal     = false;
+        $urutan      = $cek['urutan'];
+        $totalUrutan = $cek['total_urutan'];
+
         try {
-            DB::transaction(function () use ($peminjaman, $cek) {
-                $user    = Auth::user();
-                $urutan  = $cek['urutan'];
-                $isFinal = ($urutan === $cek['total_urutan']);
+            DB::transaction(function () use ($peminjaman, $cek, &$isFinal, &$urutan, &$totalUrutan) {
+                $user = Auth::user();
+
+                $urutan      = $cek['urutan'];
+                $totalUrutan = $cek['total_urutan'];
+                $isFinal     = ($urutan === $totalUrutan);
 
                 Verifikasi::updateOrCreate(
                     [
@@ -168,7 +222,9 @@ class VerifikasiController extends Controller
                     ],
                     [
                         'id_verifikator'    => $user->nomor_induk,
-                        'role_verifikator'  => $user->roles->pluck('nama')->first() ?? $user->role,
+                        'role_verifikator'  => strtolower(trim(
+                            $user->roles->pluck('nama')->first() ?? $user->role
+                        )),
                         'status_verifikasi' => 'disetujui',
                         'waktu_verifikasi'  => now(),
                         'catatan'           => null,
@@ -176,34 +232,97 @@ class VerifikasiController extends Controller
                 );
 
                 if ($isFinal) {
-                    $peminjaman->update(['status' => 'disetujui']);
+                    $peminjaman->update([
+                        'status' => 'disetujui',
+                    ]);
                 }
 
-                Log::info('[approve] berhasil', [
+                Log::info('[approve] update verifikasi berhasil', [
                     'peminjaman_id' => $peminjaman->id,
                     'urutan'        => $urutan,
+                    'total_urutan'  => $totalUrutan,
                     'is_final'      => $isFinal,
                 ]);
             });
+
+            $peminjaman->refresh()->load([
+                'pemohon.roles',
+                'ruangan.jenisRuangan',
+            ]);
+
+            if (!$peminjaman->pemohon) {
+                Log::warning('[notifikasi] pemohon tidak ditemukan', [
+                    'peminjaman_id' => $peminjaman->id,
+                ]);
+
+                Alert::success('Berhasil', 'Verifikasi berhasil, tetapi data pemohon tidak ditemukan.');
+                return back();
+            }
+
+            if ($isFinal) {
+                $peminjaman->pemohon->notify(
+                    new VerifikasiPeminjamanNotification(
+                        $peminjaman,
+                        'disetujui'
+                    )
+                );
+
+                Log::info('[notifikasi] pemohon disetujui', [
+                    'peminjaman_id' => $peminjaman->id,
+                    'pemohon_id'    => $peminjaman->pemohon->nomor_induk ?? null,
+                ]);
+            } else {
+                $alur = $this->ambilAlurVerifikasi($peminjaman);
+
+                $nextStep = $alur->get($urutan);
+
+                if ($nextStep) {
+                    $nextRole = strtolower(trim($nextStep->role_verifikator));
+
+                    $this->kirimNotifikasiKeRole($nextRole, $peminjaman);
+
+                    $peminjaman->pemohon->notify(
+                        new VerifikasiPeminjamanNotification(
+                            $peminjaman,
+                            'diproses ke tahap berikutnya'
+                        )
+                    );
+
+                    Log::info('[notifikasi] pemohon lanjut tahap', [
+                        'peminjaman_id' => $peminjaman->id,
+                        'pemohon_id'    => $peminjaman->pemohon->nomor_induk ?? null,
+                        'next_urutan'   => $urutan + 1,
+                        'next_role'     => $nextRole,
+                    ]);
+                } else {
+                    Log::warning('[approve] nextStep alur tidak ditemukan padahal belum final', [
+                        'peminjaman_id' => $peminjaman->id,
+                        'urutan'        => $urutan,
+                        'total_urutan'  => $totalUrutan,
+                    ]);
+                }
+            }
+
         } catch (\Exception $e) {
             Log::error('[approve] exception', [
                 'message'       => $e->getMessage(),
+                'file'          => $e->getFile(),
+                'line'          => $e->getLine(),
                 'peminjaman_id' => $peminjaman->id,
             ]);
+
             return back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
         }
 
-        $pesan = ($cek['urutan'] === $cek['total_urutan'])
+        $pesan = ($urutan === $totalUrutan)
             ? 'Pengajuan disetujui. Semua langkah verifikasi selesai.'
-            : "Langkah {$cek['urutan']} dari {$cek['total_urutan']} disetujui. Menunggu verifikasi berikutnya.";
+            : "Langkah {$urutan} dari {$totalUrutan} disetujui. Menunggu verifikasi berikutnya.";
 
         Alert::success('Berhasil', $pesan);
+
         return back();
     }
 
-    // ──────────────────────────────────────────────────────────────
-    // REJECT
-    // ──────────────────────────────────────────────────────────────
     public function reject(Request $request, Peminjaman $peminjaman)
     {
         $request->validate([
@@ -215,6 +334,7 @@ class VerifikasiController extends Controller
         }
 
         $cek = $this->cekGiliran($peminjaman);
+
         if (!$cek['boleh']) {
             return back()->with('error', $cek['pesan']);
         }
@@ -231,14 +351,15 @@ class VerifikasiController extends Controller
                     ],
                     [
                         'id_verifikator'    => $user->nomor_induk,
-                        'role_verifikator'  => $user->roles->pluck('nama')->first() ?? $user->role,
+                        'role_verifikator'  => strtolower(trim(
+                            $user->roles->pluck('nama')->first() ?? $user->role
+                        )),
                         'status_verifikasi' => 'ditolak',
                         'waktu_verifikasi'  => now(),
                         'catatan'           => $request->catatan,
                     ]
                 );
 
-                // Batalkan semua langkah pending lain
                 Verifikasi::where('id_peminjaman', $peminjaman->id)
                     ->where('urutan', '!=', $urutan)
                     ->where('status_verifikasi', 'pending')
@@ -258,15 +379,36 @@ class VerifikasiController extends Controller
                     'urutan'        => $urutan,
                 ]);
             });
+
+            $peminjaman->refresh()->load(['pemohon']);
+
+            if ($peminjaman->pemohon) {
+                $peminjaman->pemohon->notify(
+                    new VerifikasiPeminjamanNotification(
+                        $peminjaman,
+                        'ditolak'
+                    )
+                );
+
+                Log::info('[notifikasi] pemohon ditolak', [
+                    'peminjaman_id' => $peminjaman->id,
+                    'pemohon_id'    => $peminjaman->pemohon->nomor_induk ?? null,
+                ]);
+            }
+
         } catch (\Exception $e) {
             Log::error('[reject] exception', [
                 'message'       => $e->getMessage(),
+                'file'          => $e->getFile(),
+                'line'          => $e->getLine(),
                 'peminjaman_id' => $peminjaman->id,
             ]);
+
             return back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
         }
 
         Alert::success('Berhasil', "Pengajuan ditolak pada langkah {$cek['urutan']}.");
+
         return back();
     }
 }

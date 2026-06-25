@@ -14,7 +14,7 @@
             <a href="{{ route('sarpras.riwayat-verifikasi.export', request()->query()) }}"
             class="inline-flex items-center gap-2 px-5 py-2.5 bg-white border border-slate-200 rounded-2xl text-sm font-semibold text-slate-700 hover:bg-slate-50 transition shadow-sm">
                 <i class="fa-solid fa-file-csv text-blue-500"></i>
-                Ekspor CSV
+                Unduh CSV
             </a>
         </div>
     </div>
@@ -221,13 +221,15 @@
                             data-catatan="{{ $langkahSaya?->catatan ?? '' }}"
 
                             data-semua-langkah="{{ $p->verifikasi->map(fn($v) => [
-                                'urutan'            => $v->urutan,
-                                'role_verifikator'  => $v->role_verifikator,
-                                'status_verifikasi' => $v->status_verifikasi,
-                                'waktu_verifikasi'  => $v->waktu_verifikasi
+                                'urutan'                  => $v->urutan,
+                                'role_verifikator'        => $v->role_verifikator,
+                                'nama_verifikator'        => $v->verifikator->nama_lengkap ?? null,
+                                'nomor_induk_verifikator' => $v->verifikator->nomor_induk ?? null,
+                                'status_verifikasi'       => $v->status_verifikasi,
+                                'waktu_verifikasi'        => $v->waktu_verifikasi
                                     ? \Carbon\Carbon::parse($v->waktu_verifikasi)->locale('id')->translatedFormat('d M Y, H:i')
                                     : null,
-                                'catatan'           => $v->catatan,
+                                'catatan'                 => $v->catatan,
                             ])->toJson() }}"
 
                             class="inline-flex items-center justify-center w-9 h-9 bg-blue-50 text-blue-500 hover:bg-blue-100 rounded-xl transition-colors opacity-60 group-hover:opacity-100">
@@ -238,7 +240,7 @@
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="7" class="px-6 py-16 text-center">
+                    <td colspan="8" class="px-6 py-16 text-center">
                         <div class="flex flex-col items-center gap-3">
                             <div class="w-14 h-14 bg-slate-100 rounded-2xl flex items-center justify-center">
                                 <i class="fa-regular fa-folder-open text-2xl text-slate-300"></i>
@@ -269,7 +271,7 @@
 
 
 {{-- ================================================================ --}}
-{{-- MODAL DETAIL RIWAYAT VERIFIKASI                                  --}}
+{{-- MODAL DETAIL RIWAYAT                                             --}}
 {{-- ================================================================ --}}
 <div id="detailModal"
     class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/50 backdrop-blur-sm px-4"
@@ -282,7 +284,7 @@
         <div class="flex items-start justify-between px-6 py-5 border-b border-slate-100">
             <div>
                 <h3 class="text-lg font-extrabold text-slate-900">Detail Riwayat Verifikasi</h3>
-                <p class="text-xs text-slate-400 mt-0.5">Informasi lengkap riwayat verifikasi peminjaman ruangan</p>
+                <p class="text-xs text-slate-400 mt-0.5">Informasi lengkap riwayat verifikasi peminjaman</p>
             </div>
 
             <div class="flex items-center gap-2">
@@ -371,7 +373,7 @@
                     </div>
                 </div>
 
-                {{-- JADWAL --}}
+                {{-- JADWAL PEMINJAMAN --}}
                 <div>
                     <p class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-1.5">
                         <i class="fa-solid fa-calendar text-blue-400"></i> Jadwal Peminjaman
@@ -395,7 +397,7 @@
                     </div>
                 </div>
 
-                {{-- VERIFIKASI SAYA --}}
+                {{-- DETAIL VERIFIKASI SAYA --}}
                 <div>
                     <p class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-1.5">
                         <i class="fa-solid fa-user-check text-blue-400"></i> Verifikasi Saya
@@ -424,7 +426,7 @@
                     </div>
                 </div>
 
-                {{-- CATATAN VERIFIKASI SAYA --}}
+                {{-- CATATAN SAYA --}}
                 <div id="catatanWrap" class="hidden">
                     <p class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-1.5">
                         <i class="fa-solid fa-note-sticky text-amber-400"></i> Catatan Verifikasi Saya
@@ -478,25 +480,14 @@
 
     function setBadge(element, status) {
         const statusMap = {
-            pending: {
-                cls: 'bg-amber-50 text-amber-700 border border-amber-100',
-                label: 'Menunggu'
-            },
-            disetujui: {
-                cls: 'bg-green-50 text-green-700 border border-green-100',
-                label: 'Disetujui'
-            },
-            ditolak: {
-                cls: 'bg-red-50 text-red-600 border border-red-100',
-                label: 'Ditolak'
-            },
-            '-': {
-                cls: 'bg-slate-50 text-slate-500 border border-slate-100',
-                label: '-'
-            }
+            pending:   { cls: 'bg-amber-50 text-amber-700 border border-amber-100', label: 'Menunggu' },
+            disetujui: { cls: 'bg-green-50 text-green-700 border border-green-100', label: 'Disetujui' },
+            ditolak:   { cls: 'bg-red-50 text-red-600 border border-red-100',       label: 'Ditolak' },
+            '-':        { cls: 'bg-slate-50 text-slate-500 border border-slate-100', label: '-' },
         };
 
         const s = statusMap[status] || statusMap['-'];
+
         element.className = `inline-flex px-2.5 py-1 text-xs font-bold rounded-full ${s.cls}`;
         element.textContent = s.label;
     }
@@ -525,21 +516,23 @@
         document.getElementById('modal_waktu').textContent = d.waktu || '—';
         document.getElementById('modal_kegiatan').textContent = d.kegiatan || '—';
 
-        // Status akhir
-        setBadge(document.getElementById('modal_status_badge'), d.status);
+        // Status Akhir
+        const badgeAkhir = document.getElementById('modal_status_badge');
+        setBadge(badgeAkhir, d.status);
 
         // Verifikasi Saya
         document.getElementById('modal_langkah_saya').textContent =
-            d.urutan && d.totalUrutan && d.urutan !== '-'
+            d.urutan && d.totalUrutan
                 ? `Urutan ${d.urutan}/${d.totalUrutan}`
                 : '—';
 
         document.getElementById('modal_role_verifikator').textContent = d.roleVerifikator || '—';
         document.getElementById('modal_waktu_verifikasi').textContent = d.waktuVerifikasi || '—';
 
-        setBadge(document.getElementById('modal_status_langkah_badge'), d.statusLangkah);
+        const badgeLangkah = document.getElementById('modal_status_langkah_badge');
+        setBadge(badgeLangkah, d.statusLangkah);
 
-        // Catatan Verifikasi Saya
+        // Catatan Saya
         const catatanWrap = document.getElementById('catatanWrap');
         const catatanEl = document.getElementById('modal_catatan');
 
@@ -561,11 +554,12 @@
             dokWrap.classList.add('hidden');
         }
 
-        // Alur Verifikasi
+        // Alur Verifikasi Lengkap
         const alurEl = document.getElementById('modal_alur');
         alurEl.innerHTML = '';
 
         let langkah = [];
+
         try {
             langkah = JSON.parse(d.semuaLangkah || '[]');
         } catch(e) {
@@ -616,7 +610,14 @@
 
                     <div class="flex-1">
                         <div class="flex items-center justify-between gap-2">
-                            <p class="text-sm font-semibold text-slate-700 capitalize">${v.role_verifikator || '—'}</p>
+                            <div>
+                                <p class="text-sm font-semibold text-slate-700">
+                                    ${v.nama_verifikator || v.role_verifikator || '—'}
+                                </p>
+                                <p class="text-xs text-slate-400 capitalize">
+                                    ${v.nama_verifikator ? v.role_verifikator : 'Belum diverifikasi'}
+                                </p>
+                            </div>
                             <span class="px-2 py-0.5 text-[11px] font-bold rounded-full ${warna.badge}">
                                 ${warna.label}
                             </span>
@@ -633,6 +634,7 @@
             alurEl.innerHTML = '<p class="text-xs text-slate-400">Belum ada data verifikasi.</p>';
         }
 
+        // Buka Modal
         modal.classList.remove('hidden');
         modal.classList.add('flex');
 

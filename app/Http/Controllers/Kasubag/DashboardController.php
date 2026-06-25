@@ -15,16 +15,21 @@ class DashboardController extends Controller
     public function dashboard(Request $request)
     {
         $user = Auth::user();
+        $userId = $user->nomor_induk;
 
         $userRoles = $user->roles
             ->pluck('nama')
             ->map(fn ($role) => strtolower(trim($role)))
+            ->filter()
+            ->values()
             ->toArray();
 
         $jenisPemohonDiizinkan = DB::table('alur_verifikasi')
-            ->whereIn(DB::raw('LOWER(role_verifikator)'), $userRoles)
+            ->whereIn(DB::raw('LOWER(TRIM(role_verifikator))'), $userRoles)
             ->pluck('jenis_pemohon')
+            ->map(fn ($jenis) => strtolower(trim($jenis)))
             ->unique()
+            ->values()
             ->toArray();
 
         $anchor = $request->filled('tanggal')
@@ -36,35 +41,36 @@ class DashboardController extends Controller
 
         /*
         |--------------------------------------------------------------------------
-        | STAT CARD KASUBAG
+        | STAT CARD KASUBAG SEBAGAI VERIFIKATOR
         |--------------------------------------------------------------------------
         */
 
-        $baseKasubagQuery = Peminjaman::query()
-            ->whereHas('pemohon.roles', function ($q) use ($jenisPemohonDiizinkan) {
-                $q->whereIn('nama', $jenisPemohonDiizinkan);
-            });
-
-        $menunggu = (clone $baseKasubagQuery)
+        $pendingPeminjaman = Peminjaman::with([
+                'pemohon.roles',
+                'ruangan.jenisRuangan',
+                'verifikasi',
+            ])
             ->where('status', 'pending')
-            ->whereDoesntHave('verifikasi', function ($q) use ($user) {
-                $q->where('id_verifikator', $user->nomor_induk);
+            ->whereHas('pemohon.roles', function ($q) use ($jenisPemohonDiizinkan) {
+                $q->whereIn(DB::raw('LOWER(TRIM(nama))'), $jenisPemohonDiizinkan);
             })
+            ->get();
+
+        $menunggu = $pendingPeminjaman
+            ->filter(fn ($peminjaman) => $this->perluDiverifikasiOlehUser($peminjaman, $userRoles, $userId))
             ->count();
 
         $disetujui = Peminjaman::query()
-            ->where('status', 'disetujui')
-            ->whereHas('verifikasi', function ($q) use ($user) {
-                $q->where('id_verifikator', $user->nomor_induk)
-                  ->where('status_verifikasi', 'disetujui');
+            ->whereHas('verifikasi', function ($q) use ($userId) {
+                $q->where('id_verifikator', $userId)
+                    ->where('status_verifikasi', 'disetujui');
             })
             ->count();
 
         $ditolak = Peminjaman::query()
-            ->where('status', 'ditolak')
-            ->whereHas('verifikasi', function ($q) use ($user) {
-                $q->where('id_verifikator', $user->nomor_induk)
-                  ->where('status_verifikasi', 'ditolak');
+            ->whereHas('verifikasi', function ($q) use ($userId) {
+                $q->where('id_verifikator', $userId)
+                    ->where('status_verifikasi', 'ditolak');
             })
             ->count();
 
@@ -76,14 +82,19 @@ class DashboardController extends Controller
         |--------------------------------------------------------------------------
         */
 
-        $jadwal = Jadwal::with('ruangan')
+        $jadwal = Jadwal::with([
+                'ruangan.gedung.kampus',
+            ])
             ->whereDate('tanggal_mulai', '<=', $weekEnd->toDateString())
             ->whereDate('tanggal_selesai', '>=', $weekStart->toDateString())
             ->orderBy('tanggal_mulai')
             ->orderBy('waktu_mulai')
             ->get();
 
-        $peminjaman = Peminjaman::with('ruangan')
+        $peminjaman = Peminjaman::with([
+                'ruangan.gedung.kampus',
+                'pemohon',
+            ])
             ->where('status', 'disetujui')
             ->whereDate('tanggal_mulai', '<=', $weekEnd->toDateString())
             ->whereDate('tanggal_selesai', '>=', $weekStart->toDateString())
@@ -131,7 +142,6 @@ class DashboardController extends Controller
                     }
 
                     $columns[$placedColumn] = $eventEnd;
-
                     $event['overlap_index'] = $placedColumn;
 
                     $result->push($event);
@@ -163,10 +173,77 @@ class DashboardController extends Controller
         ]);
     }
 
+    private function perluDiverifikasiOlehUser($peminjaman, array $userRoles, string $userId): bool
+    {
+        if ($peminjaman->verifikasi->contains('id_verifikator', $userId)) {
+            return false;
+        }
+
+        $jenisPemohon = strtolower(trim(
+            $peminjaman->pemohon->roles->pluck('nama')->first()
+                ?? $peminjaman->pemohon->role
+                ?? ''
+        ));
+
+        if ($jenisPemohon === '') {
+            return false;
+        }
+
+        $jenisRuangSlug = strtolower(trim($peminjaman->ruangan->jenisRuangan->slug ?? ''));
+        $jenisRuangNama = strtolower(trim($peminjaman->ruangan->jenisRuangan->nama ?? ''));
+
+        $isLab = str_contains($jenisRuangSlug, 'lab')
+            || str_contains($jenisRuangNama, 'lab');
+
+        $alur = DB::table('alur_verifikasi')
+            ->whereRaw('LOWER(TRIM(jenis_pemohon)) = ?', [$jenisPemohon])
+            ->when(!$isLab, function ($q) {
+                $q->whereRaw('LOWER(TRIM(role_verifikator)) != ?', ['kalab']);
+            })
+            ->orderBy('urutan')
+            ->get();
+
+        if ($alur->isEmpty()) {
+            return false;
+        }
+
+        $riwayat = $peminjaman->verifikasi
+            ->sortBy('urutan')
+            ->values();
+
+        foreach ($alur as $step) {
+            $roleVerifikator = strtolower(trim($step->role_verifikator));
+
+            $verifikasiStep = $riwayat->first(function ($item) use ($step, $roleVerifikator) {
+                $urutanSama = isset($item->urutan)
+                    && (int) $item->urutan === (int) $step->urutan;
+
+                $roleSama = isset($item->role_verifikator)
+                    && strtolower(trim($item->role_verifikator)) === $roleVerifikator;
+
+                return $urutanSama || $roleSama;
+            });
+
+            if (!$verifikasiStep) {
+                return in_array($roleVerifikator, $userRoles);
+            }
+
+            if ($verifikasiStep->status_verifikasi === 'ditolak') {
+                return false;
+            }
+
+            if ($verifikasiStep->status_verifikasi !== 'disetujui') {
+                return in_array($roleVerifikator, $userRoles);
+            }
+        }
+
+        return false;
+    }
+
     private function mapJadwal($data, Carbon $weekStart, Carbon $weekEnd)
     {
         return $data->flatMap(function ($item) use ($weekStart, $weekEnd) {
-            $tanggalMulai = Carbon::parse($item->tanggal_mulai)->startOfDay();
+            $tanggalMulai   = Carbon::parse($item->tanggal_mulai)->startOfDay();
             $tanggalSelesai = Carbon::parse($item->tanggal_selesai)->startOfDay();
 
             $start = $tanggalMulai->greaterThan($weekStart)
@@ -177,17 +254,25 @@ class DashboardController extends Controller
                 ? $tanggalSelesai
                 : $weekEnd->copy();
 
+            $lokasi = $this->lokasiRuangan($item->ruangan);
+
             $events = collect();
 
             for ($date = $start->copy(); $date->lte($end); $date->addDay()) {
                 $events->push([
-                    'tanggal'       => $date->toDateString(),
-                    'waktu_mulai'   => $item->waktu_mulai,
-                    'waktu_selesai' => $item->waktu_selesai,
-                    'title'         => $item->kegiatan,
-                    'subtitle'      => $item->penanggung_jawab ?? $item->catatan,
-                    'ruangan'       => $item->ruangan->nama_ruang ?? '-',
-                    'type'          => 'jadwal',
+                    'tanggal'           => $date->toDateString(),
+                    'waktu_mulai'       => $item->waktu_mulai,
+                    'waktu_selesai'     => $item->waktu_selesai,
+
+                    'title'             => $item->kegiatan,
+                    'penanggung_jawab'  => $item->penanggung_jawab ?? '-',
+                    'catatan'           => $item->catatan ?? '-',
+                    'type'              => 'jadwal',
+
+                    'kampus'            => $lokasi['kampus'],
+                    'gedung'            => $lokasi['gedung'],
+                    'lantai'            => $lokasi['lantai'],
+                    'ruangan'           => $lokasi['ruangan'],
                 ]);
             }
 
@@ -198,7 +283,7 @@ class DashboardController extends Controller
     private function mapPeminjaman($data, Carbon $weekStart, Carbon $weekEnd)
     {
         return $data->flatMap(function ($item) use ($weekStart, $weekEnd) {
-            $tanggalMulai = Carbon::parse($item->tanggal_mulai)->startOfDay();
+            $tanggalMulai   = Carbon::parse($item->tanggal_mulai)->startOfDay();
             $tanggalSelesai = Carbon::parse($item->tanggal_selesai)->startOfDay();
 
             $start = $tanggalMulai->greaterThan($weekStart)
@@ -209,21 +294,76 @@ class DashboardController extends Controller
                 ? $tanggalSelesai
                 : $weekEnd->copy();
 
+            $lokasi = $this->lokasiRuangan($item->ruangan);
+
+            $penanggungJawab = data_get($item, 'pemohon.nama_lengkap')
+                ?? data_get($item, 'pemohon.nama')
+                ?? data_get($item, 'pemohon.nomor_induk')
+                ?? '-';
+
             $events = collect();
 
             for ($date = $start->copy(); $date->lte($end); $date->addDay()) {
                 $events->push([
-                    'tanggal'       => $date->toDateString(),
-                    'waktu_mulai'   => $item->waktu_mulai,
-                    'waktu_selesai' => $item->waktu_selesai,
-                    'title'         => 'Peminjaman Pada Ruang ' . ($item->ruangan->nama_ruang ?? '-'),
-                    'subtitle'      => $item->kegiatan,
-                    'ruangan'       => $item->ruangan->nama_ruang ?? '-',
-                    'type'          => 'peminjaman',
+                    'tanggal'           => $date->toDateString(),
+                    'waktu_mulai'       => $item->waktu_mulai,
+                    'waktu_selesai'     => $item->waktu_selesai,
+
+                    'title'             => $item->kegiatan ?? 'Peminjaman Ruangan',
+                    'penanggung_jawab'  => $penanggungJawab,
+                    'catatan'           => $item->catatan ?? '-',
+                    'type'              => 'peminjaman',
+
+                    'kampus'            => $lokasi['kampus'],
+                    'gedung'            => $lokasi['gedung'],
+                    'lantai'            => $lokasi['lantai'],
+                    'ruangan'           => $lokasi['ruangan'],
                 ]);
             }
 
             return $events;
         });
+    }
+
+    private function lokasiRuangan($ruangan): array
+    {
+        $kampus = data_get($ruangan, 'kampus.nama_kampus')
+            ?? data_get($ruangan, 'kampus.nama')
+            ?? data_get($ruangan, 'gedung.kampus.nama_kampus')
+            ?? data_get($ruangan, 'gedung.kampus.nama')
+            ?? data_get($ruangan, 'nama_kampus');
+
+        $gedung = data_get($ruangan, 'gedung.nama_gedung')
+            ?? data_get($ruangan, 'gedung.nama')
+            ?? data_get($ruangan, 'nama_gedung');
+
+        $lantai = data_get($ruangan, 'lantai.nama_lantai')
+            ?? data_get($ruangan, 'lantai.nama')
+            ?? data_get($ruangan, 'nama_lantai')
+            ?? data_get($ruangan, 'lantai');
+
+        $namaRuangan = data_get($ruangan, 'nama_ruang')
+            ?? data_get($ruangan, 'nama')
+            ?? data_get($ruangan, 'kode_ruang');
+
+        return [
+            'kampus'  => $this->nilaiLokasi($kampus),
+            'gedung'  => $this->nilaiLokasi($gedung),
+            'lantai'  => $this->nilaiLokasi($lantai),
+            'ruangan' => $this->nilaiLokasi($namaRuangan),
+        ];
+    }
+
+    private function nilaiLokasi($value): string
+    {
+        if ($value === null || $value === '') {
+            return '-';
+        }
+
+        if (is_object($value) || is_array($value)) {
+            return '-';
+        }
+
+        return (string) $value;
     }
 }

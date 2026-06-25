@@ -177,9 +177,10 @@
                                 <button type="button"
                                         onclick="openEditModal(
                                             {{ $item->id }},
-                                            '{{ addslashes($item->nama_ruang) }}',
+                                            @js($item->nama_ruang),
                                             {{ $item->id_jenis_ruang }},
-                                            '{{ $item->id_user ?? '' }}'
+                                            @js($item->id_user),
+                                            @js(route('kasubag.ruangan.update', $item->id))
                                         )"
                                         title="Edit"
                                         class="w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 hover:text-amber-600 hover:bg-amber-50 transition-all">
@@ -314,25 +315,6 @@
                     </p>
                 @enderror
             </div>
-
-            {{-- <div>
-                <label class="block text-sm font-semibold text-slate-700 mb-1.5">Nomor Ruang <span class="text-red-500">*</span></label>
-                <div class="relative">
-                    <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400 pointer-events-none">
-                        <i class="fa-solid fa-hashtag text-sm"></i>
-                    </span>
-                    <input type="text" id="nomor_ruang" name="nomor_ruang"
-                           value="{{ old('nomor_ruang') }}"
-                           placeholder="A101" maxlength="5"
-                           style="text-transform:uppercase"
-                           class="w-full pl-10 pr-4 py-2.5 text-sm bg-slate-50 border {{ $errors->has('nomor_ruang') ? 'border-red-400 bg-red-50' : 'border-slate-200' }} rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-slate-300 transition-all">
-                </div>
-                @error('nomor_ruang')
-                    <p class="mt-1.5 text-xs text-red-500 flex items-center gap-1">
-                        <i class="fa-solid fa-circle-exclamation"></i> {{ $message }}
-                    </p>
-                @enderror
-            </div> --}}
 
             <div>
                 <label class="block text-sm font-semibold text-slate-700 mb-1.5">Jenis Ruang <span class="text-red-500">*</span></label>
@@ -533,22 +515,20 @@
     });
 
     // ── MODAL EDIT ───────────────────────────────────────────────
-    function openEditModal(id, namaRuang, jenisRuangId, idUser) {
-        // Set action form ke route Laravel update dengan ID
-        document.getElementById('formEditRuangan').action = `/kasubag/ruangan/${id}`;
+    function openEditModal(id, namaRuang, jenisRuangId, idUser, updateUrl) {
+        document.getElementById('formEditRuangan').action = updateUrl;
 
-        document.getElementById('editNamaRuang').value  = namaRuang;
-        // document.getElementById('editNomorRuang').value = nomorRuang;
-        document.getElementById('editJenisRuang').value = jenisRuangId;
-        document.getElementById('editRuanganSubtitle').textContent = namaRuang;
+        document.getElementById('editNamaRuang').value = namaRuang ?? '';
+        document.getElementById('editJenisRuang').value = jenisRuangId ?? '';
+        document.getElementById('editRuanganSubtitle').textContent = namaRuang ?? 'Edit Ruangan';
 
-        // Set & cek PIC
         const editJenisSelect = document.getElementById('editJenisRuang');
         checkEditJenisRuang(editJenisSelect, idUser);
 
         document.getElementById('modalEditRuangan').classList.remove('hidden');
+
         setTimeout(() => {
-            document.getElementById('modalEditPanel').classList.remove('scale-95','opacity-0');
+            document.getElementById('modalEditPanel').classList.remove('scale-95', 'opacity-0');
             document.getElementById('editNamaRuang').focus();
         }, 10);
     }

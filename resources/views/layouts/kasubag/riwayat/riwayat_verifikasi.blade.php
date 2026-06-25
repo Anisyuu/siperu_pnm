@@ -217,13 +217,15 @@
                             data-catatan="{{ $langkahSaya?->catatan ?? '' }}"
 
                             data-semua-langkah="{{ $p->verifikasi->map(fn($v) => [
-                                'urutan'            => $v->urutan,
-                                'role_verifikator'  => $v->role_verifikator,
-                                'status_verifikasi' => $v->status_verifikasi,
-                                'waktu_verifikasi'  => $v->waktu_verifikasi
+                                'urutan'                  => $v->urutan,
+                                'role_verifikator'        => $v->role_verifikator,
+                                'nama_verifikator'        => $v->verifikator->nama_lengkap ?? null,
+                                'nomor_induk_verifikator' => $v->verifikator->nomor_induk ?? null,
+                                'status_verifikasi'       => $v->status_verifikasi,
+                                'waktu_verifikasi'        => $v->waktu_verifikasi
                                     ? \Carbon\Carbon::parse($v->waktu_verifikasi)->locale('id')->translatedFormat('d M Y, H:i')
                                     : null,
-                                'catatan'           => $v->catatan,
+                                'catatan'                 => $v->catatan,
                             ])->toJson() }}"
 
                             class="inline-flex items-center justify-center w-9 h-9 bg-blue-50 text-blue-500 hover:bg-blue-100 rounded-xl transition-colors opacity-60 group-hover:opacity-100">
@@ -614,7 +616,15 @@
 
                     <div class="flex-1">
                         <div class="flex items-center justify-between gap-2">
-                            <p class="text-sm font-semibold text-slate-700 capitalize">${v.role_verifikator || '—'}</p>
+                            <div>
+                                <p class="text-sm font-semibold text-slate-700">
+                                    ${v.nama_verifikator || v.role_verifikator || '—'}
+                                </p>
+                                <p class="text-xs text-slate-400 capitalize">
+                                    ${v.nama_verifikator ? v.role_verifikator : 'Belum diverifikasi'}
+                                </p>
+                            </div>
+
                             <span class="px-2 py-0.5 text-[11px] font-bold rounded-full ${warna.badge}">
                                 ${warna.label}
                             </span>

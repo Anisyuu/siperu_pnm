@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\GoogleController;
+use App\Http\Controllers\PanduanController;
 
 // Controller kasubag
 // use App\Http\Controllers\Kasubag\{JadwalController, PeminjamanController, UserController};
@@ -10,8 +11,6 @@ use App\Http\Controllers\Kasubag\DashboardController as KasubagDashboardControll
 use App\Http\Controllers\Kasubag\JadwalController as KasubagJadwalController;
 use App\Http\Controllers\Kasubag\PeminjamanController as KasubagPeminjamanController;
 use App\Http\Controllers\Kasubag\UserController as KasubagUserController;
-use App\Http\Controllers\Kasubag\KelolaRuanganController as KasubagKelolaRuanganController;
-use App\Http\Controllers\Kasubag\RiwayatController as KasubagRiwayatController;
 use App\Http\Controllers\Kasubag\{
     GedungController,
     JenisRuangController,
@@ -45,6 +44,11 @@ use App\Http\Controllers\Dosen\JadwalController as DosenJadwalController;
 use App\Http\Controllers\Dosen\PeminjamanController as DosenPeminjamanController;
 use App\Http\Controllers\Dosen\RiwayatController as DosenRiwayatController;
 
+// Controller karyawan
+use App\Http\Controllers\Karyawan\DashboardController as KaryawanDashboardController;
+use App\Http\Controllers\Karyawan\JadwalController as KaryawanJadwalController;
+use App\Http\Controllers\Karyawan\PeminjamanController as KaryawanPeminjamanController;
+
 // Controller ormawa
 use App\Http\Controllers\Ormawa\DashboardController as OrmawaDashboardController;
 use App\Http\Controllers\Ormawa\PeminjamanController as OrmawaPeminjamanController;
@@ -68,6 +72,12 @@ Route::get('/auth/google/callback', [GoogleController::class, 'callback'])->name
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
 Route::post('/login', [AuthController::class, 'login'])->name('login.post');
 
+Route::get('/lupa-password', [AuthController::class, 'showForgotPassword'])->name('password.request');
+Route::post('/lupa-password', [AuthController::class, 'sendResetLink'])->name('password.email');
+
+Route::get('/reset-password/{token}', [AuthController::class, 'showResetPassword'])->name('password.reset');
+Route::post('/reset-password', [AuthController::class, 'resetPassword'])->name('password.update');
+
 Route::middleware(['auth'])->group(function () {
     Route::post('/logout', [AuthController::class, 'logout'])
             ->name('logout');
@@ -78,7 +88,56 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/ormawa', [OrmawaDashboardController::class, 'dashboard'])->name('ormawa.dashboard');
     Route::get('/dosen', [DosenDashboardController::class, 'dashboard'])->name('dosen.dashboard');
     Route::get('/mahasiswa', [MahasiswaDashboardController::class, 'dashboard'])->name('mahasiswa.dashboard');
-    // Route::get('/karyawan', fn () => view('layouts.karyawan.dashboard'))->name('karyawan.dashboard');
+    Route::get('/karyawan', [KaryawanDashboardController::class, 'dashboard'])->name('karyawan.dashboard');
+
+
+      Route::get('/notifications', function () {
+        return auth()->user()
+            ->notifications()
+            ->latest()
+            ->take(20)
+            ->get()
+            ->map(function ($notification) {
+                return [
+                    'id'         => $notification->id,
+                    'type'       => $notification->type,
+                    'data'       => $notification->data,
+                    'read_at'    => $notification->read_at,
+                    'created_at' => $notification->created_at?->diffForHumans(),
+                ];
+            });
+    })->name('notifications.index');
+
+    Route::get('/notifications/unread-count', function () {
+        return response()->json([
+            'count' => auth()->user()->unreadNotifications()->count(),
+        ]);
+    })->name('notifications.unread-count');
+
+    Route::post('/notifications/{id}/read', function ($id) {
+        auth()->user()
+            ->notifications()
+            ->where('id', $id)
+            ->update(['read_at' => now()]);
+
+        return response()->json([
+            'message' => 'Notifikasi dibaca',
+        ]);
+    })->name('notifications.read');
+
+    Route::post('/notifications/read-all', function () {
+        auth()->user()
+            ->unreadNotifications()
+            ->update(['read_at' => now()]);
+
+        return response()->json([
+            'message' => 'Semua notifikasi dibaca',
+        ]);
+    })->name('notifications.read-all');
+
+    Route::get('/profile', [AuthController::class, 'profile'])->name('profile');
+    Route::put('/profile', [AuthController::class, 'updateProfile'])->name('profile.update');
+    Route::put('/profile/password', [AuthController::class, 'updatePassword'])->name('profile.password.update');
 
 });
 
@@ -115,8 +174,14 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/tambah-jadwal', [KasubagJadwalController::class, 'tambahJadwal'])
             ->name('tambah-jadwal');
 
+        Route::get('/jadwal/ruangan-tersedia', [KasubagJadwalController::class, 'ruanganTersedia'])
+            ->name('jadwal.ruangan-tersedia');
+
         Route::post('/simpan-jadwal', [KasubagJadwalController::class, 'simpanJadwal'])
             ->name('simpan-jadwal');
+
+        Route::get('/detail-jadwal/{id}', [KasubagJadwalController::class, 'detailJadwal'])
+            ->name('detail-jadwal');
 
         Route::get('/edit-jadwal/{id}', [KasubagJadwalController::class, 'editJadwal'])
             ->name('edit-jadwal');
@@ -330,9 +395,43 @@ Route::middleware(['auth'])->group(function () {
 
         Route::get('/riwayat-peminjaman/export', [DosenPeminjamanController::class, 'exportRiwayatPeminjaman'])
         ->name('riwayat-peminjaman.export');
+    });
 
-        Route::view('/informasi-peminjaman', 'layouts.dosen.informasi_peminjaman')
-            ->name('informasi-peminjaman');
+    // Karyawan
+    Route::middleware(['auth', 'role:karyawan'])
+    ->prefix('karyawan')
+    ->name('karyawan.')
+    ->group(function () {
+
+        Route::get('/dashboard', [KaryawanDashboardController::class, 'dashboard'])
+            ->name('dashboard');
+
+        Route::get('/jadwal-ruangan', [KaryawanJadwalController::class, 'jadwalRuangan'])
+            ->name('jadwal-ruangan');
+
+        Route::get('/list-peminjaman', [KaryawanPeminjamanController::class, 'listPeminjaman'])
+            ->name('list-peminjaman');
+
+        Route::get('/ajukan-peminjaman', [KaryawanPeminjamanController::class, 'ajukanPeminjaman'])
+            ->name('ajukan-peminjaman');
+
+        Route::get('/ruangan-tersedia', [KaryawanPeminjamanController::class, 'ruanganTersedia'])
+            ->name('ruangan-tersedia');
+
+        Route::post('/simpan-peminjaman', [KaryawanPeminjamanController::class, 'store'])
+            ->name('simpan-peminjaman');
+
+        Route::get('/detail-peminjaman/{id}', [KaryawanPeminjamanController::class, 'detailPeminjaman'])
+            ->name('detail-peminjaman');
+
+        Route::delete('/batalkan-peminjaman/{id}', [KaryawanPeminjamanController::class, 'batalkanPeminjaman'])
+            ->name('batalkan-peminjaman');
+
+        Route::get('/riwayat-peminjaman', [KaryawanPeminjamanController::class, 'riwayatPeminjaman'])
+            ->name('riwayat-peminjaman');
+
+        Route::get('/riwayat-peminjaman/export', [KaryawanPeminjamanController::class, 'exportRiwayatPeminjaman'])
+            ->name('riwayat-peminjaman.export');
     });
 
     // Ormawa
@@ -370,9 +469,6 @@ Route::middleware(['auth'])->group(function () {
 
         Route::get('/riwayat-peminjaman/export', [OrmawaPeminjamanController::class, 'exportRiwayatPeminjaman'])
             ->name('riwayat-peminjaman.export');
-
-        Route::view('/informasi-peminjaman', 'layouts.ormawa.informasi_peminjaman')
-            ->name('informasi-peminjaman');
     });
 
     // Mahasiswa
@@ -410,11 +506,8 @@ Route::middleware(['auth'])->group(function () {
 
         Route::get('/riwayat-peminjaman/export', [MahasiswaPeminjamanController::class, 'exportRiwayatPeminjaman'])
             ->name('riwayat-peminjaman.export');
-
-        Route::view('/informasi-peminjaman', 'layouts.mahasiswa.informasi_peminjaman')
-            ->name('informasi-peminjaman');
     });
-// Contoh Pengelompoka route auth sesuai role
-// Route::middleware(['auth', 'role:pimpinan'])->group(function () {
-//     Route::get('/pimpinan', ...);
-// });
+
+
+        Route::get('/panduan', [PanduanController::class, 'index'])
+            ->name('panduan.index');

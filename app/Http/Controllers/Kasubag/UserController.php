@@ -28,10 +28,19 @@ class UserController extends Controller
 
     public function detailUser($nomor_induk)
     {
-        $user = User::with('roles')->where('nomor_induk', $nomor_induk)->first();
+        $user = User::with([
+            'roles',
+            'gedung',
+            'ruangan.gedung',
+            'ruangan.jenisRuangan',
+        ])
+        ->where('nomor_induk', $nomor_induk)
+        ->first();
+
         if (!$user) {
             return redirect()->back()->with('error', 'Pengguna tidak ditemukan');
         }
+
         return view('layouts.kasubag.user.detail_user', compact('user'));
     }
 

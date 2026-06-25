@@ -8,12 +8,29 @@ use App\Models\Jadwal;
 use App\Models\Peminjaman;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
 {
     public function dashboard(Request $request)
     {
-        $userId = Auth::user()->nomor_induk;
+        $user = Auth::user();
+        $userId = $user->nomor_induk;
+
+        $userRoles = $user->roles
+            ->pluck('nama')
+            ->map(fn ($role) => strtolower(trim($role)))
+            ->filter()
+            ->values()
+            ->toArray();
+
+        $jenisPemohonDiizinkan = DB::table('alur_verifikasi')
+            ->whereIn(DB::raw('LOWER(TRIM(role_verifikator))'), $userRoles)
+            ->pluck('jenis_pemohon')
+            ->map(fn ($jenis) => strtolower(trim($jenis)))
+            ->unique()
+            ->values()
+            ->toArray();
 
         $anchor = $request->filled('tanggal')
             ? Carbon::parse($request->tanggal)
@@ -24,20 +41,44 @@ class DashboardController extends Controller
 
         /*
         |--------------------------------------------------------------------------
-        | STAT CARD PEMINJAM
+        | STAT CARD KALAB SEBAGAI VERIFIKATOR
         |--------------------------------------------------------------------------
-        | Tidak diubah.
-        | Hanya menghitung peminjaman milik user yang sedang login.
+        | Menghitung peminjaman berdasarkan ruangan/lab yang menjadi tanggung jawab
+        | Kalab yang sedang login.
         |--------------------------------------------------------------------------
         */
 
-        $basePeminjamanUser = Peminjaman::query()
-            ->where('pemohon_id', $userId);
+        $menunggu = Peminjaman::query()
+            ->where('status', 'pending')
+            ->whereHas('pemohon.roles', function ($q) use ($jenisPemohonDiizinkan) {
+                $q->whereIn(DB::raw('LOWER(TRIM(nama))'), $jenisPemohonDiizinkan);
+            })
+            ->whereHas('ruangan', function ($q) use ($userId) {
+                $q->where('id_user', $userId);
+            })
+            ->count();
 
-        $total     = (clone $basePeminjamanUser)->count();
-        $menunggu  = (clone $basePeminjamanUser)->where('status', 'pending')->count();
-        $disetujui = (clone $basePeminjamanUser)->where('status', 'disetujui')->count();
-        $ditolak   = (clone $basePeminjamanUser)->where('status', 'ditolak')->count();
+        $disetujui = Peminjaman::query()
+            ->whereHas('verifikasi', function ($q) use ($userId) {
+                $q->where('id_verifikator', $userId)
+                    ->where('status_verifikasi', 'disetujui');
+            })
+            ->whereHas('ruangan', function ($q) use ($userId) {
+                $q->where('id_user', $userId);
+            })
+            ->count();
+
+        $ditolak = Peminjaman::query()
+            ->whereHas('verifikasi', function ($q) use ($userId) {
+                $q->where('id_verifikator', $userId)
+                    ->where('status_verifikasi', 'ditolak');
+            })
+            ->whereHas('ruangan', function ($q) use ($userId) {
+                $q->where('id_user', $userId);
+            })
+            ->count();
+
+        $total = $menunggu + $disetujui + $ditolak;
 
         /*
         |--------------------------------------------------------------------------

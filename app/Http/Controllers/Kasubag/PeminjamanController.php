@@ -24,11 +24,12 @@ class PeminjamanController extends Controller
         ->toArray();
 
     $query = Peminjaman::with([
-            'ruangan.gedung.kampus',
-            'pemohon.roles',
-            'verifikasi',
-            'verifikasiAktif'
-        ])
+        'ruangan.gedung.kampus',
+        'pemohon.roles',
+        'verifikasi' => fn ($q) => $q->orderBy('urutan'),
+        'verifikasi.verifikator',
+        'verifikasiAktif'
+    ])
         ->where('status', 'pending')
         ->whereHas('pemohon.roles', function ($q) use ($jenisPemohonDiizinkan) {
             $q->whereIn('nama', $jenisPemohonDiizinkan);
@@ -64,10 +65,15 @@ class PeminjamanController extends Controller
     public function riwayatVerifikasi( Request $request)
     {
         $userId = Auth::user()->nomor_induk;
-        $query = Peminjaman::with(['ruangan.gedung.kampus', 'pemohon', 'verifikasi' => fn($q) => $q->orderBy('urutan')])
-            ->whereHas('verifikasi', function ($q) use ($userId) {
-                $q->where('id_verifikator', $userId);
-            });
+        $query = Peminjaman::with([
+            'ruangan.gedung.kampus',
+            'pemohon.roles',
+            'verifikasi' => fn ($q) => $q->orderBy('urutan'),
+            'verifikasi.verifikator',
+        ])
+        ->whereHas('verifikasi', function ($q) use ($userId) {
+            $q->where('id_verifikator', $userId);
+        });
 
             // SEARCH
         if ($request->filled('search')) {
@@ -90,8 +96,9 @@ class PeminjamanController extends Controller
 
         $query = Peminjaman::with([
             'ruangan.gedung.kampus',
-            'pemohon',
-            'verifikasi' => fn($q) => $q->orderBy('urutan')
+            'pemohon.roles',
+            'verifikasi' => fn ($q) => $q->orderBy('urutan'),
+            'verifikasi.verifikator',
         ]);
 
         // SEARCH

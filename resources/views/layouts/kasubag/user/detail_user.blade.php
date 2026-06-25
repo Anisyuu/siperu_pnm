@@ -81,6 +81,100 @@
                 </div>
             </div>
 
+
+            @if ($user->ruangan->isNotEmpty())
+                <div class="bg-white border border-slate-200 rounded-2xl p-5">
+                    <div class="flex items-center justify-between mb-4">
+                        <p class="text-[11px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                            <span class="w-5 h-5 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center text-[10px] font-extrabold">3</span>
+                            Ruangan Terkait
+                        </p>
+
+                        <span class="text-xs font-bold text-blue-600 bg-blue-50 border border-blue-100 px-2.5 py-1 rounded-full">
+                            {{ $user->ruangan->count() }} Ruangan
+                        </span>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        @foreach ($user->ruangan as $ruangan)
+                            <div class="border border-slate-200 rounded-xl p-4 hover:bg-slate-50 transition-colors">
+                                <div class="flex items-start gap-3">
+                                    <div class="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+                                        <i class="fa-solid fa-door-open text-sm"></i>
+                                    </div>
+
+                                    <div class="min-w-0 flex-1">
+                                        <p class="font-bold text-slate-800 text-sm truncate">
+                                            {{ $ruangan->nama_ruang }}
+                                        </p>
+
+                                        <div class="mt-2 space-y-1 text-xs text-slate-500">
+                                            <div class="flex items-center gap-2">
+                                                <i class="fa-regular fa-building w-3 text-slate-400"></i>
+                                                <span>
+                                                    {{ $ruangan->gedung->nama ?? 'Gedung tidak tersedia' }}
+                                                </span>
+                                            </div>
+
+                                            <div class="flex items-center gap-2">
+                                                <i class="fa-solid fa-layer-group w-3 text-slate-400"></i>
+                                                <span>
+                                                    Lantai {{ $ruangan->lantai ?? '-' }}
+                                                </span>
+                                            </div>
+
+                                            <div class="flex items-center gap-2">
+                                                <i class="fa-solid fa-table-cells-large w-3 text-slate-400"></i>
+                                                <span>
+                                                    {{ $ruangan->jenisRuangan->nama ?? 'Jenis ruang tidak tersedia' }}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            @endif
+
+            @if ($user->gedung->isNotEmpty())
+                {{-- GEDUNG TERKAIT --}}
+                <div class="bg-white border border-slate-200 rounded-2xl p-5">
+                    <div class="flex items-center justify-between mb-4">
+                        <p class="text-[11px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                            <span class="w-5 h-5 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center text-[10px] font-extrabold">3</span>
+                            Gedung Terkait
+                        </p>
+
+                        <span class="text-xs font-bold text-blue-600 bg-blue-50 border border-blue-100 px-2.5 py-1 rounded-full">
+                            {{ $user->gedung->count() }} Gedung
+                        </span>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        @foreach ($user->gedung as $gedung)
+                            <div class="border border-slate-200 rounded-xl p-4 hover:bg-slate-50 transition-colors">
+                                <div class="flex items-start gap-3">
+                                    <div class="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+                                        <i class="fa-regular fa-building text-sm"></i>
+                                    </div>
+
+                                    <div class="min-w-0 flex-1">
+                                        <p class="font-bold text-slate-800 text-sm truncate">
+                                            {{ $gedung->nama ?? '-' }}
+                                        </p>
+                                        <p class="text-slate-500 text-xs truncate">
+                                            {{ $gedung->kampus->nama_kampus ?? '-' }}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            @endif
+
         </div>
         {{-- TUTUP KOLOM KIRI --}}
 

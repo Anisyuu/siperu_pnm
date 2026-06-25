@@ -35,14 +35,31 @@
                 </p>
                 <div class="grid grid-cols-2 gap-4 text-sm">
                     <div>
-                        <p class="text-slate-400 mb-1">Ruangan</p>
-                        <p class="font-semibold text-slate-700">
-                            {{ $peminjaman->ruangan->nama_ruang }}
+                        <p class="text-slate-400 mb-1">Kampus</p>
+                        <p class="text-slate-600">
+                            {{ $peminjaman->ruangan->gedung->kampus->nama_kampus ?? '-' }}
                         </p>
                     </div>
+
                     <div>
                         <p class="text-slate-400 mb-1">Gedung</p>
-                        <p class="text-slate-600">{{ $peminjaman->ruangan->gedung->nama }}</p>
+                        <p class="text-slate-600">
+                            {{ $peminjaman->ruangan->gedung->nama ?? '-' }}
+                        </p>
+                    </div>
+
+                    <div>
+                        <p class="text-slate-400 mb-1">Lantai</p>
+                        <p class="text-slate-600">
+                            Lantai {{ $peminjaman->ruangan->lantai ?? '-' }}
+                        </p>
+                    </div>
+
+                    <div>
+                        <p class="text-slate-400 mb-1">Ruangan</p>
+                        <p class="text-slate-600">
+                            {{ $peminjaman->ruangan->nama_ruang ?? '-' }}
+                        </p>
                     </div>
                 </div>
             </div>
@@ -136,7 +153,7 @@
                     {{-- LOOP ALUR --}}
                     @foreach($alur as $index => $step)
                         @php
-                            $urutanBaru = $index + 1; // urutan setelah reindex
+                            $urutanBaru = $index + 1;
                             $verif      = $riwayat->firstWhere('urutan', $urutanBaru);
                             $status     = $verif->status_verifikasi ?? null;
                             $isDone     = $status === 'disetujui';
@@ -152,14 +169,36 @@
                                 <div class="w-8 h-8 rounded-full bg-amber-400 text-white flex items-center justify-center text-sm font-black shadow-sm">•</div>
                             @endif
 
-                            <p class="text-xs font-semibold text-slate-700 mt-3 capitalize">{{ $step->role_verifikator }}</p>
+                            @if ($verif?->verifikator)
+                                <p class="text-xs font-semibold text-slate-700 mt-3">
+                                    {{ $verif->verifikator->nama_lengkap }}
+                                </p>
+
+                                <p class="text-[10px] text-slate-400 capitalize">
+                                    {{ $step->role_verifikator }}
+                                </p>
+                            @else
+                                <p class="text-xs font-semibold text-slate-700 mt-3 capitalize">
+                                    {{ $step->role_verifikator }}
+                                </p>
+
+                                <p class="text-[10px] text-slate-400">
+                                    Belum diverifikasi
+                                </p>
+                            @endif
 
                             @if($isDone)
-                                <span class="text-[10px] px-2 py-0.5 bg-green-50 text-green-700 rounded-full mt-1">Disetujui</span>
+                                <span class="text-[10px] px-2 py-0.5 bg-green-50 text-green-700 rounded-full mt-1">
+                                    Disetujui
+                                </span>
                             @elseif($isReject)
-                                <span class="text-[10px] px-2 py-0.5 bg-red-50 text-red-600 rounded-full mt-1">Ditolak</span>
+                                <span class="text-[10px] px-2 py-0.5 bg-red-50 text-red-600 rounded-full mt-1">
+                                    Ditolak
+                                </span>
                             @else
-                                <span class="text-[10px] px-2 py-0.5 bg-amber-50 text-amber-700 rounded-full mt-1">Menunggu</span>
+                                <span class="text-[10px] px-2 py-0.5 bg-amber-50 text-amber-700 rounded-full mt-1">
+                                    Menunggu
+                                </span>
                             @endif
 
                             @if($verif && $verif->waktu_verifikasi)
@@ -172,7 +211,9 @@
                             @endif
 
                             @if($verif && $verif->catatan)
-                                <p class="text-[10px] text-slate-500 italic mt-1 max-w-[80px]">"{{ Str::limit($verif->catatan, 30) }}"</p>
+                                <p class="text-[10px] text-slate-500 italic mt-1 max-w-[80px]">
+                                    "{{ Str::limit($verif->catatan, 30) }}"
+                                </p>
                             @endif
                         </div>
                     @endforeach

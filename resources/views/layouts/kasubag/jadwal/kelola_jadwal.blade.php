@@ -39,11 +39,11 @@
 
     {{-- FILTER --}}
     <form method="GET" action="{{ route('kasubag.kelola-jadwal') }}"
-          class="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm">
+        class="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm">
 
-        <div class="grid grid-cols-1 md:grid-cols-6 gap-3">
+        <div class="flex flex-col md:flex-row gap-3">
 
-            <div class="relative md:col-span-2">
+            <div class="relative flex-1">
                 <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm pointer-events-none"></i>
                 <input
                     name="search"
@@ -72,26 +72,24 @@
                 class="px-4 py-2.5 text-sm rounded-xl border border-slate-200 bg-white focus:ring-2 focus:ring-blue-300 focus:border-blue-400 focus:outline-none text-slate-700 transition"
             />
 
-            <input
+            {{-- <input
                 type="date"
                 name="tanggal_selesai"
                 value="{{ request('tanggal_selesai') }}"
                 class="px-4 py-2.5 text-sm rounded-xl border border-slate-200 bg-white focus:ring-2 focus:ring-blue-300 focus:border-blue-400 focus:outline-none text-slate-700 transition"
-            />
+            /> --}}
 
-            <div class="flex gap-2">
-                <button type="submit"
-                    class="flex-1 px-6 py-2.5 bg-primary text-white text-sm font-semibold rounded-xl hover:brightness-110 active:scale-95 transition shadow-sm shadow-blue-200">
-                    Terapkan
-                </button>
+            <button type="submit"
+                class="px-6 py-2.5 bg-primary text-white text-sm font-semibold rounded-xl hover:brightness-110 active:scale-95 transition shadow-sm shadow-blue-200">
+                Terapkan
+            </button>
 
-                @if(request()->hasAny(['search', 'ruangan_id', 'tanggal_mulai', 'tanggal_selesai']))
-                    <a href="{{ route('kasubag.kelola-jadwal') }}"
-                       class="px-4 py-2.5 border border-slate-200 text-sm text-slate-500 font-semibold rounded-xl hover:bg-slate-50 transition">
-                        Reset
-                    </a>
-                @endif
-            </div>
+            @if(request()->hasAny(['search', 'ruangan_id', 'tanggal_mulai', 'tanggal_selesai']))
+                <a href="{{ route('kasubag.kelola-jadwal') }}"
+                class="px-4 py-2.5 border border-slate-200 text-sm text-slate-500 font-semibold rounded-xl hover:bg-slate-50 transition">
+                    Reset
+                </a>
+            @endif
 
         </div>
     </form>
@@ -192,8 +190,16 @@
 
                         <td class="px-5 py-4 text-center">
                             <div class="flex justify-center items-center gap-2">
+
+                                <a href="{{ route('kasubag.detail-jadwal', $j->id) }}"
+                                class="inline-flex items-center justify-center w-9 h-9 bg-blue-50 text-blue-500 hover:bg-blue-100 rounded-xl transition-colors opacity-60 group-hover:opacity-100"
+                                title="Detail Jadwal">
+                                    <i class="fa-regular fa-eye text-sm"></i>
+                                </a>
+
                                 <a href="{{ route('kasubag.edit-jadwal', $j->id) }}"
-                                   class="inline-flex items-center justify-center w-9 h-9 bg-amber-50 text-amber-500 hover:bg-amber-100 rounded-xl transition-colors opacity-60 group-hover:opacity-100">
+                                class="inline-flex items-center justify-center w-9 h-9 bg-amber-50 text-amber-500 hover:bg-amber-100 rounded-xl transition-colors opacity-60 group-hover:opacity-100"
+                                title="Edit Jadwal">
                                     <i class="fa-regular fa-pen-to-square text-sm"></i>
                                 </a>
 
@@ -201,7 +207,8 @@
                                     @csrf
                                     @method('DELETE')
                                     <button type="submit"
-                                        class="inline-flex items-center justify-center w-9 h-9 bg-red-50 text-red-500 hover:bg-red-100 rounded-xl transition-colors opacity-60 group-hover:opacity-100">
+                                        class="inline-flex items-center justify-center w-9 h-9 bg-red-50 text-red-500 hover:bg-red-100 rounded-xl transition-colors opacity-60 group-hover:opacity-100"
+                                        title="Hapus Jadwal">
                                         <i class="fa-regular fa-trash-can text-sm"></i>
                                     </button>
                                 </form>
@@ -253,18 +260,7 @@
     </script>
 @endif
 
-@if(session('success'))
-    <script>
-        Swal.fire({
-            icon: 'success',
-            title: 'Berhasil',
-            text: "{{ session('success') }}",
-            timer: 2000,
-            showConfirmButton: false
-        });
-    </script>
-@endif
-
+@push('js')
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     document.querySelectorAll('.form-hapus-jadwal').forEach(function (form) {
@@ -289,5 +285,6 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 });
 </script>
+@endpush
 
 </x-master>

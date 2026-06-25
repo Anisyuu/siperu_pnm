@@ -190,28 +190,44 @@
                     <td class="px-5 py-4 text-center">
                         <button onclick="openModal(this)"
                             data-no="{{ $p->no_peminjaman }}"
+                            data-diajukan="{{ \Carbon\Carbon::parse($p->created_at)->locale('id')->translatedFormat('d F Y, H:i') }}"
+
                             data-pemohon="{{ $pemohon->nama_lengkap ?? '-' }}"
                             data-nim="{{ $pemohon->nomor_induk ?? '-' }}"
-                            data-ruangan="{{ $p->ruangan->nama_ruang }} — {{ $p->ruangan->gedung->nama }} Lt.{{ $p->ruangan->lantai }}"
+                            data-email="{{ $pemohon->email ?? '-' }}"
+                            data-jenis-pemohon="{{ $pemohon?->roles?->pluck('nama')->join(', ') ?: '-' }}"
+
+                            data-ruangan="{{ $p->ruangan->nama_ruang }}"
+                            data-gedung="{{ $p->ruangan->gedung->nama }}"
+                            data-lantai="{{ $p->ruangan->lantai }}"
+                            data-kampus="{{ $p->ruangan->gedung->kampus->nama_kampus ?? '-' }}"
+
                             data-tanggal="{{ \Carbon\Carbon::parse($p->tanggal_mulai)->locale('id')->translatedFormat('d F Y') }}{{ $p->tanggal_mulai !== $p->tanggal_selesai ? ' s/d '.\Carbon\Carbon::parse($p->tanggal_selesai)->locale('id')->translatedFormat('d F Y') : '' }}"
                             data-waktu="{{ \Carbon\Carbon::parse($p->waktu_mulai)->format('H:i') }} – {{ \Carbon\Carbon::parse($p->waktu_selesai)->format('H:i') }}"
                             data-kegiatan="{{ $p->kegiatan }}"
+                            data-dokumen="{{ $p->dokumen_bukti ? asset('storage/'.$p->dokumen_bukti) : '' }}"
+
                             data-status="{{ $p->status }}"
+
                             data-urutan="{{ $langkahSaya?->urutan ?? '-' }}"
                             data-total-urutan="{{ $totalLangkah }}"
                             data-role-verifikator="{{ $langkahSaya?->role_verifikator ?? '-' }}"
                             data-status-langkah="{{ $langkahSaya?->status_verifikasi ?? '-' }}"
                             data-waktu-verifikasi="{{ $langkahSaya?->waktu_verifikasi ? \Carbon\Carbon::parse($langkahSaya->waktu_verifikasi)->locale('id')->translatedFormat('d F Y, H:i') : '-' }}"
                             data-catatan="{{ $langkahSaya?->catatan ?? '' }}"
+
                             data-semua-langkah="{{ $p->verifikasi->map(fn($v) => [
-                                'urutan'            => $v->urutan,
-                                'role_verifikator'  => $v->role_verifikator,
-                                'status_verifikasi' => $v->status_verifikasi,
-                                'waktu_verifikasi'  => $v->waktu_verifikasi
+                                'urutan'                  => $v->urutan,
+                                'role_verifikator'        => $v->role_verifikator,
+                                'nama_verifikator'        => $v->verifikator->nama_lengkap ?? null,
+                                'nomor_induk_verifikator' => $v->verifikator->nomor_induk ?? null,
+                                'status_verifikasi'       => $v->status_verifikasi,
+                                'waktu_verifikasi'        => $v->waktu_verifikasi
                                     ? \Carbon\Carbon::parse($v->waktu_verifikasi)->locale('id')->translatedFormat('d M Y, H:i')
                                     : null,
-                                'catatan'           => $v->catatan,
+                                'catatan'                 => $v->catatan,
                             ])->toJson() }}"
+
                             class="inline-flex items-center justify-center w-9 h-9 bg-blue-50 text-blue-500 hover:bg-blue-100 rounded-xl transition-colors opacity-60 group-hover:opacity-100">
                             <i class="fa-regular fa-eye text-sm"></i>
                         </button>
@@ -220,7 +236,7 @@
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="7" class="px-6 py-16 text-center">
+                    <td colspan="8" class="px-6 py-16 text-center">
                         <div class="flex flex-col items-center gap-3">
                             <div class="w-14 h-14 bg-slate-100 rounded-2xl flex items-center justify-center">
                                 <i class="fa-regular fa-folder-open text-2xl text-slate-300"></i>
@@ -264,66 +280,178 @@
         <div class="flex items-start justify-between px-6 py-5 border-b border-slate-100">
             <div>
                 <h3 class="text-lg font-extrabold text-slate-900">Detail Riwayat Verifikasi</h3>
-                <p id="modal_no" class="text-xs text-slate-400 mt-0.5 font-mono"></p>
+                <p class="text-xs text-slate-400 mt-0.5">Informasi lengkap riwayat verifikasi peminjaman</p>
             </div>
-            <button onclick="closeModal()"
-                class="w-8 h-8 flex items-center justify-center rounded-xl text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors">
-                <i class="fa-solid fa-xmark"></i>
-            </button>
+
+            <div class="flex items-center gap-2">
+                <span id="modal_status_badge" class="px-3 py-1 text-xs font-bold rounded-full"></span>
+
+                <button onclick="closeModal()"
+                    class="w-8 h-8 flex items-center justify-center rounded-xl text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
         </div>
 
         {{-- Body --}}
         <div class="overflow-y-auto max-h-[70vh]">
-            <div class="px-6 py-5 space-y-5">
 
-                {{-- INFO PEMOHON + RUANGAN --}}
-                <div class="grid grid-cols-2 gap-4">
-                    <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 col-span-2">
-                        <p class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-1.5">
-                            <i class="fa-solid fa-user text-blue-400"></i> Pemohon
-                        </p>
-                        <div class="flex items-center gap-3">
+            {{-- RINGKASAN --}}
+            <div class="px-6 py-4 bg-slate-50 border-b border-slate-100 grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">No. Peminjaman</p>
+                    <span id="modal_no"
+                        class="inline-flex font-mono text-sm font-bold text-slate-700 bg-white border border-slate-200 px-3 py-1 rounded-lg">
+                    </span>
+                </div>
+
+                <div>
+                    <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Diajukan</p>
+                    <p id="modal_diajukan" class="text-sm font-semibold text-slate-700"></p>
+                </div>
+            </div>
+
+            <div class="px-6 py-5 space-y-6">
+
+                {{-- DATA PEMOHON --}}
+                <div>
+                    <p class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-1.5">
+                        <i class="fa-solid fa-user text-blue-400"></i> Data Pemohon
+                    </p>
+
+                    <div class="bg-slate-50 border border-slate-200 rounded-xl p-4">
+                        <div class="flex items-center gap-3 mb-4 pb-4 border-b border-slate-200">
                             <div id="modal_avatar"
-                                class="w-9 h-9 rounded-xl bg-blue-50 text-blue-700 flex items-center justify-center text-sm font-extrabold flex-shrink-0"></div>
+                                class="w-10 h-10 rounded-xl bg-blue-50 text-blue-700 flex items-center justify-center text-sm font-extrabold flex-shrink-0">
+                            </div>
+
                             <div>
                                 <p id="modal_pemohon" class="font-bold text-slate-800 text-sm"></p>
                                 <p id="modal_nim" class="text-xs text-slate-400 mt-0.5"></p>
                             </div>
                         </div>
-                    </div>
 
-                    <div class="bg-slate-50 border border-slate-200 rounded-xl p-4">
-                        <p class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2 flex items-center gap-1.5">
-                            <i class="fa-solid fa-door-open text-blue-400"></i> Ruangan
-                        </p>
-                        <p id="modal_ruangan" class="text-sm font-semibold text-slate-700"></p>
-                    </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                            <div>
+                                <p class="text-xs text-slate-400 mb-0.5">Email</p>
+                                <p id="modal_email" class="font-semibold text-slate-700 text-xs"></p>
+                            </div>
 
-                    <div class="bg-slate-50 border border-slate-200 rounded-xl p-4">
-                        <p class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2 flex items-center gap-1.5">
-                            <i class="fa-solid fa-calendar text-blue-400"></i> Jadwal
-                        </p>
-                        <p id="modal_tanggal" class="text-sm font-semibold text-slate-700"></p>
-                        <p id="modal_waktu" class="text-xs text-slate-400 mt-0.5"></p>
-                    </div>
-
-                    <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 col-span-2">
-                        <p class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Kegiatan</p>
-                        <p id="modal_kegiatan" class="text-sm text-slate-700 leading-relaxed"></p>
+                            <div>
+                                <p class="text-xs text-slate-400 mb-0.5">Jenis Pemohon</p>
+                                <p id="modal_jenis_pemohon" class="font-semibold text-slate-700 text-xs"></p>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
-                {{-- STATUS AKHIR --}}
-                <div class="flex items-center justify-between bg-slate-50 border border-slate-200 rounded-xl px-4 py-3">
-                    <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Status Akhir Peminjaman</span>
-                    <span id="modal_status_badge" class="px-3 py-1 text-xs font-bold rounded-full"></span>
+                {{-- DETAIL RUANGAN --}}
+                <div>
+                    <p class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-1.5">
+                        <i class="fa-solid fa-door-open text-blue-400"></i> Detail Ruangan
+                    </p>
+
+                    <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                        <div>
+                            <p class="text-xs text-slate-400 mb-0.5">Ruangan</p>
+                            <p id="modal_ruangan" class="font-bold text-slate-800"></p>
+                        </div>
+
+                        <div>
+                            <p class="text-xs text-slate-400 mb-0.5">Gedung / Lantai</p>
+                            <p id="modal_gedung" class="font-semibold text-slate-700"></p>
+                        </div>
+
+                        <div>
+                            <p class="text-xs text-slate-400 mb-0.5">Kampus</p>
+                            <p id="modal_kampus" class="font-semibold text-slate-700"></p>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- JADWAL PEMINJAMAN --}}
+                <div>
+                    <p class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-1.5">
+                        <i class="fa-solid fa-calendar text-blue-400"></i> Jadwal Peminjaman
+                    </p>
+
+                    <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                        <div>
+                            <p class="text-xs text-slate-400 mb-0.5">Tanggal Kegiatan</p>
+                            <p id="modal_tanggal" class="font-bold text-slate-800"></p>
+                        </div>
+
+                        <div>
+                            <p class="text-xs text-slate-400 mb-0.5">Waktu</p>
+                            <p id="modal_waktu" class="font-bold text-slate-800"></p>
+                        </div>
+
+                        <div class="md:col-span-2">
+                            <p class="text-xs text-slate-400 mb-0.5">Kegiatan</p>
+                            <p id="modal_kegiatan" class="font-semibold text-slate-700 leading-relaxed"></p>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- DETAIL VERIFIKASI SAYA --}}
+                <div>
+                    <p class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-1.5">
+                        <i class="fa-solid fa-user-check text-blue-400"></i> Verifikasi Saya
+                    </p>
+
+                    <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                        <div>
+                            <p class="text-xs text-slate-400 mb-0.5">Langkah Verifikasi</p>
+                            <p id="modal_langkah_saya" class="font-bold text-slate-800"></p>
+                        </div>
+
+                        <div>
+                            <p class="text-xs text-slate-400 mb-0.5">Role Verifikator</p>
+                            <p id="modal_role_verifikator" class="font-semibold text-slate-700 capitalize"></p>
+                        </div>
+
+                        <div>
+                            <p class="text-xs text-slate-400 mb-0.5">Status Verifikasi</p>
+                            <span id="modal_status_langkah_badge" class="inline-flex px-2.5 py-1 text-xs font-bold rounded-full"></span>
+                        </div>
+
+                        <div>
+                            <p class="text-xs text-slate-400 mb-0.5">Waktu Verifikasi</p>
+                            <p id="modal_waktu_verifikasi" class="font-semibold text-slate-700"></p>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- CATATAN SAYA --}}
+                <div id="catatanWrap" class="hidden">
+                    <p class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-1.5">
+                        <i class="fa-solid fa-note-sticky text-amber-400"></i> Catatan Verifikasi Saya
+                    </p>
+
+                    <div class="bg-amber-50 border border-amber-100 rounded-xl px-4 py-3 text-sm text-amber-800">
+                        <p id="modal_catatan"></p>
+                    </div>
+                </div>
+
+                {{-- DOKUMEN --}}
+                <div id="dokumenWrap" class="hidden">
+                    <p class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-1.5">
+                        <i class="fa-solid fa-paperclip text-blue-400"></i> Dokumen Pendukung
+                    </p>
+
+                    <a id="modal_dokumen" href="#" target="_blank"
+                        class="inline-flex items-center gap-2 px-4 py-2.5 bg-blue-50 border border-blue-100 text-blue-700 text-sm font-semibold rounded-xl hover:bg-blue-100 transition-colors">
+                        <i class="fa-solid fa-file-arrow-down text-sm"></i>
+                        Lihat / Unduh Dokumen
+                    </a>
                 </div>
 
                 {{-- ALUR VERIFIKASI --}}
                 <div>
                     <p class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-1.5">
-                        <i class="fa-solid fa-list-check text-blue-400"></i> Alur Verifikasi
+                        <i class="fa-solid fa-list-check text-blue-400"></i> Alur Verifikasi Lengkap
                     </p>
+
                     <div id="modal_alur" class="space-y-2"></div>
                 </div>
 
@@ -346,51 +474,124 @@
     const modal      = document.getElementById('detailModal');
     const modalPanel = document.getElementById('modalPanel');
 
-    function openModal(btn) {
-        const d = btn.dataset;
-
-        // Header
-        document.getElementById('modal_no').textContent       = d.no;
-        document.getElementById('modal_avatar').textContent   = (d.pemohon || '?')[0].toUpperCase();
-        document.getElementById('modal_pemohon').textContent  = d.pemohon;
-        document.getElementById('modal_nim').textContent      = d.nim;
-        document.getElementById('modal_ruangan').textContent  = d.ruangan;
-        document.getElementById('modal_tanggal').textContent  = d.tanggal;
-        document.getElementById('modal_waktu').textContent    = d.waktu;
-        document.getElementById('modal_kegiatan').textContent = d.kegiatan;
-
-        // Status badge
-        const badge    = document.getElementById('modal_status_badge');
+    function setBadge(element, status) {
         const statusMap = {
             pending:   { cls: 'bg-amber-50 text-amber-700 border border-amber-100', label: 'Menunggu' },
             disetujui: { cls: 'bg-green-50 text-green-700 border border-green-100', label: 'Disetujui' },
             ditolak:   { cls: 'bg-red-50 text-red-600 border border-red-100',       label: 'Ditolak' },
+            '-':        { cls: 'bg-slate-50 text-slate-500 border border-slate-100', label: '-' },
         };
-        const s = statusMap[d.status] || statusMap.pending;
-        badge.className   = `px-3 py-1 text-xs font-bold rounded-full ${s.cls}`;
-        badge.textContent = s.label;
 
-        // Alur verifikasi — render semua langkah
+        const s = statusMap[status] || statusMap['-'];
+
+        element.className = `inline-flex px-2.5 py-1 text-xs font-bold rounded-full ${s.cls}`;
+        element.textContent = s.label;
+    }
+
+    function openModal(btn) {
+        const d = btn.dataset;
+
+        // Ringkasan
+        document.getElementById('modal_no').textContent = d.no || '—';
+        document.getElementById('modal_diajukan').textContent = d.diajukan || '—';
+
+        // Data Pemohon
+        document.getElementById('modal_avatar').textContent = (d.pemohon || '?')[0].toUpperCase();
+        document.getElementById('modal_pemohon').textContent = d.pemohon || '—';
+        document.getElementById('modal_nim').textContent = d.nim || '—';
+        document.getElementById('modal_email').textContent = d.email || '—';
+        document.getElementById('modal_jenis_pemohon').textContent = d.jenisPemohon || '—';
+
+        // Detail Ruangan
+        document.getElementById('modal_ruangan').textContent = d.ruangan || '—';
+        document.getElementById('modal_gedung').textContent = `${d.gedung || '—'} · Lt.${d.lantai || '-'}`;
+        document.getElementById('modal_kampus').textContent = d.kampus || '—';
+
+        // Jadwal
+        document.getElementById('modal_tanggal').textContent = d.tanggal || '—';
+        document.getElementById('modal_waktu').textContent = d.waktu || '—';
+        document.getElementById('modal_kegiatan').textContent = d.kegiatan || '—';
+
+        // Status Akhir
+        const badgeAkhir = document.getElementById('modal_status_badge');
+        setBadge(badgeAkhir, d.status);
+
+        // Verifikasi Saya
+        document.getElementById('modal_langkah_saya').textContent =
+            d.urutan && d.totalUrutan
+                ? `Urutan ${d.urutan}/${d.totalUrutan}`
+                : '—';
+
+        document.getElementById('modal_role_verifikator').textContent = d.roleVerifikator || '—';
+        document.getElementById('modal_waktu_verifikasi').textContent = d.waktuVerifikasi || '—';
+
+        const badgeLangkah = document.getElementById('modal_status_langkah_badge');
+        setBadge(badgeLangkah, d.statusLangkah);
+
+        // Catatan Saya
+        const catatanWrap = document.getElementById('catatanWrap');
+        const catatanEl = document.getElementById('modal_catatan');
+
+        if (d.catatan && d.catatan.trim() !== '') {
+            catatanEl.textContent = d.catatan;
+            catatanWrap.classList.remove('hidden');
+        } else {
+            catatanWrap.classList.add('hidden');
+        }
+
+        // Dokumen
+        const dokWrap = document.getElementById('dokumenWrap');
+        const dokLink = document.getElementById('modal_dokumen');
+
+        if (d.dokumen && d.dokumen.trim() !== '') {
+            dokLink.href = d.dokumen;
+            dokWrap.classList.remove('hidden');
+        } else {
+            dokWrap.classList.add('hidden');
+        }
+
+        // Alur Verifikasi Lengkap
         const alurEl = document.getElementById('modal_alur');
         alurEl.innerHTML = '';
 
         let langkah = [];
-        try { langkah = JSON.parse(d.semuaLangkah || '[]'); } catch(e) {}
+
+        try {
+            langkah = JSON.parse(d.semuaLangkah || '[]');
+        } catch(e) {
+            langkah = [];
+        }
 
         langkah.forEach((v, i) => {
             const stepStatus = v.status_verifikasi;
-            const warna = stepStatus === 'disetujui'
-                ? { ring: 'border-green-200 bg-green-50', dot: 'bg-green-500', text: 'text-green-700', badge: 'bg-green-50 text-green-700 border border-green-100', label: 'Disetujui' }
-                : stepStatus === 'ditolak'
-                ? { ring: 'border-red-200 bg-red-50',   dot: 'bg-red-400',   text: 'text-red-600',   badge: 'bg-red-50 text-red-600 border border-red-100',     label: 'Ditolak' }
-                : { ring: 'border-slate-200 bg-slate-50', dot: 'bg-amber-400', text: 'text-amber-700', badge: 'bg-amber-50 text-amber-700 border border-amber-100', label: 'Pending' };
 
-            const catatan = v.catatan
-                ? `<p class="text-xs text-slate-500 mt-1 italic">"${v.catatan}"</p>`
-                : '';
+            const warna = stepStatus === 'disetujui'
+                ? {
+                    ring: 'border-green-200 bg-green-50',
+                    dot: 'bg-green-500',
+                    badge: 'bg-green-50 text-green-700 border border-green-100',
+                    label: 'Disetujui'
+                }
+                : stepStatus === 'ditolak'
+                ? {
+                    ring: 'border-red-200 bg-red-50',
+                    dot: 'bg-red-400',
+                    badge: 'bg-red-50 text-red-600 border border-red-100',
+                    label: 'Ditolak'
+                }
+                : {
+                    ring: 'border-slate-200 bg-slate-50',
+                    dot: 'bg-amber-400',
+                    badge: 'bg-amber-50 text-amber-700 border border-amber-100',
+                    label: 'Pending'
+                };
 
             const waktu = v.waktu_verifikasi
                 ? `<p class="text-xs text-slate-400 mt-0.5">${v.waktu_verifikasi}</p>`
+                : `<p class="text-xs text-slate-400 mt-0.5">Belum diverifikasi</p>`;
+
+            const catatan = v.catatan
+                ? `<p class="text-xs text-slate-500 mt-1 italic">"${v.catatan}"</p>`
                 : '';
 
             alurEl.innerHTML += `
@@ -399,13 +600,25 @@
                         <span class="w-6 h-6 rounded-full border-2 border-white shadow flex items-center justify-center text-[10px] font-extrabold text-white ${warna.dot}">
                             ${v.urutan}
                         </span>
+
                         ${i < langkah.length - 1 ? '<div class="w-px h-3 bg-slate-200"></div>' : ''}
                     </div>
+
                     <div class="flex-1">
                         <div class="flex items-center justify-between gap-2">
-                            <p class="text-sm font-semibold text-slate-700 capitalize">${v.role_verifikator}</p>
-                            <span class="px-2 py-0.5 text-[11px] font-bold rounded-full ${warna.badge}">${warna.label}</span>
+                            <div>
+                                <p class="text-sm font-semibold text-slate-700">
+                                    ${v.nama_verifikator || v.role_verifikator || '—'}
+                                </p>
+                                <p class="text-xs text-slate-400 capitalize">
+                                    ${v.nama_verifikator ? v.role_verifikator : 'Belum diverifikasi'}
+                                </p>
+                            </div>
+                            <span class="px-2 py-0.5 text-[11px] font-bold rounded-full ${warna.badge}">
+                                ${warna.label}
+                            </span>
                         </div>
+
                         ${waktu}
                         ${catatan}
                     </div>
@@ -417,9 +630,10 @@
             alurEl.innerHTML = '<p class="text-xs text-slate-400">Belum ada data verifikasi.</p>';
         }
 
-        // Buka modal
+        // Buka Modal
         modal.classList.remove('hidden');
         modal.classList.add('flex');
+
         requestAnimationFrame(() => {
             modalPanel.classList.remove('scale-95', 'opacity-0');
             modalPanel.classList.add('scale-100', 'opacity-100');
@@ -429,6 +643,7 @@
     function closeModal() {
         modalPanel.classList.add('scale-95', 'opacity-0');
         modalPanel.classList.remove('scale-100', 'opacity-100');
+
         setTimeout(() => {
             modal.classList.add('hidden');
             modal.classList.remove('flex');

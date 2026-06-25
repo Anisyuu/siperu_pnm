@@ -8,12 +8,29 @@ use App\Models\Jadwal;
 use App\Models\Peminjaman;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
 {
     public function dashboard(Request $request)
     {
-        $userId = Auth::user()->nomor_induk;
+        $user = Auth::user();
+        $userId = $user->nomor_induk;
+
+        $userRoles = $user->roles
+            ->pluck('nama')
+            ->map(fn ($role) => strtolower(trim($role)))
+            ->filter()
+            ->values()
+            ->toArray();
+
+        $jenisPemohonDiizinkan = DB::table('alur_verifikasi')
+            ->whereIn(DB::raw('LOWER(TRIM(role_verifikator))'), $userRoles)
+            ->pluck('jenis_pemohon')
+            ->map(fn ($jenis) => strtolower(trim($jenis)))
+            ->unique()
+            ->values()
+            ->toArray();
 
         $anchor = $request->filled('tanggal')
             ? Carbon::parse($request->tanggal)
@@ -24,20 +41,40 @@ class DashboardController extends Controller
 
         /*
         |--------------------------------------------------------------------------
-        | STAT CARD PEMINJAM
-        |--------------------------------------------------------------------------
-        | Tidak diubah.
-        | Hanya menghitung peminjaman milik user yang sedang login.
+        | STAT CARD PIMPINAN SEBAGAI VERIFIKATOR
         |--------------------------------------------------------------------------
         */
 
-        $basePeminjamanUser = Peminjaman::query()
-            ->where('pemohon_id', $userId);
+        $pendingPeminjaman = Peminjaman::with([
+                'pemohon.roles',
+                'ruangan.jenisRuangan',
+                'verifikasi',
+            ])
+            ->where('status', 'pending')
+            ->whereHas('pemohon.roles', function ($q) use ($jenisPemohonDiizinkan) {
+                $q->whereIn(DB::raw('LOWER(TRIM(nama))'), $jenisPemohonDiizinkan);
+            })
+            ->get();
 
-        $total     = (clone $basePeminjamanUser)->count();
-        $menunggu  = (clone $basePeminjamanUser)->where('status', 'pending')->count();
-        $disetujui = (clone $basePeminjamanUser)->where('status', 'disetujui')->count();
-        $ditolak   = (clone $basePeminjamanUser)->where('status', 'ditolak')->count();
+        $menunggu = $pendingPeminjaman
+            ->filter(fn ($peminjaman) => $this->perluDiverifikasiOlehUser($peminjaman, $userRoles, $userId))
+            ->count();
+
+        $disetujui = Peminjaman::query()
+            ->whereHas('verifikasi', function ($q) use ($userId) {
+                $q->where('id_verifikator', $userId)
+                    ->where('status_verifikasi', 'disetujui');
+            })
+            ->count();
+
+        $ditolak = Peminjaman::query()
+            ->whereHas('verifikasi', function ($q) use ($userId) {
+                $q->where('id_verifikator', $userId)
+                    ->where('status_verifikasi', 'ditolak');
+            })
+            ->count();
+
+        $total = $menunggu + $disetujui + $ditolak;
 
         /*
         |--------------------------------------------------------------------------
@@ -133,6 +170,73 @@ class DashboardController extends Controller
             'disetujui'    => $disetujui,
             'ditolak'      => $ditolak,
         ]);
+    }
+
+    private function perluDiverifikasiOlehUser($peminjaman, array $userRoles, string $userId): bool
+    {
+        if ($peminjaman->verifikasi->contains('id_verifikator', $userId)) {
+            return false;
+        }
+
+        $jenisPemohon = strtolower(trim(
+            $peminjaman->pemohon->roles->pluck('nama')->first()
+                ?? $peminjaman->pemohon->role
+                ?? ''
+        ));
+
+        if ($jenisPemohon === '') {
+            return false;
+        }
+
+        $jenisRuangSlug = strtolower(trim($peminjaman->ruangan->jenisRuangan->slug ?? ''));
+        $jenisRuangNama = strtolower(trim($peminjaman->ruangan->jenisRuangan->nama ?? ''));
+
+        $isLab = str_contains($jenisRuangSlug, 'lab')
+            || str_contains($jenisRuangNama, 'lab');
+
+        $alur = DB::table('alur_verifikasi')
+            ->whereRaw('LOWER(TRIM(jenis_pemohon)) = ?', [$jenisPemohon])
+            ->when(!$isLab, function ($q) {
+                $q->whereRaw('LOWER(TRIM(role_verifikator)) != ?', ['kalab']);
+            })
+            ->orderBy('urutan')
+            ->get();
+
+        if ($alur->isEmpty()) {
+            return false;
+        }
+
+        $riwayat = $peminjaman->verifikasi
+            ->sortBy('urutan')
+            ->values();
+
+        foreach ($alur as $step) {
+            $roleVerifikator = strtolower(trim($step->role_verifikator));
+
+            $verifikasiStep = $riwayat->first(function ($item) use ($step, $roleVerifikator) {
+                $urutanSama = isset($item->urutan)
+                    && (int) $item->urutan === (int) $step->urutan;
+
+                $roleSama = isset($item->role_verifikator)
+                    && strtolower(trim($item->role_verifikator)) === $roleVerifikator;
+
+                return $urutanSama || $roleSama;
+            });
+
+            if (!$verifikasiStep) {
+                return in_array($roleVerifikator, $userRoles);
+            }
+
+            if ($verifikasiStep->status_verifikasi === 'ditolak') {
+                return false;
+            }
+
+            if ($verifikasiStep->status_verifikasi !== 'disetujui') {
+                return in_array($roleVerifikator, $userRoles);
+            }
+        }
+
+        return false;
     }
 
     private function mapJadwal($data, Carbon $weekStart, Carbon $weekEnd)

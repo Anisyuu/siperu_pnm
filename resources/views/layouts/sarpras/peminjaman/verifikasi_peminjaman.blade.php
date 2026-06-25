@@ -148,6 +148,8 @@
                         <button onclick="openModal(this)"
                             data-id="{{ $p->id }}"
                             data-no="{{ $p->no_peminjaman }}"
+                            data-diajukan="{{ \Carbon\Carbon::parse($p->created_at)->locale('id')->translatedFormat('d M Y H:i') }}"
+
                             data-nama="{{ $pemohon->nama_lengkap ?? '-' }}"
                             data-nim="{{ $pemohon->nomor_induk ?? '-' }}"
                             data-email="{{ $pemohon->email ?? '-' }}"
@@ -168,14 +170,17 @@
                             data-approve-url="{{ route('sarpras.peminjaman.approve', $p->id) }}"
                             data-reject-url="{{ route('sarpras.peminjaman.reject', $p->id) }}"
                             data-semua-langkah="{{ $p->verifikasi->map(fn($v) => [
-                                'urutan'            => $v->urutan,
-                                'role_verifikator'  => $v->role_verifikator,
-                                'status_verifikasi' => $v->status_verifikasi,
-                                'waktu_verifikasi'  => $v->waktu_verifikasi
+                                'urutan'                  => $v->urutan,
+                                'role_verifikator'        => $v->role_verifikator,
+                                'nama_verifikator'        => $v->verifikator->nama_lengkap ?? null,
+                                'nomor_induk_verifikator' => $v->verifikator->nomor_induk ?? null,
+                                'status_verifikasi'       => $v->status_verifikasi,
+                                'waktu_verifikasi'        => $v->waktu_verifikasi
                                     ? \Carbon\Carbon::parse($v->waktu_verifikasi)->locale('id')->translatedFormat('d M Y, H:i')
                                     : null,
-                                'catatan'           => $v->catatan,
+                                'catatan'                 => $v->catatan,
                             ])->toJson() }}"
+
                             class="inline-flex items-center justify-center w-9 h-9 bg-blue-50 text-blue-500 hover:bg-blue-100 rounded-xl transition-colors opacity-60 group-hover:opacity-100">
                             <i class="fa-regular fa-eye text-sm"></i>
                         </button>
@@ -242,10 +247,23 @@
         {{-- Modal Body --}}
         <div class="overflow-y-auto max-h-[65vh]">
 
-            {{-- No Peminjaman --}}
-            <div class="px-6 py-4 bg-slate-50 border-b border-slate-100 flex items-center justify-between">
-                <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">No. Peminjaman</span>
-                <span id="modal_no" class="font-mono text-sm font-bold text-slate-700 bg-white border border-slate-200 px-3 py-1 rounded-lg"></span>
+            {{-- RINGKASAN PENGAJUAN --}}
+            <div class="px-6 py-4 bg-slate-50 border-b border-slate-100 grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">
+                        No. Peminjaman
+                    </p>
+                    <span id="modal_no"
+                        class="inline-flex font-mono text-sm font-bold text-slate-700 bg-white border border-slate-200 px-3 py-1 rounded-lg">
+                    </span>
+                </div>
+
+                <div>
+                    <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">
+                        Diajukan
+                    </p>
+                    <p id="modal_diajukan" class="text-sm font-semibold text-slate-700"></p>
+                </div>
             </div>
 
             <div class="px-6 py-5 space-y-6">
@@ -401,9 +419,11 @@
     function openModal(btn) {
         const d = btn.dataset;
 
-        // No & Avatar
-        document.getElementById('modal_no').textContent      = d.no;
-        document.getElementById('modal_avatar').textContent  = (d.nama || '?')[0].toUpperCase();
+        // No, waktu pengajuan & Avatar
+        document.getElementById('modal_no').textContent = d.no;
+        document.getElementById('modal_diajukan').textContent = d.diajukan || '—';
+
+        document.getElementById('modal_avatar').textContent = (d.nama || '?')[0].toUpperCase();
         document.getElementById('modal_nama').textContent    = d.nama;
         document.getElementById('modal_nim').textContent     = d.nim;
         document.getElementById('modal_email').textContent   = d.email;
@@ -485,7 +505,14 @@
                     </div>
                     <div class="flex-1">
                         <div class="flex items-center justify-between gap-2">
-                            <p class="text-sm font-semibold text-slate-700 capitalize">${v.role_verifikator}</p>
+                            <div>
+                                <p class="text-sm font-semibold text-slate-700">
+                                    ${v.nama_verifikator || v.role_verifikator || '—'}
+                                </p>
+                                <p class="text-xs text-slate-400 capitalize">
+                                    ${v.nama_verifikator ? v.role_verifikator : 'Belum diverifikasi'}
+                                </p>
+                            </div>
                             <span class="px-2 py-0.5 text-[11px] font-bold rounded-full ${warna.badge}">${warna.label}</span>
                         </div>
                         ${waktu}

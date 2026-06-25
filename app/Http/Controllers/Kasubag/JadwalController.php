@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Kasubag;
 
 use App\Http\Controllers\Controller;
 use App\Models\Jadwal;
+use App\Models\Peminjaman;
 use App\Models\Ruangan;
 use App\Models\Kampus;
 use App\Models\Gedung;
@@ -116,18 +117,28 @@ class JadwalController extends Controller
             'catatan'            => 'nullable|string',
         ]);
 
-        $bentrok = Jadwal::where('ruangan_id', $validated['ruangan_id'])
+        $bentrokJadwal = Jadwal::where('ruangan_id', $validated['ruangan_id'])
             ->whereDate('tanggal_mulai', '<=', $validated['tanggal_selesai'])
             ->whereDate('tanggal_selesai', '>=', $validated['tanggal_mulai'])
             ->whereTime('waktu_mulai', '<', $validated['waktu_selesai'])
             ->whereTime('waktu_selesai', '>', $validated['waktu_mulai'])
             ->exists();
 
-        if ($bentrok) {
+        $bentrokPeminjaman = Peminjaman::where('ruangan_id', $validated['ruangan_id'])
+            ->whereIn('status', ['pending', 'disetujui'])
+            ->whereDate('tanggal_mulai', '<=', $validated['tanggal_selesai'])
+            ->whereDate('tanggal_selesai', '>=', $validated['tanggal_mulai'])
+            ->whereTime('waktu_mulai', '<', $validated['waktu_selesai'])
+            ->whereTime('waktu_selesai', '>', $validated['waktu_mulai'])
+            ->exists();
+
+        if ($bentrokJadwal || $bentrokPeminjaman) {
+            Alert::error('Ruangan Tidak Tersedia', 'Ruangan sudah memiliki jadwal atau sedang diajukan pada tanggal dan jam tersebut.');
+
             return back()
                 ->withInput()
                 ->withErrors([
-                    'waktu_mulai' => 'Ruangan sudah memiliki jadwal pada tanggal dan jam tersebut.'
+                    'waktu_mulai' => 'Ruangan sudah memiliki jadwal atau sedang diajukan pada tanggal dan jam tersebut.'
                 ]);
         }
 
@@ -138,6 +149,16 @@ class JadwalController extends Controller
         return redirect()
             ->route('kasubag.kelola-jadwal')
             ->with('success', 'Jadwal penggunaan ruangan berhasil ditambahkan.');
+    }
+
+    public function detailJadwal($id)
+    {
+        $jadwal = Jadwal::with([
+            'ruangan.gedung.kampus',
+            'ruangan.jenisRuangan'
+        ])->findOrFail($id);
+
+        return view('layouts.kasubag.jadwal.detail_jadwal', compact('jadwal'));
     }
 
     public function editJadwal($id)
@@ -179,7 +200,7 @@ class JadwalController extends Controller
             'catatan'            => 'nullable|string',
         ]);
 
-        $bentrok = Jadwal::where('id', '!=', $jadwal->id)
+        $bentrokJadwal = Jadwal::where('id', '!=', $jadwal->id)
             ->where('ruangan_id', $validated['ruangan_id'])
             ->whereDate('tanggal_mulai', '<=', $validated['tanggal_selesai'])
             ->whereDate('tanggal_selesai', '>=', $validated['tanggal_mulai'])
@@ -187,11 +208,21 @@ class JadwalController extends Controller
             ->whereTime('waktu_selesai', '>', $validated['waktu_mulai'])
             ->exists();
 
-        if ($bentrok) {
+        $bentrokPeminjaman = Peminjaman::where('ruangan_id', $validated['ruangan_id'])
+            ->whereIn('status', ['pending', 'disetujui'])
+            ->whereDate('tanggal_mulai', '<=', $validated['tanggal_selesai'])
+            ->whereDate('tanggal_selesai', '>=', $validated['tanggal_mulai'])
+            ->whereTime('waktu_mulai', '<', $validated['waktu_selesai'])
+            ->whereTime('waktu_selesai', '>', $validated['waktu_mulai'])
+            ->exists();
+
+        if ($bentrokJadwal || $bentrokPeminjaman) {
+            Alert::error('Ruangan Tidak Tersedia', 'Ruangan sudah memiliki jadwal atau sedang diajukan pada tanggal dan jam tersebut.');
+
             return back()
                 ->withInput()
                 ->withErrors([
-                    'waktu_mulai' => 'Ruangan sudah memiliki jadwal pada tanggal dan jam tersebut.'
+                    'waktu_mulai' => 'Ruangan sudah memiliki jadwal atau sedang diajukan pada tanggal dan jam tersebut.'
                 ]);
         }
 
@@ -214,5 +245,57 @@ class JadwalController extends Controller
         return redirect()
             ->route('kasubag.kelola-jadwal')
             ->with('success', 'Jadwal penggunaan ruangan berhasil dihapus.');
+    }
+
+    public function ruanganTersedia(Request $request)
+    {
+        $request->validate([
+            'kampus_id'        => 'required',
+            'gedung_slug'      => 'required',
+            'lantai'           => 'required',
+            'tanggal_mulai'    => 'required|date',
+            'tanggal_selesai'  => 'required|date|after_or_equal:tanggal_mulai',
+            'waktu_mulai'      => 'required|date_format:H:i',
+            'waktu_selesai'    => 'required|date_format:H:i|after:waktu_mulai',
+        ]);
+
+        $ruanganBentrokJadwal = Jadwal::whereDate('tanggal_mulai', '<=', $request->tanggal_selesai)
+            ->whereDate('tanggal_selesai', '>=', $request->tanggal_mulai)
+            ->whereTime('waktu_mulai', '<', $request->waktu_selesai)
+            ->whereTime('waktu_selesai', '>', $request->waktu_mulai)
+            ->pluck('ruangan_id');
+
+        $ruanganBentrokPeminjaman = Peminjaman::whereIn('status', ['pending', 'disetujui'])
+            ->whereDate('tanggal_mulai', '<=', $request->tanggal_selesai)
+            ->whereDate('tanggal_selesai', '>=', $request->tanggal_mulai)
+            ->whereTime('waktu_mulai', '<', $request->waktu_selesai)
+            ->whereTime('waktu_selesai', '>', $request->waktu_mulai)
+            ->pluck('ruangan_id');
+
+        $ruanganBentrok = $ruanganBentrokJadwal
+            ->merge($ruanganBentrokPeminjaman)
+            ->unique();
+
+        $ruangan = Ruangan::with(['gedung.kampus', 'jenisRuangan'])
+            ->whereHas('gedung', function ($q) use ($request) {
+                $q->where('slug', $request->gedung_slug)
+                  ->where('kampus_id', $request->kampus_id);
+            })
+            ->where('lantai', $request->lantai)
+            ->whereNotIn('id', $ruanganBentrok)
+            ->orderBy('nama_ruang')
+            ->get()
+            ->map(function ($r) {
+                return [
+                    'id'          => $r->id,
+                    'nama_ruang'  => $r->nama_ruang,
+                    'gedung'      => $r->gedung->nama ?? '-',
+                    'gedung_slug' => $r->gedung->slug ?? '',
+                    'kampus_id'   => $r->gedung->kampus->id ?? '',
+                    'lantai'      => $r->lantai,
+                ];
+            });
+
+        return response()->json($ruangan);
     }
 }

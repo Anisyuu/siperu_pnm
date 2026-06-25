@@ -129,7 +129,7 @@ class RuanganController extends Controller
         $request->validate([
             'id_jenis_ruang' => 'required|exists:jenis_ruang,id',
             'gedung_slug'    => 'required|exists:gedung,slug',
-                'id_user'        => 'required|exists:user,nomor_induk',
+            'id_user'        => 'nullable|exists:user,nomor_induk',
             'lantai'         => 'required|integer|min:1',
             'nama_ruang'     => 'required|string|max:25',
         ]);

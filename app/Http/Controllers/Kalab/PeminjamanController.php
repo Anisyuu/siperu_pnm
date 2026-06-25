@@ -20,12 +20,12 @@ class PeminjamanController extends Controller
         $userRoles = $user->roles->pluck('nama')->toArray();
 
         Log::debug('[verifikasiPeminjaman]', [
-            'user'       => $user->nomor_induk,
-            'userRoles'  => $userRoles,
+            'user'      => $user->nomor_induk,
+            'userRoles' => $userRoles,
         ]);
 
         // ── 1. Ambil jenis_pemohon yang boleh diverifikasi role ini ──
-        $jenisPemohonDiizinkan = \DB::table('alur_verifikasi')
+        $jenisPemohonDiizinkan = DB::table('alur_verifikasi')
             ->whereIn('role_verifikator', $userRoles)
             ->pluck('jenis_pemohon')
             ->unique()
@@ -35,18 +35,27 @@ class PeminjamanController extends Controller
 
         if (empty($jenisPemohonDiizinkan)) {
             // Tidak ada alur yang cocok → tampilkan kosong
-            $peminjaman    = Peminjaman::paginate(5);
+            $peminjaman = Peminjaman::whereRaw('1 = 0')->paginate(5);
             $firstPendingId = null;
-            return view('layouts.kalab.peminjaman.verifikasi_peminjaman',
-                compact('peminjaman', 'firstPendingId'));
+
+            return view(
+                'layouts.kalab.peminjaman.verifikasi_peminjaman',
+                compact('peminjaman', 'firstPendingId')
+            );
         }
 
         // ── 2. Base query ────────────────────────────────────────────
         $baseQuery = Peminjaman::with([
                 'ruangan.gedung.kampus',
-                'ruangan.jenisRuangan', // pastikan relasi ini ada
+                'ruangan.jenisRuangan',
                 'pemohon.roles',
-                'verifikasi',
+
+                // DIBENAHI:
+                // verifikasi harus diurutkan dan relasi verifikator harus dibawa
+                // supaya Blade bisa menampilkan nama user yang melakukan verifikasi.
+                'verifikasi' => fn ($q) => $q->orderBy('urutan'),
+                'verifikasi.verifikator',
+
                 'verifikasiAktif',
             ])
             ->where('status', 'pending')
@@ -59,70 +68,78 @@ class PeminjamanController extends Controller
             // Belum pernah disetujui/ditolak oleh user ini di step manapun
             ->whereDoesntHave('verifikasi', function ($q) use ($user) {
                 $q->where('id_verifikator', $user->nomor_induk)
-                ->whereIn('status_verifikasi', ['disetujui', 'ditolak']);
+                    ->whereIn('status_verifikasi', ['disetujui', 'ditolak']);
             });
 
-            // ── 3. Filter kalab: hanya ruangan Lab yang ia kelola ────────
-            //    Jika kalab hanya boleh lihat ruangan lab miliknya,
-            //    tambahkan kondisi ini. Jika tidak perlu filter gedung, hapus blok ini.
-            $isKalab = in_array('kalab', array_map('strtolower', $userRoles));
+        // ── 3. Filter kalab: hanya ruangan Lab yang ia kelola ────────
+        $isKalab = in_array('kalab', array_map('strtolower', $userRoles));
 
-            if ($isKalab) {
-                // Kalab hanya lihat peminjaman ruangan lab yang ia kelola (id_user = nomor_induk kalab)
-                $baseQuery->whereHas('ruangan', function ($q) use ($user) {
-                    $q->where('id_user', $user->nomor_induk)
+        if ($isKalab) {
+            // Kalab hanya lihat peminjaman ruangan lab yang ia kelola
+            $baseQuery->whereHas('ruangan', function ($q) use ($user) {
+                $q->where('id_user', $user->nomor_induk)
                     ->whereHas('jenisRuangan', function ($q2) {
                         $q2->whereRaw("LOWER(nama) LIKE '%lab%'");
                     });
-                });
-            }
-
-            // dd($baseQuery->toSql(), $baseQuery->getBindings(), $isKalab);
-
-            // Jika kalab juga punya relasi ke ruangan/gedung tertentu,
-            // tambahkan filter di sini. Contoh jika kalab punya id_ruangan:
-            // $ruanganIds = Ruangan::where('id_user', $user->nomor_induk)->pluck('id');
-            // $baseQuery->whereIn('id_ruangan', $ruanganIds);
-
+            });
+        }
 
         // ── 4. Filter search & status ────────────────────────────────
-            if ($request->filled('search')) {
-                $search = $request->search;
-                $baseQuery->where(function ($q) use ($search) {
-                    $q->where('kegiatan', 'like', "%{$search}%")
+        if ($request->filled('search')) {
+            $search = $request->search;
+
+            $baseQuery->where(function ($q) use ($search) {
+                $q->where('kegiatan', 'like', "%{$search}%")
                     ->orWhere('no_peminjaman', 'like', "%{$search}%")
                     ->orWhereHas('pemohon', function ($q2) use ($search) {
                         $q2->where('nama_lengkap', 'like', "%{$search}%");
                     });
-                });
-            }
+            });
+        }
 
-            if ($request->filled('status')) {
-                $baseQuery->where('status', $request->status);
-            }
+        if ($request->filled('status')) {
+            $baseQuery->where('status', $request->status);
+        }
 
-            // ── 5. Eksekusi ───────────────────────────────────────────────
-            $peminjaman = (clone $baseQuery)->oldest()->paginate(5)->withQueryString();
+        // ── 5. Eksekusi ───────────────────────────────────────────────
+        $peminjaman = (clone $baseQuery)
+            ->oldest()
+            ->paginate(5)
+            ->withQueryString();
 
-            Log::debug('[verifikasiPeminjaman] total ditemukan', [
-                'count' => $peminjaman->total(),
-            ]);
+        Log::debug('[verifikasiPeminjaman] total ditemukan', [
+            'count' => $peminjaman->total(),
+        ]);
 
-            $firstPendingId = (clone $baseQuery)->oldest()->value('id');
+        $firstPendingId = (clone $baseQuery)
+            ->oldest()
+            ->value('id');
 
-            return view('layouts.kalab.peminjaman.verifikasi_peminjaman',
-                compact('peminjaman', 'firstPendingId'));
+        return view(
+            'layouts.kalab.peminjaman.verifikasi_peminjaman',
+            compact('peminjaman', 'firstPendingId')
+        );
     }
 
-    public function riwayatVerifikasi( Request $request)
+    public function riwayatVerifikasi(Request $request)
     {
         $userId = Auth::user()->nomor_induk;
-        $query = Peminjaman::with(['ruangan.gedung.kampus', 'pemohon', 'verifikasi' => fn($q) => $q->orderBy('urutan')])
+
+        $query = Peminjaman::with([
+                'ruangan.gedung.kampus',
+                'pemohon.roles',
+
+                // DIBENAHI:
+                // supaya riwayat verifikasi juga bisa menampilkan
+                // nama user verifikator di alur verifikasi.
+                'verifikasi' => fn ($q) => $q->orderBy('urutan'),
+                'verifikasi.verifikator',
+            ])
             ->whereHas('verifikasi', function ($q) use ($userId) {
                 $q->where('id_verifikator', $userId);
             });
 
-            // SEARCH
+        // SEARCH
         if ($request->filled('search')) {
             $query->where('kegiatan', 'like', '%' . $request->search . '%');
         }
@@ -132,9 +149,15 @@ class PeminjamanController extends Controller
             $query->where('status', $request->status);
         }
 
-        $peminjaman = $query->latest()->paginate(5);
+        $peminjaman = $query
+            ->latest()
+            ->paginate(5)
+            ->withQueryString();
 
-        return view('layouts.kalab.peminjaman.riwayat_verifikasi', compact('peminjaman'));
+        return view(
+            'layouts.kalab.peminjaman.riwayat_verifikasi',
+            compact('peminjaman')
+        );
     }
 
     public function exportRiwayatVerifikasi(Request $request)
@@ -144,8 +167,13 @@ class PeminjamanController extends Controller
         $query = Peminjaman::query()
             ->with([
                 'ruangan.gedung.kampus',
-                'pemohon',
+                'pemohon.roles',
+
+                // DIBENAHI:
+                // aman ditambahkan juga untuk kebutuhan export,
+                // terutama kalau trait export membaca data verifikator.
                 'verifikasi' => fn ($q) => $q->orderBy('urutan'),
+                'verifikasi.verifikator',
             ])
             ->whereHas('verifikasi', function ($q) use ($userId) {
                 $q->where('id_verifikator', '=', $userId);

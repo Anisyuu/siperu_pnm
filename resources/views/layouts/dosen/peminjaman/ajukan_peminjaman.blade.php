@@ -9,8 +9,7 @@
         <p class="mt-0.5 text-sm text-slate-500">Isi form pengajuan dengan lengkap dan benar.</p>
     </div>
 
-    <form action="{{ route('mahasiswa.simpan-peminjaman') }}" method="POST"
-          enctype="multipart/form-data" id="formPeminjaman">
+    <form action="{{ route('dosen.simpan-peminjaman') }}" method="POST" enctype="multipart/form-data" id="formPeminjaman">
         @csrf
 
         <div class="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-5 items-start">
@@ -231,7 +230,7 @@
                             <i class="fa-solid fa-paper-plane text-xs"></i>
                             Kirim Pengajuan
                         </button>
-                        <a href="{{ route('mahasiswa.list-peminjaman') }}"
+                        <a href="{{ route('dosen.list-peminjaman') }}"
                             class="w-full flex items-center justify-center gap-2 py-2.5 border border-slate-200 text-slate-600 font-semibold text-sm rounded-xl hover:bg-slate-50 transition-colors">
                             Batal
                         </a>
@@ -354,7 +353,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         try {
-            const response = await fetch(`{{ route('mahasiswa.ruangan-tersedia') }}?${params.toString()}`, {
+            const response = await fetch(`{{ route('dosen.ruangan-tersedia') }}?${params.toString()}`, {
                 headers: {
                     'Accept': 'application/json'
                 }
@@ -468,7 +467,7 @@ function updateSummary() {
         get('sumWaktu').textContent  = '—';
         get('sumDurasi').textContent = '—';
     }
-}
+    }
 
 function showFileName(input) {
     const label = document.getElementById('fileLabel');
@@ -477,6 +476,43 @@ function showFileName(input) {
         ? `<span class="font-semibold text-slate-700">${input.files[0].name}</span>`
         : `Seret file ke sini atau <span class="text-blue-500">klik untuk memilih</span>`;
 }
+
+document.addEventListener('DOMContentLoaded', () => {
+    const formPeminjaman = document.getElementById('formPeminjaman');
+
+    if (!formPeminjaman) return;
+
+    formPeminjaman.addEventListener('submit', function (e) {
+        if (formPeminjaman.dataset.confirmed === 'true') {
+            return;
+        }
+
+        e.preventDefault();
+
+        if (typeof Swal === 'undefined') {
+            formPeminjaman.dataset.confirmed = 'true';
+            formPeminjaman.submit();
+            return;
+        }
+
+        Swal.fire({
+            title: 'Kirim pengajuan?',
+            text: 'Pastikan data peminjaman ruangan sudah benar.',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: 'Ya, kirim',
+            cancelButtonText: 'Batal',
+            reverseButtons: true,
+            confirmButtonColor: '#2563eb',
+            cancelButtonColor: '#64748b'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                formPeminjaman.dataset.confirmed = 'true';
+                formPeminjaman.submit();
+            }
+        });
+    });
+});
 </script>
 @endpush
 

@@ -472,6 +472,44 @@ function showFileName(input) {
         ? `<span class="font-semibold text-slate-700">${input.files[0].name}</span>`
         : `Seret file ke sini atau <span class="text-blue-500">klik untuk memilih</span>`;
 }
+
+// ── SweetAlert konfirmasi submit ─────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+    const formPeminjaman = document.getElementById('formPeminjaman');
+
+    if (!formPeminjaman) return;
+
+    formPeminjaman.addEventListener('submit', function (e) {
+        if (formPeminjaman.dataset.confirmed === 'true') {
+            return;
+        }
+
+        e.preventDefault();
+
+        if (typeof Swal === 'undefined') {
+            formPeminjaman.dataset.confirmed = 'true';
+            formPeminjaman.submit();
+            return;
+        }
+
+        Swal.fire({
+            title: 'Kirim pengajuan?',
+            text: 'Pastikan data peminjaman ruangan sudah benar.',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: 'Ya, kirim',
+            cancelButtonText: 'Batal',
+            reverseButtons: true,
+            confirmButtonColor: '#2563eb',
+            cancelButtonColor: '#64748b'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                formPeminjaman.dataset.confirmed = 'true';
+                formPeminjaman.submit();
+            }
+        });
+    });
+});
 </script>
 @endpush
 

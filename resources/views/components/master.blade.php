@@ -7,4 +7,7 @@
             {{ $slot }}
         </main>
     </div>
+
+
+
 </x-app>
