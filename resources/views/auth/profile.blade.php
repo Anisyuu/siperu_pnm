@@ -66,15 +66,20 @@
 
                                     <div class="relative">
                                         <input
+                                            id="password_lama"
                                             type="password"
                                             name="password_lama"
                                             class="h-11 w-full rounded-xl border border-slate-200 bg-white px-4 pr-11 text-sm font-semibold text-slate-700 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
                                             placeholder="Masukkan password lama"
                                         >
 
-                                        <div class="pointer-events-none absolute inset-y-0 right-4 flex items-center text-slate-400">
-                                            <i class="fa-solid fa-lock text-xs"></i>
-                                        </div>
+                                        <button
+                                            type="button"
+                                            onclick="togglePassword('password_lama', 'icon_password_lama')"
+                                            class="absolute inset-y-0 right-4 flex items-center text-slate-400 hover:text-blue-600 transition"
+                                        >
+                                            <i id="icon_password_lama" class="fa-solid fa-eye text-xs"></i>
+                                        </button>
                                     </div>
 
                                     @error('password_lama')
@@ -92,15 +97,20 @@
 
                                         <div class="relative">
                                             <input
+                                                id="password"
                                                 type="password"
                                                 name="password"
                                                 class="h-11 w-full rounded-xl border border-slate-200 bg-white px-4 pr-11 text-sm font-semibold text-slate-700 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
                                                 placeholder="Minimal 8 karakter"
                                             >
 
-                                            <div class="pointer-events-none absolute inset-y-0 right-4 flex items-center text-slate-400">
-                                                <i class="fa-solid fa-key text-xs"></i>
-                                            </div>
+                                            <button
+                                                type="button"
+                                                onclick="togglePassword('password', 'icon_password')"
+                                                class="absolute inset-y-0 right-4 flex items-center text-slate-400 hover:text-blue-600 transition"
+                                            >
+                                                <i id="icon_password" class="fa-solid fa-eye text-xs"></i>
+                                            </button>
                                         </div>
 
                                         @error('password')
@@ -117,15 +127,20 @@
 
                                         <div class="relative">
                                             <input
+                                                id="password_confirmation"
                                                 type="password"
                                                 name="password_confirmation"
                                                 class="h-11 w-full rounded-xl border border-slate-200 bg-white px-4 pr-11 text-sm font-semibold text-slate-700 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
                                                 placeholder="Ulangi password baru"
                                             >
 
-                                            <div class="pointer-events-none absolute inset-y-0 right-4 flex items-center text-slate-400">
-                                                <i class="fa-solid fa-check-double text-xs"></i>
-                                            </div>
+                                            <button
+                                                type="button"
+                                                onclick="togglePassword('password_confirmation', 'icon_password_confirmation')"
+                                                class="absolute inset-y-0 right-4 flex items-center text-slate-400 hover:text-blue-600 transition"
+                                            >
+                                                <i id="icon_password_confirmation" class="fa-solid fa-eye text-xs"></i>
+                                            </button>
                                         </div>
                                     </div>
                                 </div>
@@ -238,4 +253,23 @@
 
         </div>
     </div>
+
+    <script>
+        function togglePassword(inputId, iconId) {
+            const input = document.getElementById(inputId);
+            const icon = document.getElementById(iconId);
+
+            if (input.type === 'password') {
+                input.type = 'text';
+
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            } else {
+                input.type = 'password';
+
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            }
+        }
+    </script>
 </x-master>

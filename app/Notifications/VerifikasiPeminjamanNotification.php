@@ -4,7 +4,6 @@ namespace App\Notifications;
 
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Notification;
-use Illuminate\Notifications\Messages\BroadcastMessage;
 
 class VerifikasiPeminjamanNotification extends Notification
 {
@@ -17,7 +16,7 @@ class VerifikasiPeminjamanNotification extends Notification
 
     public function via($notifiable): array
     {
-        return ['database', 'broadcast'];
+        return ['database'];
     }
 
     public function toArray($notifiable): array
@@ -32,10 +31,5 @@ class VerifikasiPeminjamanNotification extends Notification
             'status'            => $this->peminjaman->status,
             'status_verifikasi' => $this->statusVerifikasi,
         ];
-    }
-
-    public function toBroadcast($notifiable): BroadcastMessage
-    {
-        return new BroadcastMessage($this->toArray($notifiable));
     }
 }

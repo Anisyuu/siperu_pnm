@@ -17,7 +17,7 @@ return new class extends Migration
             $table->foreignId('id_gedung')->constrained('gedung')->onDelete('cascade');
             $table->integer('lantai');
             // $table->string('nomor_ruang', 5);
-            $table->string('nama_ruang', 25);
+            $table->string('nama_ruang', 100);
             $table->string('slug', 50)->unique()->nullable();
             $table->string('id_user')->nullable(); // atau sesuai tipe kolomnya
             $table->foreign('id_user')->references('nomor_induk')->on('user')->onDelete('cascade');

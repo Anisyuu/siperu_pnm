@@ -4,19 +4,18 @@ namespace App\Notifications;
 
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Notification;
-use Illuminate\Notifications\Messages\BroadcastMessage;
 
 class PengajuanPeminjamanNotification extends Notification
 {
     use Queueable;
 
     public function __construct(
-        public $peminjaman
+        public $peminjaman,
     ) {}
 
     public function via($notifiable): array
     {
-        return ['database', 'broadcast'];
+        return ['database'];
     }
 
     public function toArray($notifiable): array
@@ -30,10 +29,5 @@ class PengajuanPeminjamanNotification extends Notification
             'kegiatan'      => $this->peminjaman->kegiatan,
             'status'        => $this->peminjaman->status,
         ];
-    }
-
-    public function toBroadcast($notifiable): BroadcastMessage
-    {
-        return new BroadcastMessage($this->toArray($notifiable));
     }
 }

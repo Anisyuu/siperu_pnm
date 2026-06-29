@@ -54,9 +54,136 @@ class PeminjamanController extends Controller
     {
         $role = strtolower(trim($role));
 
+        $peminjaman->loadMissing([
+            'ruangan.user.roles',
+            'ruangan.gedung.user.roles',
+        ]);
+
+        /*
+        |--------------------------------------------------------------------------
+        | Khusus Kalab
+        |--------------------------------------------------------------------------
+        | Kalab diambil dari penanggung jawab ruangan/lab:
+        | ruangan.id_user = user.nomor_induk
+        */
+        if ($role === 'kalab') {
+            $kalabRuangan = $peminjaman->ruangan?->user;
+
+            if (!$kalabRuangan) {
+                Log::warning('[notifikasi peminjaman] kalab ruangan tidak ditemukan', [
+                    'peminjaman_id' => $peminjaman->id,
+                    'ruangan_id'    => $peminjaman->ruangan_id,
+                    'ruangan_nama'  => $peminjaman->ruangan->nama_ruang ?? null,
+                    'id_user'       => $peminjaman->ruangan->id_user ?? null,
+                ]);
+
+                return;
+            }
+
+            if (!$kalabRuangan->roles->contains(fn ($r) => strtolower(trim($r->nama)) === 'kalab')) {
+                Log::warning('[notifikasi peminjaman] user penanggung jawab ruangan bukan role kalab', [
+                    'peminjaman_id'     => $peminjaman->id,
+                    'ruangan_id'        => $peminjaman->ruangan_id,
+                    'ruangan_nama'      => $peminjaman->ruangan->nama_ruang ?? null,
+                    'id_user_ruangan'   => $peminjaman->ruangan->id_user ?? null,
+                    'user_nomor_induk'  => $kalabRuangan->nomor_induk,
+                    'user_nama_lengkap' => $kalabRuangan->nama_lengkap,
+                    'roles_user'        => $kalabRuangan->roles->pluck('nama')->toArray(),
+                ]);
+
+                return;
+            }
+
+            $kalabRuangan->notify(new PengajuanPeminjamanNotification($peminjaman));
+
+            Log::info('[notifikasi peminjaman] dikirim ke kalab ruangan', [
+                'peminjaman_id'      => $peminjaman->id,
+                'ruangan_id'         => $peminjaman->ruangan_id,
+                'ruangan_nama'       => $peminjaman->ruangan->nama_ruang ?? null,
+                'kalab_nomor_induk'  => $kalabRuangan->nomor_induk,
+                'kalab_nama_lengkap' => $kalabRuangan->nama_lengkap,
+            ]);
+
+            return;
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Khusus Sarpras
+        |--------------------------------------------------------------------------
+        | Sarpras diambil dari penanggung jawab gedung:
+        | gedung.id_user = user.nomor_induk
+        */
+        if ($role === 'sarpras') {
+            $gedung = $peminjaman->ruangan?->gedung;
+
+            if (!$gedung) {
+                Log::warning('[notifikasi peminjaman] gedung ruangan tidak ditemukan', [
+                    'peminjaman_id' => $peminjaman->id,
+                    'ruangan_id'    => $peminjaman->ruangan_id,
+                ]);
+
+                return;
+            }
+
+            $sarprasGedung = $gedung->user;
+
+            if (!$sarprasGedung) {
+                Log::warning('[notifikasi peminjaman] sarpras gedung tidak ditemukan', [
+                    'peminjaman_id' => $peminjaman->id,
+                    'ruangan_id'    => $peminjaman->ruangan_id,
+                    'gedung_id'     => $gedung->id,
+                    'gedung_nama'   => $gedung->nama ?? null,
+                    'id_user'       => $gedung->id_user,
+                ]);
+
+                return;
+            }
+
+            if (!$sarprasGedung->roles->contains(fn ($r) => strtolower(trim($r->nama)) === 'sarpras')) {
+                Log::warning('[notifikasi peminjaman] user penanggung jawab gedung bukan role sarpras', [
+                    'peminjaman_id'     => $peminjaman->id,
+                    'gedung_id'         => $gedung->id,
+                    'gedung_nama'       => $gedung->nama ?? null,
+                    'id_user_gedung'    => $gedung->id_user,
+                    'user_nomor_induk'  => $sarprasGedung->nomor_induk,
+                    'user_nama_lengkap' => $sarprasGedung->nama_lengkap,
+                    'roles_user'        => $sarprasGedung->roles->pluck('nama')->toArray(),
+                ]);
+
+                return;
+            }
+
+            $sarprasGedung->notify(new PengajuanPeminjamanNotification($peminjaman));
+
+            Log::info('[notifikasi peminjaman] dikirim ke sarpras gedung', [
+                'peminjaman_id'        => $peminjaman->id,
+                'ruangan_id'           => $peminjaman->ruangan_id,
+                'ruangan_nama'         => $peminjaman->ruangan->nama_ruang ?? null,
+                'gedung_id'            => $gedung->id,
+                'gedung_nama'          => $gedung->nama ?? null,
+                'sarpras_nomor_induk'  => $sarprasGedung->nomor_induk,
+                'sarpras_nama_lengkap' => $sarprasGedung->nama_lengkap,
+            ]);
+
+            return;
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Role Umum
+        |--------------------------------------------------------------------------
+        | Kasubag, pimpinan, dan role umum lain dikirim berdasarkan role.
+        */
         $users = User::whereHas('roles', function ($q) use ($role) {
             $q->whereRaw('LOWER(TRIM(nama)) = ?', [$role]);
         })->get();
+
+        Log::info('[notifikasi peminjaman] kirim ke role umum', [
+            'role'          => $role,
+            'jumlah_user'   => $users->count(),
+            'peminjaman_id' => $peminjaman->id,
+        ]);
 
         foreach ($users as $user) {
             $user->notify(new PengajuanPeminjamanNotification($peminjaman));
@@ -172,6 +299,8 @@ class PeminjamanController extends Controller
             $peminjaman->load([
                 'pemohon.roles',
                 'ruangan.jenisRuangan',
+                'ruangan.user.roles',
+                'ruangan.gedung.user.roles',
             ]);
 
             $alur = $this->ambilAlurVerifikasi($peminjaman);

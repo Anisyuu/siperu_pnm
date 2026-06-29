@@ -27,7 +27,7 @@ class PanduanController extends Controller
                                     'Sistem akan menampilkan halaman login.',
                                 ],
                                 'images' => [
-                                    'kasubag_login.png',
+                                    'kasubag_login.webp',
                                 ],
                                 'image_captions' => [
                                     'Tampilan halaman login Sistem Peminjaman Ruangan',
@@ -42,7 +42,7 @@ class PanduanController extends Controller
                                     'Pastikan email dan password tidak kosong.',
                                 ],
                                 'images' => [
-                                    'kasubag_login2.png',
+                                    'kasubag_login2.webp',
                                 ],
                                 'image_captions' => [
                                     'Form pengisian email dan password',
@@ -58,7 +58,7 @@ class PanduanController extends Controller
                                     'Jika berhasil, sistem menampilkan dashboard Kasubag.',
                                 ],
                                 'images' => [
-                                    'kasubag_dashboard.png',
+                                    'kasubag_dashboard.webp',
                                 ],
                                 'image_captions' => [
                                     'Dashboard setelah login berhasil',
@@ -81,7 +81,7 @@ class PanduanController extends Controller
                                     'Gunakan informasi tersebut untuk memantau aktivitas sistem.',
                                 ],
                                 'images' => [
-                                    'kasubag_dashboard.png',
+                                    'kasubag_dashboard.webp',
                                 ],
                                 'image_captions' => [
                                     'Tampilan dashboard Kasubag',
@@ -115,7 +115,7 @@ class PanduanController extends Controller
                                     'Data pengguna dapat dicari atau diperiksa melalui halaman ini.',
                                 ],
                                 'images' => [
-                                    'kasubag_kelola_pengguna1.png',
+                                    'kasubag_kelola_pengguna1.webp',
                                 ],
                                 'image_captions' => [
                                     'Halaman daftar pengguna',
@@ -131,7 +131,7 @@ class PanduanController extends Controller
                                     'Klik Simpan untuk menyimpan data pengguna.',
                                 ],
                                 'images' => [
-                                    'kasubag_kelola_pengguna2.png',
+                                    'kasubag_kelola_pengguna2.webp',
                                 ],
                                 'image_captions' => [
                                     'Form tambah pengguna',
@@ -148,7 +148,7 @@ class PanduanController extends Controller
                                     'Gunakan fitur status untuk mengaktifkan atau menonaktifkan akun pengguna.',
                                 ],
                                 'images' => [
-                                    'kasubag_kelola_pengguna3.png',
+                                    'kasubag_kelola_pengguna3.webp',
                                 ],
                                 'image_captions' => [
                                     'Form ubah pengguna',
@@ -184,7 +184,7 @@ class PanduanController extends Controller
                                     'Gunakan tombol Edit atau Hapus jika data jenis ruangan perlu diperbarui.',
                                 ],
                                 'images' => [
-                                    'kasubag_kelola_jenis_ruangan.png',
+                                    'kasubag_kelola_jenis_ruangan.webp',
                                 ],
                                 'image_captions' => [
                                     'Halaman kelola jenis ruangan',
@@ -201,7 +201,7 @@ class PanduanController extends Controller
                                     'Kasubag dapat menggunakan halaman ini untuk memilih data kampus yang akan ditambah, diubah, atau dilanjutkan ke pengelolaan gedung.',
                                 ],
                                 'images' => [
-                                    'kasubag_kelola_kampus.png',
+                                    'kasubag_kelola_kampus.webp',
                                 ],
                                 'image_captions' => [
                                     'Halaman daftar kampus',
@@ -220,8 +220,8 @@ class PanduanController extends Controller
                                     'Perbarui data kampus yang diperlukan, kemudian klik tombol Simpan Perubahan.',
                                 ],
                                 'images' => [
-                                    'kasubag_tambah_kampus.png',
-                                    'kasubag_edit_kampus.png',
+                                    'kasubag_tambah_kampus.webp',
+                                    'kasubag_edit_kampus.webp',
                                 ],
                                 'image_captions' => [
                                     'Form tambah kampus',
@@ -240,7 +240,7 @@ class PanduanController extends Controller
                                     'Kasubag juga dapat melanjutkan ke proses tambah gedung, edit gedung, atau memilih gedung untuk melihat lantai dan ruangan di dalamnya.',
                                 ],
                                 'images' => [
-                                    'kasubag_kelola_gedung.png',
+                                    'kasubag_kelola_gedung.webp',
                                 ],
                                 'image_captions' => [
                                     'Halaman daftar gedung',
@@ -265,8 +265,8 @@ class PanduanController extends Controller
                                     'Jika ingin menghapus data gedung, pilih data gedung pada daftar lalu klik tombol Hapus.',
                                 ],
                                 'images' => [
-                                    'kasubag_tambah_gedung.png',
-                                    'kasubag_edit_gedung.png',
+                                    'kasubag_tambah_gedung.webp',
+                                    'kasubag_edit_gedung.webp',
                                 ],
                                 'image_captions' => [
                                     'Form tambah gedung',
@@ -285,7 +285,7 @@ class PanduanController extends Controller
                                     'Sistem akan menampilkan daftar ruangan yang berada pada lantai tersebut.',
                                 ],
                                 'images' => [
-                                    'kasubag_kelola_lantai.png',
+                                    'kasubag_kelola_lantai.webp',
                                 ],
                                 'image_captions' => [
                                     'Halaman pilihan lantai dalam gedung',
@@ -303,7 +303,7 @@ class PanduanController extends Controller
                                     'Kasubag dapat melanjutkan ke proses tambah ruangan, edit ruangan, atau pemeriksaan detail ruangan.',
                                 ],
                                 'images' => [
-                                    'kasubag_kelola_ruangan.png',
+                                    'kasubag_kelola_ruangan.webp',
                                 ],
                                 'image_captions' => [
                                     'Halaman daftar ruangan',
@@ -332,8 +332,8 @@ class PanduanController extends Controller
                                     'Jika ingin menghapus data ruangan, pilih data ruangan pada daftar lalu klik tombol Hapus.',
                                 ],
                                 'images' => [
-                                    'kasubag_tambah_ruangan.png',
-                                    'kasubag_edit_ruangan.png',
+                                    'kasubag_tambah_ruangan.webp',
+                                    'kasubag_edit_ruangan.webp',
                                 ],
                                 'image_captions' => [
                                     'Form tambah ruangan',
@@ -382,7 +382,7 @@ class PanduanController extends Controller
                                     'Gunakan filter pencarian jika ingin melihat jadwal berdasarkan ruangan, tanggal, kampus, atau gedung.',
                                 ],
                                 'images' => [
-                                    'kasubag_kelola_jadwal.png',
+                                    'kasubag_kelola_jadwal.webp',
                                 ],
                                 'image_captions' => [
                                     'Halaman kelola jadwal',
@@ -407,8 +407,8 @@ class PanduanController extends Controller
                                     'Jika berhasil, jadwal tidak lagi tampil pada daftar jadwal penggunaan ruangan.',
                                 ],
                                 'images' => [
-                                    'kasubag_tambah_jadwal.png',
-                                    'kasubag_edit_jadwal.png',
+                                    'kasubag_tambah_jadwal.webp',
+                                    'kasubag_edit_jadwal.webp',
                                 ],
                                 'image_captions' => [
                                     'Form tambah jadwal',
@@ -443,7 +443,7 @@ class PanduanController extends Controller
                                             'Kasubag dapat melihat apakah setiap jenis pemohon sudah memiliki alur verifikasi yang sesuai.',
                                         ],
                                         'images' => [
-                                            'kasubag_alur_verifikasi.png',
+                                            'kasubag_alur_verifikasi.webp',
                                         ],
                                         'image_captions' => [
                                             'Halaman kelola alur verifikasi',
@@ -469,8 +469,8 @@ class PanduanController extends Controller
                                             'Konfirmasi penghapusan jika sistem menampilkan pesan konfirmasi.',
                                         ],
                                         'images' => [
-                                            'kasubag_tambah_alur_verifikasi.png',
-                                            'kasubag_edit_alur_verifikasi.png',
+                                            'kasubag_tambah_alur_verifikasi.webp',
+                                            'kasubag_edit_alur_verifikasi.webp',
                                         ],
                                         'image_captions' => [
                                             'Form tambah alur verifikasi',
@@ -527,7 +527,7 @@ class PanduanController extends Controller
                                                     'Kasubag dapat memilih salah satu pengajuan untuk melihat detailnya.',
                                                 ],
                                                 'images' => [
-                                                    'kasubag_verifikasi_peminjaman.png',
+                                                    'kasubag_verifikasi_peminjaman.webp',
                                                 ],
                                                 'image_captions' => [
                                                     'Halaman verifikasi peminjaman Kasubag',
@@ -545,7 +545,7 @@ class PanduanController extends Controller
                                                     'Simpan keputusan verifikasi.',
                                                 ],
                                                 'images' => [
-                                                    'kasubag_detail_verifikasi_peminjaman.png',
+                                                    'kasubag_detail_verifikasi_peminjaman.webp',
                                                 ],
                                                 'image_captions' => [
                                                     'Detail pengajuan peminjaman',
@@ -570,7 +570,7 @@ class PanduanController extends Controller
                                                 'Gunakan fitur pencarian atau filter untuk mencari data riwayat verifikasi tertentu.',
                                             ],
                                             'images' => [
-                                                'kasubag_riwayat_verifikasi.png',
+                                                'kasubag_riwayat_verifikasi.webp',
                                             ],
                                             'image_captions' => [
                                                 'Halaman riwayat verifikasi Kasubag',
@@ -586,7 +586,7 @@ class PanduanController extends Controller
                                                 'Gunakan hasil unduhan sebagai arsip atau bahan dokumentasi proses verifikasi peminjaman ruangan.',
                                             ],
                                             'images' => [
-                                                'kasubag_detail_riwayat_verifikasi.png',
+                                                'kasubag_detail_riwayat_verifikasi.webp',
                                             ],
                                             'image_captions' => [
                                                 'Detail riwayat verifikasi',
@@ -611,7 +611,7 @@ class PanduanController extends Controller
                                                 'Gunakan fitur pencarian atau filter untuk mencari data peminjaman tertentu.',
                                             ],
                                             'images' => [
-                                                'kasubag_riwayat_peminjaman.png',
+                                                'kasubag_riwayat_peminjaman.webp',
                                             ],
                                             'image_captions' => [
                                                 'Halaman riwayat peminjaman Kasubag',
@@ -627,7 +627,7 @@ class PanduanController extends Controller
                                                 'Gunakan hasil unduhan sebagai arsip atau bahan pemeriksaan penggunaan ruangan.',
                                             ],
                                             'images' => [
-                                                'kasubag_detail_riwayat_peminjaman.png',
+                                                'kasubag_detail_riwayat_peminjaman.webp',
                                             ],
                                             'image_captions' => [
                                                 'Detail riwayat peminjaman',
@@ -658,7 +658,7 @@ class PanduanController extends Controller
                                     'Klik tombol Login.',
                                 ],
                                 'images' => [
-                                    'verifikator_login.png',
+                                    'verifikator_login.webp',
                                 ],
                                 'image_captions' => [
                                     'Halaman login verifikator',
@@ -673,7 +673,7 @@ class PanduanController extends Controller
                                     'Menu yang tampil disesuaikan dengan role pengguna.',
                                 ],
                                 'images' => [
-                                    'verifikator_dashboard.png',
+                                    'verifikator_dashboard.webp',
                                 ],
                                 'image_captions' => [
                                     'Dashboard verifikator',
@@ -696,7 +696,7 @@ class PanduanController extends Controller
                                     'Gunakan informasi dashboard untuk menentukan pengajuan yang perlu segera diproses.',
                                 ],
                                 'images' => [
-                                    'verifikator_dashboard.png',
+                                    'verifikator_dashboard.webp',
                                 ],
                                 'image_captions' => [
                                     'Dashboard verifikator',
@@ -719,7 +719,7 @@ class PanduanController extends Controller
                                 'Verifikator dapat melihat informasi ruangan, tanggal, jam, lokasi, dan keterangan penggunaan.',
                             ],
                             'images' => [
-                                'verifikator_jadwal_ruangan.png',
+                                'verifikator_jadwal_ruangan.webp',
                             ],
                             'image_captions' => [
                                 'Halaman jadwal ruangan verifikator',
@@ -735,7 +735,7 @@ class PanduanController extends Controller
                                 'Gunakan hasil filter untuk memeriksa ketersediaan atau penggunaan ruangan sebelum memproses pengajuan.',
                             ],
                             'images' => [
-                                'verifikator_filter_jadwal.png',
+                                'verifikator_filter_jadwal.webp',
                             ],
                             'image_captions' => [
                                 'Filter jadwal ruangan verifikator',
@@ -759,7 +759,7 @@ class PanduanController extends Controller
                                     'Pengajuan yang tampil disesuaikan dengan role dan urutan verifikator.',
                                 ],
                                 'images' => [
-                                    'verifikator_verifikasi_peminjaman.png',
+                                    'verifikator_verifikasi_peminjaman.webp',
                                 ],
                                 'image_captions' => [
                                     'Daftar pengajuan menunggu verifikasi',
@@ -774,7 +774,7 @@ class PanduanController extends Controller
                                     'Pastikan informasi pengajuan sudah jelas sebelum diverifikasi.',
                                 ],
                                 'images' => [
-                                    'verifikator_verifikasi_peminjaman2.png',
+                                    'verifikator_verifikasi_peminjaman2.webp',
                                 ],
                                 'image_captions' => [
                                     'Detail data pengajuan',
@@ -810,7 +810,7 @@ class PanduanController extends Controller
                                     'Gunakan fitur unduh untuk menyimpan data riwayat verifikasi sebagai arsip ataupun dokumentasi.',
                                 ],
                                 'images' => [
-                                    'verifikator_riwayat_verifikasi.png',
+                                    'verifikator_riwayat_verifikasi.webp',
                                 ],
                                 'image_captions' => [
                                     'Halaman riwayat verifikasi',
@@ -824,7 +824,7 @@ class PanduanController extends Controller
                                     'Lihat detail pengajuan dan keputusan verifikasi.',
                                 ],
                                 'images' => [
-                                    'verifikator_detail_riwayat_verifikasi.png',
+                                    'verifikator_detail_riwayat_verifikasi.webp',
                                 ],
                                 'image_captions' => [
                                     'Detail riwayat verifikasi',
@@ -854,7 +854,7 @@ class PanduanController extends Controller
                                     'Klik tombol Login.',
                                 ],
                                 'images' => [
-                                    'pemohon_login.png',
+                                    'pemohon_login.webp',
                                 ],
                                 'image_captions' => [
                                     'Halaman login pemohon',
@@ -869,7 +869,7 @@ class PanduanController extends Controller
                                     'Pemohon dapat mulai mengakses menu pengajuan atau riwayat peminjaman.',
                                 ],
                                 'images' => [
-                                    'pemohon_dashboard.png',
+                                    'pemohon_dashboard.webp',
                                 ],
                                 'image_captions' => [
                                     'Dashboard pemohon setelah login',
@@ -892,7 +892,7 @@ class PanduanController extends Controller
                                     'Gunakan ringkasan ini untuk memantau pengajuan yang sudah dibuat.',
                                 ],
                                 'images' => [
-                                    'pemohon_dashboard.png',
+                                    'pemohon_dashboard.webp',
                                 ],
                                 'image_captions' => [
                                     'Dashboard pemohon',
@@ -915,7 +915,7 @@ class PanduanController extends Controller
                                 'Pemohon dapat melihat informasi ruangan, tanggal, jam, lokasi, dan keterangan penggunaan.',
                             ],
                             'images' => [
-                                'pemohon_jadwal_ruangan.png',
+                                'pemohon_jadwal_ruangan.webp',
                             ],
                             'image_captions' => [
                                 'Halaman jadwal ruangan pemohon',
@@ -931,7 +931,7 @@ class PanduanController extends Controller
                                 'Gunakan informasi jadwal tersebut sebagai pertimbangan sebelum mengajukan peminjaman ruangan.',
                             ],
                             'images' => [
-                                'pemohon_filter_jadwal.png',
+                                'pemohon_filter_jadwal.webp',
                             ],
                             'image_captions' => [
                                 'Filter jadwal ruangan pemohon',
@@ -956,7 +956,7 @@ class PanduanController extends Controller
                                     'Pemohon mulai mengisi data peminjaman.',
                                 ],
                                 'images' => [
-                                    'pemohon_pengajuan_list_peminjaman.png',
+                                    'pemohon_pengajuan_list_peminjaman.webp',
                                 ],
                                 'image_captions' => [
                                     'Halaman list peminjaman',
@@ -974,7 +974,7 @@ class PanduanController extends Controller
                                     'Lengkapi data pendukung lain jika diperlukan.',
                                 ],
                                 'images' => [
-                                    'pemohon_form_pengajuan_peminjaman.png',
+                                    'pemohon_form_pengajuan_peminjaman.webp',
                                 ],
                                 'image_captions' => [
                                     'Form peminjaman',
@@ -1010,7 +1010,7 @@ class PanduanController extends Controller
                                     'Gunakan fitur unduh untuk menyimpan data riwayat peminjaman sebagai arsip atau dokumentasi.',
                                 ],
                                 'images' => [
-                                    'pemohon_riwayat_peminjaman.png',
+                                    'pemohon_riwayat_peminjaman.webp',
                                 ],
                                 'image_captions' => [
                                     'Halaman riwayat peminjaman',
@@ -1025,7 +1025,7 @@ class PanduanController extends Controller
                                     'Periksa catatan verifikator jika pengajuan ditolak atau membutuhkan perhatian.',
                                 ],
                                 'images' => [
-                                    'pemohon_detail_riwayat_peminjaman.png',
+                                    'pemohon_detail_riwayat_peminjaman.webp',
                                 ],
                                 'image_captions' => [
                                     'Detail riwayat peminjaman',

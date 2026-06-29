@@ -714,16 +714,23 @@ document.addEventListener("DOMContentLoaded", function () {
             closeNotificationModal();
         }
     });
+    
+    /*
+    |--------------------------------------------------------------------------
+    | Polling Notifikasi
+    |--------------------------------------------------------------------------
+    | Cek notifikasi setiap 10 detik tanpa Reverb.
+    */
+    loadUnreadCount();
 
-    window.addEventListener('notification-received', function () {
-        setTimeout(() => {
-            loadUnreadCount();
+    setInterval(() => {
+        loadUnreadCount();
 
-            if (notificationModal && !notificationModal.classList.contains('hidden')) {
-                loadNotifications();
-            }
-        }, 300);
+        if (notificationModal && !notificationModal.classList.contains('hidden')) {
+            loadNotifications();
+        }
+    }, 10000);
+
     });
-});
 </script>
 @endpush

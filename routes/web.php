@@ -30,19 +30,16 @@ use App\Http\Controllers\Sarpras\PeminjamanController as SarprasPeminjamanContro
 use App\Http\Controllers\Kalab\DashboardController as KalabDashboardController;
 use App\Http\Controllers\Kalab\JadwalController as KalabJadwalController;
 use App\Http\Controllers\Kalab\PeminjamanController as KalabPeminjamanController;
-use App\Http\Controllers\Kalab\RiwayatController as KalabRiwayatController;
 
 // Controller pimpinan
 use App\Http\Controllers\Pimpinan\DashboardController as PimpinanDashboardController;
 use App\Http\Controllers\Pimpinan\JadwalController as PimpinanJadwalController;
-use App\Http\Controllers\Pimpinan\RiwayatController as PimpinanRiwayatController;
 use App\Http\Controllers\Pimpinan\PeminjamanController as PimpinanPeminjamanController;
 
 // Controller dosen
 use App\Http\Controllers\Dosen\DashboardController as DosenDashboardController;
 use App\Http\Controllers\Dosen\JadwalController as DosenJadwalController;
 use App\Http\Controllers\Dosen\PeminjamanController as DosenPeminjamanController;
-use App\Http\Controllers\Dosen\RiwayatController as DosenRiwayatController;
 
 // Controller karyawan
 use App\Http\Controllers\Karyawan\DashboardController as KaryawanDashboardController;
@@ -53,13 +50,11 @@ use App\Http\Controllers\Karyawan\PeminjamanController as KaryawanPeminjamanCont
 use App\Http\Controllers\Ormawa\DashboardController as OrmawaDashboardController;
 use App\Http\Controllers\Ormawa\PeminjamanController as OrmawaPeminjamanController;
 use App\Http\Controllers\Ormawa\JadwalController as OrmawaJadwalController;
-use App\Http\Controllers\Ormawa\RiwayatController as OrmawaRiwayatController;
 
 // Controller mahasiswa
 use App\Http\Controllers\Mahasiswa\DashboardController as MahasiswaDashboardController;
 use App\Http\Controllers\Mahasiswa\JadwalController as MahasiswaJadwalController;
 use App\Http\Controllers\Mahasiswa\PeminjamanController as MahasiswaPeminjamanController;
-use App\Http\Controllers\Mahasiswa\RiwayatController as MahasiswaRiwayatController;
 
 Route::get('/', function () {
     return redirect()->route('login');
@@ -78,6 +73,8 @@ Route::post('/lupa-password', [AuthController::class, 'sendResetLink'])->name('p
 Route::get('/reset-password/{token}', [AuthController::class, 'showResetPassword'])->name('password.reset');
 Route::post('/reset-password', [AuthController::class, 'resetPassword'])->name('password.update');
 
+
+
 Route::middleware(['auth'])->group(function () {
     Route::post('/logout', [AuthController::class, 'logout'])
             ->name('logout');
@@ -90,20 +87,18 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/mahasiswa', [MahasiswaDashboardController::class, 'dashboard'])->name('mahasiswa.dashboard');
     Route::get('/karyawan', [KaryawanDashboardController::class, 'dashboard'])->name('karyawan.dashboard');
 
-
-      Route::get('/notifications', function () {
+    Route::get('/notifications', function () {    
         return auth()->user()
             ->notifications()
             ->latest()
-            ->take(20)
+            ->take(10)
             ->get()
             ->map(function ($notification) {
                 return [
-                    'id'         => $notification->id,
-                    'type'       => $notification->type,
-                    'data'       => $notification->data,
-                    'read_at'    => $notification->read_at,
-                    'created_at' => $notification->created_at?->diffForHumans(),
+                    'id' => $notification->id,
+                    'data' => $notification->data,
+                    'read_at' => $notification->read_at,
+                    'created_at' => $notification->created_at->diffForHumans(),
                 ];
             });
     })->name('notifications.index');
@@ -115,25 +110,27 @@ Route::middleware(['auth'])->group(function () {
     })->name('notifications.unread-count');
 
     Route::post('/notifications/{id}/read', function ($id) {
-        auth()->user()
+        
+        $notification = auth()->user()
             ->notifications()
             ->where('id', $id)
-            ->update(['read_at' => now()]);
+            ->firstOrFail();
+
+        $notification->markAsRead();
 
         return response()->json([
-            'message' => 'Notifikasi dibaca',
+            'success' => true,
         ]);
     })->name('notifications.read');
 
     Route::post('/notifications/read-all', function () {
-        auth()->user()
-            ->unreadNotifications()
-            ->update(['read_at' => now()]);
+        auth()->user()->unreadNotifications->markAsRead();
 
         return response()->json([
-            'message' => 'Semua notifikasi dibaca',
+            'success' => true,
         ]);
     })->name('notifications.read-all');
+    
 
     Route::get('/profile', [AuthController::class, 'profile'])->name('profile');
     Route::put('/profile', [AuthController::class, 'updateProfile'])->name('profile.update');
@@ -511,3 +508,4 @@ Route::middleware(['auth'])->group(function () {
 
         Route::get('/panduan', [PanduanController::class, 'index'])
             ->name('panduan.index');
+

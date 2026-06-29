@@ -41,14 +41,6 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-            const userId = @json(auth()->user()->nomor_induk);
-
-            console.log('Mendaftarkan Echo untuk user ID:', userId);
-
-            if (!window.Echo) {
-                console.error('Echo belum aktif. Cek Vite, bootstrap.js, npm run dev, dan konfigurasi Reverb.');
-                return;
-            }
 
             function showToast({
                 title = 'Notifikasi',
@@ -180,25 +172,68 @@
                 return 'info';
             }
 
-            window.Echo.private(`App.Models.User.${userId}`)
-                .notification((notification) => {
-                    console.log('Notifikasi masuk:', notification);
 
-                    showToast({
-                        title: notification.title || 'Notifikasi Baru',
-                        message: notification.message || 'Ada pembaruan notifikasi.',
-                        type: resolveToastType(notification),
-                        duration: 6000
+            let lastNotificationId = null;
+
+            async function checkNotifications() {
+
+                try {
+
+                    const response = await fetch("{{ route('notifications.index') }}", {
+                        headers: {
+                            "Accept": "application/json"
+                        }
                     });
 
-                    const badge = document.getElementById('notification-badge');
+                    if (!response.ok) return;
 
-                    if (badge) {
-                        let count = parseInt(badge.innerText || 0);
-                        badge.innerText = count + 1;
-                        badge.classList.remove('hidden');
+                    const notifications = await response.json();
+
+                    if (!notifications.length) return;
+
+                    const newest = notifications[0];
+
+                    if (lastNotificationId === null) {
+                        lastNotificationId = newest.id;
+                        return;
                     }
-                });
+
+                    if (newest.id !== lastNotificationId) {
+
+                        lastNotificationId = newest.id;
+
+                        showToast({
+                            title: newest.data.title,
+                            message: newest.data.message,
+                            type: resolveToastType(newest.data),
+                            duration: 6000
+                        });
+
+                        const badge = document.getElementById('notification-badge');
+
+                        if (badge) {
+
+                            let count = parseInt(badge.innerText || 0);
+
+                            badge.innerText = count + 1;
+
+                            badge.classList.remove('hidden');
+
+                        }
+
+                    }
+
+                } catch (e) {
+
+                    console.error(e);
+
+                }
+
+            }
+            
+                    checkNotifications();
+            
+                    setInterval(checkNotifications, 10000);
         });
     </script>
 @endauth
